@@ -514,18 +514,20 @@ def predict():
             out_deg = r_data['static_features'][:, 6].cpu().numpy()
             
             true_basin_sink = (out_deg == 0) | ((is_sink == 1) & (out_deg < in_deg))
-            deep_sag_convergence = (sag_index >= 0.08) & (accum_score >= 1.8)
-            conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink) & (~deep_sag_convergence)
+            deep_sag = (sag_index >= 0.06) & (accum_score >= 1.7)
+            neural_high_conf = (p_prob >= 0.70) & (delta_elev < 0.30) & (accum_score >= 1.5)
+            
+            conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf)
             
             feasibility = np.ones(len(delta_elev), dtype=np.float32)
             feasibility = np.where(conveyance_dry, 0.0, feasibility)
-            feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~true_basin_sink) & (~deep_sag_convergence), 0.0, feasibility)
-            feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink) & (~deep_sag_convergence), 0.0, feasibility)
+            feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.03) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf), 0.0, feasibility)
+            feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf), 0.0, feasibility)
             
-            thresh = np.where(deep_sag_convergence | true_basin_sink, 0.20, np.where(accum_score >= 2.0, 0.45, 0.65))
+            thresh = np.where(true_basin_sink | deep_sag, 0.20, np.where(neural_high_conf, 0.30, np.where(accum_score >= 2.0, 0.45, 0.65)))
             raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
             
-            depth_ceiling = np.where(true_basin_sink | deep_sag_convergence, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
+            depth_ceiling = np.where(true_basin_sink | deep_sag | neural_high_conf, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
             preds = np.minimum(raw_preds, depth_ceiling * (effective_rain / 50.0))
         else:
             out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
@@ -713,18 +715,20 @@ def storm_playback():
                 out_deg = r_data['static_features'][:, 6].cpu().numpy()
                 
                 true_basin_sink = (out_deg == 0) | ((is_sink == 1) & (out_deg < in_deg))
-                deep_sag_convergence = (sag_index >= 0.08) & (accum_score >= 1.8)
-                conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink) & (~deep_sag_convergence)
+                deep_sag = (sag_index >= 0.06) & (accum_score >= 1.7)
+                neural_high_conf = (p_prob >= 0.70) & (delta_elev < 0.30) & (accum_score >= 1.5)
+                
+                conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf)
                 
                 feasibility = np.ones(len(delta_elev), dtype=np.float32)
                 feasibility = np.where(conveyance_dry, 0.0, feasibility)
-                feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~true_basin_sink) & (~deep_sag_convergence), 0.0, feasibility)
-                feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink) & (~deep_sag_convergence), 0.0, feasibility)
+                feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.03) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf), 0.0, feasibility)
+                feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf), 0.0, feasibility)
                 
-                thresh = np.where(deep_sag_convergence | true_basin_sink, 0.20, np.where(accum_score >= 2.0, 0.45, 0.65))
+                thresh = np.where(true_basin_sink | deep_sag, 0.20, np.where(neural_high_conf, 0.30, np.where(accum_score >= 2.0, 0.45, 0.65)))
                 raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
                 
-                depth_ceiling = np.where(true_basin_sink | deep_sag_convergence, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
+                depth_ceiling = np.where(true_basin_sink | deep_sag | neural_high_conf, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
                 preds = np.minimum(raw_preds, depth_ceiling * (effective_rain / 50.0))
             else:
                 out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
