@@ -12,6 +12,7 @@ from pyproj import Transformer
 from torch_geometric.nn import GINEConv, GATv2Conv
 from train_perfect_accuracy_gnn import PerfectAccuracyGNN
 from train_zero_tolerance_gnn import ZeroToleranceHurdleGNN
+from train_dual_stream_hydro_gnn import DualStreamHydroGNN
 
 app = Flask(__name__)
 
@@ -389,7 +390,10 @@ def init_app_data():
     if os.path.exists(ckpt_file):
         ckpt = torch.load(ckpt_file, map_location=device, weights_only=False)
         st = ckpt['model_state_dict']
-        if ckpt.get('model_type') == 'ZeroToleranceHurdleGNN' or 'gate_head.0.weight' in st:
+        if ckpt.get('model_type') == 'DualStreamHydroGNN' or 'conv4.att' in st:
+            hid = ckpt.get('hidden_channels', 96)
+            MODEL = DualStreamHydroGNN(in_channels=14, hidden_channels=hid, out_channels=1).to(device)
+        elif ckpt.get('model_type') == 'ZeroToleranceHurdleGNN' or 'gate_head.0.weight' in st:
             MODEL = ZeroToleranceHurdleGNN(in_channels=14, hidden_channels=128, out_channels=1).to(device)
         elif "conv1.att" in st or "regressor.0.weight" in st:
             MODEL = PerfectAccuracyGNN(in_channels=14, hidden_channels=128, out_channels=1).to(device)
@@ -497,7 +501,7 @@ def predict():
     edge_norm = (r_data['edge_attr'].to(device) - EDGE_MEANS) / EDGE_STDS
 
     with torch.no_grad():
-        if isinstance(MODEL, ZeroToleranceHurdleGNN):
+        if isinstance(MODEL, (ZeroToleranceHurdleGNN, DualStreamHydroGNN)):
             r_out, g_out = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm, return_gate=True)
             p_prob = torch.sigmoid(g_out).cpu().numpy().ravel()
             p_depth = torch.clamp(r_out * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
@@ -681,9 +685,10 @@ def storm_playback():
         edge_norm = (r_data['edge_attr'].to(device) - EDGE_MEANS) / EDGE_STDS
 
         with torch.no_grad():
-            if isinstance(MODEL, ZeroToleranceHurdleGNN):
+            if isinstance(MODEL, (ZeroToleranceHurdleGNN, DualStreamHydroGNN)):
                 r_out, g_out = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm, return_gate=True)
                 p_prob = torch.sigmoid(g_out).cpu().numpy().ravel()
+                p_depth = torch.clamp(r_out * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
                 preds = np.where(p_prob >= 0.50, p_depth, 0.0)
                 
                 # Hydraulic Ridge Suppression: Non-sinking ridge nodes pass runoff with 0.00m ponding
