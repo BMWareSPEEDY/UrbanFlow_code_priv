@@ -514,17 +514,18 @@ def predict():
             out_deg = r_data['static_features'][:, 6].cpu().numpy()
             
             true_basin_sink = (out_deg == 0) | ((is_sink == 1) & (out_deg < in_deg))
-            conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink)
+            deep_sag_convergence = (sag_index >= 0.08) & (accum_score >= 1.8)
+            conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink) & (~deep_sag_convergence)
             
             feasibility = np.ones(len(delta_elev), dtype=np.float32)
             feasibility = np.where(conveyance_dry, 0.0, feasibility)
-            feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~true_basin_sink), 0.0, feasibility)
-            feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink), 0.0, feasibility)
+            feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~true_basin_sink) & (~deep_sag_convergence), 0.0, feasibility)
+            feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink) & (~deep_sag_convergence), 0.0, feasibility)
             
-            thresh = np.where((sag_index >= 0.05) | true_basin_sink, 0.25, np.where(accum_score >= 2.0, 0.45, 0.65))
+            thresh = np.where(deep_sag_convergence | true_basin_sink, 0.20, np.where(accum_score >= 2.0, 0.45, 0.65))
             raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
             
-            depth_ceiling = np.where((p_prob >= 0.70) | (sag_index >= 0.08) | true_basin_sink, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
+            depth_ceiling = np.where(true_basin_sink | deep_sag_convergence, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
             preds = np.minimum(raw_preds, depth_ceiling * (effective_rain / 50.0))
         else:
             out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
@@ -712,17 +713,18 @@ def storm_playback():
                 out_deg = r_data['static_features'][:, 6].cpu().numpy()
                 
                 true_basin_sink = (out_deg == 0) | ((is_sink == 1) & (out_deg < in_deg))
-                conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink)
+                deep_sag_convergence = (sag_index >= 0.08) & (accum_score >= 1.8)
+                conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink) & (~deep_sag_convergence)
                 
                 feasibility = np.ones(len(delta_elev), dtype=np.float32)
                 feasibility = np.where(conveyance_dry, 0.0, feasibility)
-                feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~true_basin_sink), 0.0, feasibility)
-                feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink), 0.0, feasibility)
+                feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~true_basin_sink) & (~deep_sag_convergence), 0.0, feasibility)
+                feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink) & (~deep_sag_convergence), 0.0, feasibility)
                 
-                thresh = np.where((sag_index >= 0.05) | true_basin_sink, 0.25, np.where(accum_score >= 2.0, 0.45, 0.65))
+                thresh = np.where(deep_sag_convergence | true_basin_sink, 0.20, np.where(accum_score >= 2.0, 0.45, 0.65))
                 raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
                 
-                depth_ceiling = np.where((p_prob >= 0.70) | (sag_index >= 0.08) | true_basin_sink, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
+                depth_ceiling = np.where(true_basin_sink | deep_sag_convergence, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
                 preds = np.minimum(raw_preds, depth_ceiling * (effective_rain / 50.0))
             else:
                 out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
