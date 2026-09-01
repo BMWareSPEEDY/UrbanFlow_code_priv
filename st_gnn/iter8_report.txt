@@ -1,0 +1,21 @@
+PREDICTIONS: D:\CODES\PYTHON_CODES\UrbanFLOW\st_gnn\preds_iter8.pt
+OVERALL: MAE 0.1643 m | RMSE 0.3323 | R2 0.7099 | +-10cm 63.4% | +-20cm 73.7% | F1@0.15m 0.8591 (P 0.848 R 0.871)
+PER-INTENSITY:
+  I=  20.0: MAE 0.0246 | R2 0.2243 | +-10cm 93.5% | F1@0.15 0.5947
+  I=  50.0: MAE 0.0463 | R2 0.7001 | +-10cm 83.6% | F1@0.15 0.8344
+  I=  80.0: MAE 0.0678 | R2 0.7447 | +-10cm 77.4% | F1@0.15 0.8641
+  I= 120.0: MAE 0.1193 | R2 0.7351 | +-10cm 66.8% | F1@0.15 0.8684
+  I= 150.0: MAE 0.1724 | R2 0.6983 | +-10cm 58.2% | F1@0.15 0.8667
+  I= 200.0: MAE 0.2744 | R2 0.6262 | +-10cm 46.7% | F1@0.15 0.8611
+  I= 250.0: MAE 0.2988 | R2 0.6352 | +-10cm 41.6% | F1@0.15 0.8648
+  I= 300.0: MAE 0.3112 | R2 0.6248 | +-10cm 39.6% | F1@0.15 0.8638
+ERROR-BY-DEPTH-BIN (true depth):
+  y in [0.00,0.05): n= 53740 | MAE 0.0436 | bias +0.0370
+  y in [0.05,0.15): n=  6688 | MAE 0.1559 | bias +0.0273
+  y in [0.15,0.30): n=  6665 | MAE 0.1765 | bias +0.0215
+  y in [0.30,0.50): n=  6793 | MAE 0.2167 | bias -0.0114
+  y in [0.50,0.80): n=  7357 | MAE 0.2867 | bias -0.0548
+  y in [0.80,3.00): n= 17955 | MAE 0.4425 | bias -0.2670
+BIGGEST ERROR GAP: true-depth bin [0.80,3.00) (contributes 7945.3 m total abs error); overall total abs error 16349.7 m
+WORST NODE: idx 74730, intensity 250 mm/hr, true 3.000 m, pred 0.000 m
+BIAS: light (<120mm/hr) -0.0134 m | extreme (>=200mm/hr) -0.0350 m

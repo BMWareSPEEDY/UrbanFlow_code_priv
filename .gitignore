@@ -1,0 +1,20 @@
+# Virtual Environment
+.venv/
+env/
+venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary SWMM simulation outputs
+*.out
+*.rpt
+temp_test_*
+*.tmp
+*.log
+
+# System files
+.DS_Store
+Thumbs.db

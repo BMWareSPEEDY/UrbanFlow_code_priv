@@ -1,0 +1,21 @@
+PREDICTIONS: D:\CODES\PYTHON_CODES\UrbanFLOW\st_gnn\stgnn_builder\smoke_convgru_preds.pt
+OVERALL: MAE 0.3992 m | RMSE 0.7319 | R2 -0.4069 | +-10cm 53.8% | +-20cm 58.8% | F1@0.15m 0.0067 (P 0.033 R 0.004)
+PER-INTENSITY:
+  I=  20.0: MAE 0.2221 | R2 -22.5432 | +-10cm 58.7% | F1@0.15 0.0593
+  I=  50.0: MAE 0.0997 | R2 -0.2409 | +-10cm 71.4% | F1@0.15 0.0000
+  I=  80.0: MAE 0.1664 | R2 -0.2956 | +-10cm 65.0% | F1@0.15 0.0000
+  I= 120.0: MAE 0.2943 | R2 -0.3894 | +-10cm 57.6% | F1@0.15 0.0000
+  I= 150.0: MAE 0.4099 | R2 -0.4962 | +-10cm 52.1% | F1@0.15 0.0000
+  I= 200.0: MAE 0.6191 | R2 -0.6802 | +-10cm 43.8% | F1@0.15 0.0000
+  I= 250.0: MAE 0.6822 | R2 -0.7402 | +-10cm 41.3% | F1@0.15 0.0000
+  I= 300.0: MAE 0.7000 | R2 -0.7589 | +-10cm 40.4% | F1@0.15 0.0000
+ERROR-BY-DEPTH-BIN (true depth):
+  y in [0.00,0.05): n= 53740 | MAE 0.0445 | bias +0.0374
+  y in [0.05,0.15): n=  6688 | MAE 0.1284 | bias -0.0459
+  y in [0.15,0.30): n=  6665 | MAE 0.2241 | bias -0.2119
+  y in [0.30,0.50): n=  6793 | MAE 0.3949 | bias -0.3932
+  y in [0.50,0.80): n=  7357 | MAE 0.6413 | bias -0.6412
+  y in [0.80,3.00): n= 17955 | MAE 1.4872 | bias -1.4872
+BIGGEST ERROR GAP: true-depth bin [0.80,3.00) (contributes 26703.0 m total abs error); overall total abs error 39716.5 m
+WORST NODE: idx 13468, intensity 50 mm/hr, true 3.000 m, pred 0.000 m
+BIAS: light (<120mm/hr) -0.0275 m | extreme (>=200mm/hr) -0.6671 m
