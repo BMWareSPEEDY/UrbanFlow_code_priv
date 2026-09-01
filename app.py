@@ -505,13 +505,28 @@ def predict():
             r_out, g_out = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm, return_gate=True)
             p_prob = torch.sigmoid(g_out).cpu().numpy().ravel()
             p_depth = torch.clamp(r_out * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
-            preds = np.where(p_prob >= 0.50, p_depth, 0.0)
-            
-            # Hydraulic Ridge Suppression: Non-sinking ridge nodes pass runoff with 0.00m ponding
+            # Adaptive Hydraulic Physics Gate
             delta_elev = r_data['static_features'][:, 2].cpu().numpy()
             sag_index = r_data['static_features'][:, 10].cpu().numpy()
             is_sink = r_data['static_features'][:, 8].cpu().numpy()
-            preds = np.where((delta_elev > 0.65) & (sag_index < 0.05) & (is_sink == 0), 0.0, preds)
+            accum_score = r_data['static_features'][:, 7].cpu().numpy()
+            in_deg = r_data['static_features'][:, 5].cpu().numpy()
+            out_deg = r_data['static_features'][:, 6].cpu().numpy()
+            
+            high_sag_crit = (sag_index >= 0.04) & ((accum_score >= 1.7) | (delta_elev < 0.35))
+            basin_sink = (out_deg == 0) | (is_sink == 1)
+            conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~basin_sink)
+            
+            feasibility = np.ones(len(delta_elev), dtype=np.float32)
+            feasibility = np.where(conveyance_dry, 0.0, feasibility)
+            feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~basin_sink), 0.0, feasibility)
+            feasibility = np.where((delta_elev > 0.70) & (~basin_sink), 0.0, feasibility)
+            
+            thresh = np.where(high_sag_crit | basin_sink, 0.25, np.where(accum_score >= 2.0, 0.40, 0.60))
+            raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
+            
+            depth_ceiling = np.where(basin_sink | (sag_index >= 0.08), 3.0, np.where(accum_score >= 2.0, 0.35, 0.15))
+            preds = np.minimum(raw_preds, depth_ceiling)
         else:
             out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
             if USE_LOG1P:
@@ -689,13 +704,28 @@ def storm_playback():
                 r_out, g_out = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm, return_gate=True)
                 p_prob = torch.sigmoid(g_out).cpu().numpy().ravel()
                 p_depth = torch.clamp(r_out * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
-                preds = np.where(p_prob >= 0.50, p_depth, 0.0)
-                
-                # Hydraulic Ridge Suppression: Non-sinking ridge nodes pass runoff with 0.00m ponding
+                # Adaptive Hydraulic Physics Gate
                 delta_elev = r_data['static_features'][:, 2].cpu().numpy()
                 sag_index = r_data['static_features'][:, 10].cpu().numpy()
                 is_sink = r_data['static_features'][:, 8].cpu().numpy()
-                preds = np.where((delta_elev > 0.65) & (sag_index < 0.05) & (is_sink == 0), 0.0, preds)
+                accum_score = r_data['static_features'][:, 7].cpu().numpy()
+                in_deg = r_data['static_features'][:, 5].cpu().numpy()
+                out_deg = r_data['static_features'][:, 6].cpu().numpy()
+                
+                high_sag_crit = (sag_index >= 0.04) & ((accum_score >= 1.7) | (delta_elev < 0.35))
+                basin_sink = (out_deg == 0) | (is_sink == 1)
+                conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~basin_sink)
+                
+                feasibility = np.ones(len(delta_elev), dtype=np.float32)
+                feasibility = np.where(conveyance_dry, 0.0, feasibility)
+                feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~basin_sink), 0.0, feasibility)
+                feasibility = np.where((delta_elev > 0.70) & (~basin_sink), 0.0, feasibility)
+                
+                thresh = np.where(high_sag_crit | basin_sink, 0.25, np.where(accum_score >= 2.0, 0.40, 0.60))
+                raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
+                
+                depth_ceiling = np.where(basin_sink | (sag_index >= 0.08), 3.0, np.where(accum_score >= 2.0, 0.35, 0.15))
+                preds = np.minimum(raw_preds, depth_ceiling)
             else:
                 out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
                 if USE_LOG1P:
