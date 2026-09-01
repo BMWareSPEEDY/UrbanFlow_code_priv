@@ -513,20 +513,19 @@ def predict():
             in_deg = r_data['static_features'][:, 5].cpu().numpy()
             out_deg = r_data['static_features'][:, 6].cpu().numpy()
             
-            high_sag_crit = (sag_index >= 0.04) & ((accum_score >= 1.7) | (delta_elev < 0.35))
-            basin_sink = (out_deg == 0) | (is_sink == 1)
-            conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~basin_sink)
+            true_basin_sink = (out_deg == 0) | ((is_sink == 1) & (out_deg < in_deg))
+            conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink)
             
             feasibility = np.ones(len(delta_elev), dtype=np.float32)
             feasibility = np.where(conveyance_dry, 0.0, feasibility)
-            feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~basin_sink), 0.0, feasibility)
-            feasibility = np.where((delta_elev > 0.70) & (~basin_sink), 0.0, feasibility)
+            feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~true_basin_sink), 0.0, feasibility)
+            feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink), 0.0, feasibility)
             
-            thresh = np.where(high_sag_crit | basin_sink, 0.25, np.where(accum_score >= 2.0, 0.40, 0.60))
+            thresh = np.where((sag_index >= 0.05) | true_basin_sink, 0.25, np.where(accum_score >= 2.0, 0.45, 0.65))
             raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
             
-            depth_ceiling = np.where(basin_sink | (sag_index >= 0.08), 3.0, np.where(accum_score >= 2.0, 0.35, 0.15))
-            preds = np.minimum(raw_preds, depth_ceiling)
+            depth_ceiling = np.where((p_prob >= 0.70) | (sag_index >= 0.08) | true_basin_sink, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
+            preds = np.minimum(raw_preds, depth_ceiling * (effective_rain / 50.0))
         else:
             out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
             if USE_LOG1P:
@@ -712,20 +711,19 @@ def storm_playback():
                 in_deg = r_data['static_features'][:, 5].cpu().numpy()
                 out_deg = r_data['static_features'][:, 6].cpu().numpy()
                 
-                high_sag_crit = (sag_index >= 0.04) & ((accum_score >= 1.7) | (delta_elev < 0.35))
-                basin_sink = (out_deg == 0) | (is_sink == 1)
-                conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~basin_sink)
+                true_basin_sink = (out_deg == 0) | ((is_sink == 1) & (out_deg < in_deg))
+                conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink)
                 
                 feasibility = np.ones(len(delta_elev), dtype=np.float32)
                 feasibility = np.where(conveyance_dry, 0.0, feasibility)
-                feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~basin_sink), 0.0, feasibility)
-                feasibility = np.where((delta_elev > 0.70) & (~basin_sink), 0.0, feasibility)
+                feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.04) & (~true_basin_sink), 0.0, feasibility)
+                feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink), 0.0, feasibility)
                 
-                thresh = np.where(high_sag_crit | basin_sink, 0.25, np.where(accum_score >= 2.0, 0.40, 0.60))
+                thresh = np.where((sag_index >= 0.05) | true_basin_sink, 0.25, np.where(accum_score >= 2.0, 0.45, 0.65))
                 raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
                 
-                depth_ceiling = np.where(basin_sink | (sag_index >= 0.08), 3.0, np.where(accum_score >= 2.0, 0.35, 0.15))
-                preds = np.minimum(raw_preds, depth_ceiling)
+                depth_ceiling = np.where((p_prob >= 0.70) | (sag_index >= 0.08) | true_basin_sink, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
+                preds = np.minimum(raw_preds, depth_ceiling * (effective_rain / 50.0))
             else:
                 out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
                 if USE_LOG1P:
