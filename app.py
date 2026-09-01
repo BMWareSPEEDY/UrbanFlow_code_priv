@@ -13,8 +13,11 @@ from torch_geometric.nn import GINEConv, GATv2Conv
 from train_perfect_accuracy_gnn import PerfectAccuracyGNN
 from train_zero_tolerance_gnn import ZeroToleranceHurdleGNN
 from train_dual_stream_hydro_gnn import DualStreamHydroGNN
+from production_v4 import ProductionFloodPredictorV4
 
 app = Flask(__name__)
+
+PRODUCTION_PREDICTOR = None
 
 class HighPrecisionGINE(nn.Module):
     def __init__(self, in_c=24, edge_c=2, hidden=192, n_layers=6):
@@ -42,6 +45,7 @@ class HighPrecisionGINE(nn.Module):
 MODEL = None
 RESIDUAL_CALIBRATIONS = {}
 REGIONS = {
+    # --- Bengaluru Districts ---
     'hsr': {
         'name': 'HSR Layout (Residential Hub)',
         'file': 'bengaluru_complete_graph.graphml',
@@ -82,6 +86,47 @@ REGIONS = {
         'country': 'India',
         'lat': 12.9352, 'lng': 77.6245
     },
+    # --- International Megacities ---
+    'tokyo': {
+        'name': 'Tokyo Metropolitan Catchment',
+        'file': 'city_tokyo_graph.graphml',
+        'sectors': 'Shinjuku & Shibuya Urban Basin',
+        'city': 'Tokyo',
+        'country': 'Japan',
+        'lat': 35.6762, 'lng': 139.6503
+    },
+    'hongkong': {
+        'name': 'Hong Kong Urban Basin',
+        'file': 'city_hongkong_graph.graphml',
+        'sectors': 'Kowloon & Victoria Harbour Coastal Catchment',
+        'city': 'Hong Kong',
+        'country': 'China / HK',
+        'lat': 22.3193, 'lng': 114.1694
+    },
+    'singapore': {
+        'name': 'Singapore Marina Catchment',
+        'file': 'city_singapore_graph.graphml',
+        'sectors': 'Marina Bay & Downtown Core',
+        'city': 'Singapore',
+        'country': 'Singapore',
+        'lat': 1.3521, 'lng': 103.8198
+    },
+    'london': {
+        'name': 'London Thames Catchment',
+        'file': 'city_london_graph.graphml',
+        'sectors': 'Thames Embankment & City of London',
+        'city': 'London',
+        'country': 'United Kingdom',
+        'lat': 51.5074, 'lng': -0.1278
+    },
+    'paris': {
+        'name': 'Paris Seine Basin',
+        'file': 'city_paris_graph.graphml',
+        'sectors': 'Seine Riverfront & Central Paris',
+        'city': 'Paris',
+        'country': 'France',
+        'lat': 48.8566, 'lng': 2.3522
+    },
     'nyc': {
         'name': 'New York City Coastal Catchment',
         'file': 'city_nyc_graph.graphml',
@@ -89,6 +134,47 @@ REGIONS = {
         'city': 'New York City',
         'country': 'United States',
         'lat': 40.7580, 'lng': -73.9855
+    },
+    'chicago': {
+        'name': 'Chicago Waterfront Catchment',
+        'file': 'city_chicago_graph.graphml',
+        'sectors': 'The Loop & Lake Michigan Basin',
+        'city': 'Chicago',
+        'country': 'United States',
+        'lat': 41.8781, 'lng': -87.6298
+    },
+    'berlin': {
+        'name': 'Berlin Spree Basin',
+        'file': 'city_berlin_graph.graphml',
+        'sectors': 'Mitte & Spree River Corridor',
+        'city': 'Berlin',
+        'country': 'Germany',
+        'lat': 52.5200, 'lng': 13.4050
+    },
+    'bangkok': {
+        'name': 'Bangkok Chao Phraya Lowlands',
+        'file': 'city_bangkok_graph.graphml',
+        'sectors': 'Chao Phraya Floodplain & Sukhumvit',
+        'city': 'Bangkok',
+        'country': 'Thailand',
+        'lat': 13.7563, 'lng': 100.5018
+    },
+    # --- Indian Megacities ---
+    'mumbai': {
+        'name': 'Mumbai Coastal Floodplain',
+        'file': 'city_mumbai_graph.graphml',
+        'sectors': 'Mithi River Basin & Bandra-Kurla Complex',
+        'city': 'Mumbai',
+        'country': 'India',
+        'lat': 19.0760, 'lng': 72.8777
+    },
+    'delhi': {
+        'name': 'Delhi Yamuna Floodplain',
+        'file': 'city_delhi_graph.graphml',
+        'sectors': 'Yamuna Floodplain Corridor & Central Delhi',
+        'city': 'Delhi',
+        'country': 'India',
+        'lat': 28.6139, 'lng': 77.2090
     }
 }
 
@@ -207,8 +293,39 @@ def generate_rwa_alert(metrics, region_info):
     )
     return msg
 
+def edge_capacity(G, u, v):
+    g = abs(float(G.edges[(u, v, list(G[u][v].keys())[0])].get('grade', 0.0)))
+    n = float(G.edges[(u, v, list(G[u][v].keys())[0])].get('manning_n', 0.013))
+    return (1.0 / max(n, 1e-4)) * 1.5 * 0.520 * np.sqrt(max(g, 1e-6))
+
+
+def compute_flow_accumulation(G, nodes_list, node_to_idx, in_deg_map, out_deg_map):
+    elevs = {nid: float(G.nodes[nid].get('elevation', 880.0)) for nid in nodes_list}
+    imps = {nid: float(G.nodes[nid].get('impervious_ratio', 0.2)) for nid in nodes_list}
+    out_neighbors = {nid: [] for nid in nodes_list}
+    for u, v, k, data in G.edges(keys=True, data=True):
+        if u in out_neighbors and u != v:
+            out_neighbors[u].append(v)
+    acc_area = {nid: 0.5 for nid in nodes_list}
+    acc_imperv_area = {nid: 0.5 * imps[nid] for nid in nodes_list}
+    ordered = sorted(nodes_list, key=lambda n: elevs[n], reverse=True)
+    for u in ordered:
+        contrib_area = acc_area[u]
+        contrib_imp = acc_imperv_area[u]
+        outs = out_neighbors[u]
+        if outs:
+            split_area = contrib_area / len(outs)
+            split_imp = contrib_imp / len(outs)
+            for v in outs:
+                acc_area[v] += split_area
+                acc_imperv_area[v] += split_imp
+    max_area = max(acc_area.values()) if acc_area else 1.0
+    dist_frac = {nid: acc_area[nid] / max_area for nid in nodes_list}
+    return acc_area, acc_imperv_area, dist_frac
+
+
 def init_app_data():
-    global MODEL, REGION_CACHE, FEATURE_MEANS, FEATURE_STDS, EDGE_MEANS, EDGE_STDS, Y_MEAN, Y_STD
+    global MODEL, REGION_CACHE, FEATURE_MEANS, FEATURE_STDS, EDGE_MEANS, EDGE_STDS, Y_MEAN, Y_STD, PRODUCTION_PREDICTOR
 
     print("1. Loading PyG dataset for statistical normalization...")
     pyg_data = torch.load("bengaluru_pyg_dataset.pt", weights_only=False)
@@ -242,10 +359,16 @@ def init_app_data():
         print(f"   - Loading region: {r_info['name']}...")
         G = ox.load_graphml(graph_file)
         node_list = list(G.nodes())
+        node_to_idx = {nid: idx for idx, nid in enumerate(node_list)}
 
         elevs = [float(G.nodes[nid].get('elevation', 880.0)) for nid in node_list]
-        min_elev = min(elevs)
-        max_elev = max(elevs)
+        xs = [float(G.nodes[nid].get('x', 0.0)) for nid in node_list]
+        ys = [float(G.nodes[nid].get('y', 0.0)) for nid in node_list]
+        min_elev, max_elev = min(elevs), max(elevs)
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        x_range = max(1.0, max_x - min_x)
+        y_range = max(1.0, max_y - min_y)
         elev_range = max(1.0, max_elev - min_elev)
 
         in_deg_map = dict(G.in_degree())
@@ -260,17 +383,67 @@ def init_app_data():
             if v in node_in_grades:
                 node_in_grades[v].append(grade)
 
+        acc_area, acc_imperv_area, dist_frac = compute_flow_accumulation(
+            G, node_list, node_to_idx, in_deg_map, out_deg_map)
+
+        elev_map = {nid: float(G.nodes[nid].get('elevation', 880.0)) for nid in node_list}
+        und_adj = {nid: set() for nid in node_list}
+        for u, v, k, data in G.edges(keys=True, data=True):
+            if u in und_adj and v in und_adj:
+                und_adj[u].add(v)
+                und_adj[v].add(u)
+                
+        elev_std2, dep_depth = {}, {}
+        for nid in node_list:
+            hood = {nid}
+            for nb in und_adj[nid]:
+                hood.add(nb)
+                for nb2 in und_adj[nb]:
+                    hood.add(nb2)
+            he = [elev_map[n] for n in hood]
+            elev_std2[nid] = float(np.std(he))
+            nbr_elevs = [elev_map[nb] for nb in und_adj[nid]]
+            dep_depth[nid] = float(max(0.0, np.mean(nbr_elevs) - elev_map[nid])) if nbr_elevs else 0.0
+            
+        surcharge = {}
+        for nid in node_list:
+            gs = node_out_grades[nid]
+            max_out_grade = max(gs) if len(gs) > 0 else 1e-4
+            surcharge[nid] = float(np.log1p(acc_area[nid] / max(1e-4, abs(max_out_grade) + 1e-4)))
+
+        path_cap = {nid: float('inf') for nid in node_list}
+        path_hops = {nid: 0 for nid in node_list}
+        ordered = sorted(node_list, key=lambda n: float(G.nodes[n].get('elevation', 880.0)), reverse=True)
+        for u in ordered:
+            outs = out_deg_map[u]
+            if outs == 0:
+                path_cap[u] = 0.0
+                path_hops[u] = 0
+                continue
+            best_v = None
+            best_g = -1.0
+            for v in G.successors(u):
+                if u == v:
+                    continue
+                for k, d in G[u][v].items():
+                    gg = abs(float(d.get('grade', 0.0)))
+                    if gg > best_g:
+                        best_g, best_v = gg, v
+            if best_v is None:
+                path_cap[u] = 0.0
+                continue
+            cap_e = edge_capacity(G, u, best_v)
+            path_cap[u] = min(cap_e, path_cap[best_v])
+            path_hops[u] = path_hops[best_v] + 1
+            
+        path_cap = {nid: float(np.log1p(v)) if v != float('inf') else 0.0 for nid, v in path_cap.items()}
+        max_hops = max(1, max(path_hops.values()) if path_hops else 1)
+        dist_outlet = {nid: float(path_hops[nid] / max_hops) for nid in node_list}
+
         node_pos = {}
         edge_list = []
         static_features_list = []
         lats, lons = [], []
-
-        xs = [float(G.nodes[nid].get('x', 0.0)) for nid in node_list]
-        ys = [float(G.nodes[nid].get('y', 0.0)) for nid in node_list]
-        min_x, max_x = min(xs), max(xs)
-        min_y, max_y = min(ys), max(ys)
-        x_range = max(1.0, max_x - min_x)
-        y_range = max(1.0, max_y - min_y)
 
         graph_crs = G.graph.get('crs', 'EPSG:32643')
         reg_transformer = Transformer.from_crs(graph_crs, 'EPSG:4326', always_xy=True)
@@ -296,7 +469,9 @@ def init_app_data():
             in_deg = in_deg_map.get(node_id, 0)
             out_deg = out_deg_map.get(node_id, 0)
             accum_score = np.log1p(in_deg * 2.5 + (1.0 if out_deg == 0 else 0.0))
-            is_sink = 1.0 if (rel_drop > 0.85 and in_deg >= 2) else 0.0
+            
+            d_dep = float(dep_depth[node_id])
+            is_sink = 1.0 if d_dep >= 0.08 else 0.0
 
             in_grades = node_in_grades.get(node_id, [0.0])
             out_grades = node_out_grades.get(node_id, [0.0])
@@ -313,23 +488,36 @@ def init_app_data():
             else:
                 swmm_depth = round(float(np.clip(accum_score * 0.08 * (rel_drop ** 1.5) + is_sink * 0.12, 0.002, 1.45)), 4)
 
-            log_area = float(np.log1p(in_deg * 2.5 + 0.5))
-            log_imp_area = float(np.log1p(in_deg * 2.5 * imp + 0.5))
-            dist_frac = 0.5
-            elev_std2 = 1.8397
-            dep_depth = 0.6175
-            surcharge = 6.1672
-            path_cap = 2.5277
-            path_hops = 1.6019
-            dist_outlet = 0.0224
-            delta_elev = (elev - min_elev) / elev_range
+            log_area = float(np.log1p(acc_area[node_id]))
+            log_imp_area = float(np.log1p(acc_imperv_area[node_id]))
+            df_val = float(dist_frac[node_id])
+            e_std = float(elev_std2[node_id])
+            d_dep = float(dep_depth[node_id])
+            sur = float(surcharge[node_id])
+            p_cap = float(path_cap[node_id])
+            p_hops = float(path_hops[node_id])
+            d_out = float(dist_outlet[node_id])
+            
+            elev_above_outlet = max(0.0, rel_drop * 10.0)
+            slope_outlet_ratio = max(0.0, max_in_grade / (0.3 + elev_above_outlet))
+            sink_d = d_dep if d_dep >= 0.05 else 0.0
+            inlet_cap = 0.12
+            sur_ratio = 100.0 * 50.0
+            deg_diff = in_deg - out_deg
+            total_rain_mm = 50.0
+            dyn_sat = imp * (1.0 + 0.5 * np.log1p(50.0 * 60.0 / 1000.0))
+            true_ponding = np.log1p(sink_d * total_rain_mm / (max(0.2, out_deg) + 0.3))
+            inflow_load = np.expm1(log_imp_area) * total_rain_mm
+            pipe_drain_cap = np.expm1(p_cap) + 0.1
+            conv_def = np.log1p(inflow_load / pipe_drain_cap)
+            dep_escape = d_dep / (max(0.005, abs(max_in_grade)) + 0.01)
 
             static_features_list.append([
-                rel_x, rel_y, delta_elev, rel_drop, manning, in_deg, out_deg,
-                accum_score, is_sink, max_in_grade, sag_index, hydraulic_capacity,
-                log_area, log_imp_area, dist_frac,
-                0.0, 0.0,  # Rain intensity & duration slots (indices 15 & 16)
-                elev_std2, dep_depth, surcharge, path_cap, path_hops, dist_outlet, imp
+                rel_drop, imp, manning, in_deg, out_deg, accum_score, is_sink, max_in_grade,
+                sag_index, hydraulic_capacity, log_area, log_imp_area, df_val, 50.0, 60.0,
+                e_std, d_dep, sur, p_cap, p_hops, d_out,
+                elev_above_outlet, slope_outlet_ratio, sink_d, inlet_cap, sur_ratio,
+                deg_diff, total_rain_mm, dyn_sat, true_ponding, conv_def, dep_escape
             ])
 
             node_pos[node_id] = {
@@ -364,6 +552,8 @@ def init_app_data():
 
         edge_index = torch.tensor([src_nodes, dst_nodes], dtype=torch.long)
         edge_attr = torch.tensor(edge_feat_list, dtype=torch.float)
+        from torch_geometric.data import Data
+        pyg_obj = Data(x=static_features, edge_index=edge_index, edge_attr=edge_attr)
 
         REGION_CACHE[r_key] = {
             'info': r_info,
@@ -374,6 +564,7 @@ def init_app_data():
             'static_features': static_features,
             'edge_index': edge_index,
             'edge_attr': edge_attr,
+            'pyg_data': pyg_obj,
             'bounds': {
                 'min_lat': min(lats), 'max_lat': max(lats),
                 'min_lng': min(lons), 'max_lng': max(lons)
@@ -382,9 +573,14 @@ def init_app_data():
 
     print("4. Loading High-Precision GNN Model...")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    global YL_MEAN, YL_STD, USE_LOG1P, RESIDUAL_CALIBRATIONS
+    global YL_MEAN, YL_STD, USE_LOG1P, RESIDUAL_CALIBRATIONS, PRODUCTION_PREDICTOR
 
     RESIDUAL_CALIBRATIONS = {}
+
+    v4_ckpt = "hydro_gine_v4_3_model.pt" if os.path.exists("hydro_gine_v4_3_model.pt") else ("hydro_gine_v4_1_model.pt" if os.path.exists("hydro_gine_v4_1_model.pt") else "hydro_gine_v4_model.pt")
+    if os.path.exists(v4_ckpt):
+        print(f"   - Initializing {v4_ckpt} zero-leakage neural engine...")
+        PRODUCTION_PREDICTOR = ProductionFloodPredictorV4(v4_ckpt, device=device)
 
     ckpt_file = "zero_tolerance_gnn_checkpoint.pt" if os.path.exists("zero_tolerance_gnn_checkpoint.pt") else ("pinn_gnn_checkpoint.pt" if os.path.exists("pinn_gnn_checkpoint.pt") else "urbanflow_production_model.pt")
     if os.path.exists(ckpt_file):
@@ -413,8 +609,8 @@ def init_app_data():
             Y_MEAN = float(ckpt['y_mean'])
             Y_STD = float(ckpt['y_std'])
             USE_LOG1P = False
+        MODEL.eval()
 
-    MODEL.eval()
     print("Initialization complete!")
 
 
@@ -501,11 +697,12 @@ def predict():
     edge_norm = (r_data['edge_attr'].to(device) - EDGE_MEANS) / EDGE_STDS
 
     with torch.no_grad():
-        if isinstance(MODEL, (ZeroToleranceHurdleGNN, DualStreamHydroGNN)):
+        if PRODUCTION_PREDICTOR is not None and 'pyg_data' in r_data:
+            preds, raw_p, probs = PRODUCTION_PREDICTOR.predict(r_data['pyg_data'], effective_rain, duration_min)
+        elif isinstance(MODEL, (ZeroToleranceHurdleGNN, DualStreamHydroGNN)):
             r_out, g_out = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm, return_gate=True)
             p_prob = torch.sigmoid(g_out).cpu().numpy().ravel()
             p_depth = torch.clamp(r_out * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
-            # Adaptive Hydraulic Physics Gate
             delta_elev = r_data['static_features'][:, 2].cpu().numpy()
             sag_index = r_data['static_features'][:, 10].cpu().numpy()
             is_sink = r_data['static_features'][:, 8].cpu().numpy()
@@ -702,11 +899,12 @@ def storm_playback():
         edge_norm = (r_data['edge_attr'].to(device) - EDGE_MEANS) / EDGE_STDS
 
         with torch.no_grad():
-            if isinstance(MODEL, (ZeroToleranceHurdleGNN, DualStreamHydroGNN)):
+            if PRODUCTION_PREDICTOR is not None and 'pyg_data' in r_data:
+                preds, raw_p, probs = PRODUCTION_PREDICTOR.predict(r_data['pyg_data'], effective_rain, duration_at_step)
+            elif isinstance(MODEL, (ZeroToleranceHurdleGNN, DualStreamHydroGNN)):
                 r_out, g_out = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm, return_gate=True)
                 p_prob = torch.sigmoid(g_out).cpu().numpy().ravel()
                 p_depth = torch.clamp(r_out * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
-                # Adaptive Hydraulic Physics Gate
                 delta_elev = r_data['static_features'][:, 2].cpu().numpy()
                 sag_index = r_data['static_features'][:, 10].cpu().numpy()
                 is_sink = r_data['static_features'][:, 8].cpu().numpy()
