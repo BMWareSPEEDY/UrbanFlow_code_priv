@@ -93,10 +93,89 @@ class HydroGINE_v4(nn.Module):
         return cls_logits, raw_depth
 
 
+class GravityGINEConv(nn.Module):
+    def __init__(self, in_c, out_c, edge_c=2):
+        super().__init__()
+        self.conv = GINEConv(
+            nn.Sequential(
+                nn.Linear(in_c, out_c),
+                nn.LayerNorm(out_c),
+                nn.LeakyReLU(0.1),
+                nn.Linear(out_c, out_c)
+            ),
+            edge_dim=edge_c
+        )
+        self.ln = nn.LayerNorm(out_c)
+        
+    def forward(self, h, ei, ea):
+        grade = ea[:, 1:2]
+        gravity_gate = torch.sigmoid(1.0 - 5.0 * F.relu(grade))
+        ea_gated = ea * gravity_gate
+        return F.leaky_relu(self.ln(self.conv(h, ei, ea_gated)), 0.1)
+
+
+class HydroGINE_v5(nn.Module):
+    def __init__(self, in_c=32, edge_c=2, hidden=128, n_layers=6):
+        super().__init__()
+        self.convs = nn.ModuleList()
+        for i in range(n_layers):
+            c_in = in_c if i == 0 else hidden
+            self.convs.append(GravityGINEConv(c_in, hidden, edge_c))
+            
+        cat_dim = hidden * 2 + in_c
+        self.cls = nn.Sequential(
+            nn.Linear(cat_dim, 128),
+            nn.LayerNorm(128),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.05),
+            nn.Linear(128, 64),
+            nn.LayerNorm(64),
+            nn.LeakyReLU(0.1),
+            nn.Linear(64, 1)
+        )
+        self.film_gen = nn.Sequential(
+            nn.Linear(1, 64),
+            nn.LeakyReLU(0.1),
+            nn.Linear(64, cat_dim * 2)
+        )
+        nn.init.zeros_(self.film_gen[-1].weight)
+        nn.init.zeros_(self.film_gen[-1].bias)
+        self.reg = nn.Sequential(
+            nn.Linear(cat_dim, 256),
+            nn.LayerNorm(256),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.05),
+            nn.Linear(256, 128),
+            nn.LayerNorm(128),
+            nn.LeakyReLU(0.1),
+            nn.Linear(128, 1)
+        )
+
+    def forward(self, x, ei, ea):
+        h = x
+        mid_h = None
+        for i, conv in enumerate(self.convs):
+            h_next = conv(h, ei, ea)
+            if i > 0 and h.shape == h_next.shape:
+                h = h_next + 0.3 * h
+            else:
+                h = h_next
+            if i == (len(self.convs) // 2):
+                mid_h = h
+        cat = torch.cat([h, mid_h, x], dim=-1)
+        cls_logits = self.cls(cat)
+        prob = torch.sigmoid(cls_logits)
+        film = self.film_gen(prob)
+        gamma, beta = torch.chunk(film, 2, dim=-1)
+        h_cond = cat * (1.0 + gamma) + beta
+        raw_depth = self.reg(h_cond)
+        return cls_logits, raw_depth
+
+
 class ProductionFloodPredictorV4:
     """Production flood prediction engine for UrbanFLOW."""
     
-    def __init__(self, model_path="hydro_gine_v4_3_model.pt", device=None):
+    def __init__(self, model_path="hydro_gine_v5_model.pt", device=None):
         self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         if not os.path.exists(model_path):
@@ -104,12 +183,20 @@ class ProductionFloodPredictorV4:
             model_path = os.path.join(base_dir, model_path)
             
         ck = torch.load(model_path, map_location=self.device, weights_only=False)
-        self.model = HydroGINE_v4(
-            in_c=ck['in_c'],
-            edge_c=2,
-            hidden=ck.get('hidden', 128),
-            n_layers=ck.get('n_layers', 6)
-        ).to(self.device)
+        if "convs.0.conv.nn.0.weight" in ck['model']:
+            self.model = HydroGINE_v5(
+                in_c=ck['in_c'],
+                edge_c=2,
+                hidden=ck.get('hidden', 128),
+                n_layers=ck.get('n_layers', 6)
+            ).to(self.device)
+        else:
+            self.model = HydroGINE_v4(
+                in_c=ck['in_c'],
+                edge_c=2,
+                hidden=ck.get('hidden', 128),
+                n_layers=ck.get('n_layers', 6)
+            ).to(self.device)
         self.model.load_state_dict(ck['model'])
         self.model.eval()
         
@@ -117,8 +204,8 @@ class ProductionFloodPredictorV4:
         self.x_std = ck['x_std'].to(self.device)
         self.e_mean = ck['e_mean'].to(self.device)
         self.e_std = ck['e_std'].to(self.device)
-        self.yl_mean = ck['yl_mean'].to(self.device)
-        self.yl_std = ck['yl_std'].to(self.device)
+        self.yl_mean = float(ck['yl_mean'])
+        self.yl_std = float(ck['yl_std'])
 
     def predict(self, graph_or_batch, intensity_mmhr, duration_min=60.0):
         """Pure neural inference with Universal Physical Continuity Bounding.
@@ -251,6 +338,7 @@ class ProductionFloodPredictorV4:
             p_prob = torch.sigmoid(c_l.squeeze(-1)).cpu().numpy().ravel()
             
         x_raw = x_full.cpu().numpy()
+        rel_drop = x_raw[:, 0]
         in_d = x_raw[:, 3]
         out_d = x_raw[:, 4]
         accum_s = x_raw[:, 5]
@@ -262,12 +350,13 @@ class ProductionFloodPredictorV4:
         conv_def = x_raw[:, 30]
         
         # 1. Hydraulic Regime Identification:
-        is_isolated_sink = (out_d <= 1) & (sink_d >= 0.15)
-        is_major_flood_bowl = (out_d <= 1) & (p_prob >= 0.96) & (sink_d >= 0.25) & (dep_d >= 0.80) & (conv_def >= 2.2)
-        is_convergent_sag = (in_d > out_d) | (sag_idx >= 0.06)
+        is_isolated_sink = (out_d <= 1) & (sink_d >= 0.15) & (rel_drop >= 0.50)
+        is_major_flood_bowl = (out_d <= 1) & (p_prob >= 0.96) & (sink_d >= 0.25) & (dep_d >= 0.80) & (conv_def >= 2.2) & (rel_drop >= 0.50)
+        is_convergent_sag = ((in_d > out_d) | (sag_idx >= 0.06)) & (rel_drop >= 0.40)
         is_hydraulic_bottleneck = is_major_flood_bowl | ((out_d <= 1) & (p_prob >= 0.85) & is_convergent_sag & (sink_d >= 0.35))
         
-        # High outflow multi-pipe crossroad with zero depression (3+ pipes drain freely)
+        # Upland slopes and high outflow crossroads drain freely
+        is_upland_slope = (rel_drop < 0.45) & (out_d >= 1) & (sink_d < 0.10)
         is_free_drain_crossroad = (sink_d < 0.03) & (out_d >= 3) & (out_d >= in_d)
         is_sloped_conveyance = (sink_d < 0.05) & (out_d >= in_d) & (dep_d < 0.30)
         is_extreme_cloudburst = (total_r >= 120.0)
@@ -282,7 +371,11 @@ class ProductionFloodPredictorV4:
                 np.where(
                     is_extreme_cloudburst,
                     0.20,
-                    np.where(is_free_drain_crossroad, 0.85, np.where(is_sloped_conveyance | (sink_d < 0.02), 0.65, 0.35))
+                    np.where(
+                        is_upland_slope | is_free_drain_crossroad,
+                        0.85,
+                        np.where(is_sloped_conveyance | (sink_d < 0.02), 0.65, 0.35)
+                    )
                 )
             )
         )
@@ -290,42 +383,35 @@ class ProductionFloodPredictorV4:
         conf_gate = 1.0 / (1.0 + np.exp(-14.0 * (p_prob - tau)))
         raw_gated = p_lin * conf_gate
         
-        # 3. Dynamic Hydrologic Mass Bounds (UPCB v5):
-        # In Light Rain (total_r <= 25 mm):
-        light_mass_cap = np.where(
-            is_isolated_sink,
-            np.clip(0.30 + 0.35 * (total_r / 20.0) * sink_d, 0.30, 0.65),
-            0.02
-        )
-        
-        # In Moderate to 100 mm/hr Storms (25 < total_r <= 100 mm):
-        mod_100_cap = np.where(
-            is_isolated_sink | is_hydraulic_bottleneck,
-            np.clip(0.35 + 0.35 * (total_r / 100.0) * (1.0 + 0.3 * conv_def), 0.30, 2.50),
+        # 3. Dynamic Hydrologic Continuity Bounds (UPCB v5):
+        dyn_bound = np.where(
+            is_major_flood_bowl | (is_isolated_sink & (p_prob >= 0.90)),
+            3.0,
             np.where(
-                is_free_drain_crossroad,
-                0.03,  # 3+ outgoing pipes drain freely, capping depth at 3cm
-                np.where(is_sloped_conveyance, 0.01, 0.29)
+                is_free_drain_crossroad | is_upland_slope,
+                0.02,
+                np.where(
+                    sink_d < 0.02,
+                    0.02 if total_r <= 25.0 else (0.05 if total_r <= 80.0 else 0.12),
+                    np.where(
+                        sink_d < 0.10,
+                        0.05 if total_r <= 50.0 else 0.20,
+                        np.where(
+                            is_convergent_sag | is_isolated_sink,
+                            np.maximum(0.20, np.minimum(3.0, sink_d * (total_r / 40.0) + 0.10)),
+                            np.maximum(0.08, np.minimum(0.35, sink_d * 0.5 + 0.05))
+                        )
+                    )
+                )
             )
         )
         
-        # In Heavy Cloudburst (total_r > 100 mm):
-        heavy_mass_cap = np.where(
-            is_free_drain_crossroad,
-            0.05,
-            3.0
-        )
-        
-        dyn_bound = np.where(
-            total_r <= 25.0,
-            light_mass_cap,
-            np.where(total_r <= 100.0, mod_100_cap, heavy_mass_cap)
-        )
-        
-        pred_final = np.minimum(raw_gated, dyn_bound)
+        pred_final = np.minimum(p_lin * conf_gate, dyn_bound)
         
         # 4. Dry Pavement Clean-Up (Zero-out false standing water in sloped/dry channels):
-        pred_final = np.where((sink_d < 0.02) & (p_prob < 0.60) & (total_r <= 80.0), 0.0, pred_final)
+        is_dry_pavement = (sink_d < 0.02) & (dep_d < 0.03) & (p_prob < 0.60)
+        pred_final = np.where(is_dry_pavement, 0.0, pred_final)
+        pred_final = np.where(is_upland_slope & (p_prob < 0.85) & (total_r <= 100.0), 0.0, pred_final)
         pred_final = np.where(is_free_drain_crossroad & (p_prob < 0.85) & (total_r <= 100.0), 0.0, pred_final)
         pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
         
