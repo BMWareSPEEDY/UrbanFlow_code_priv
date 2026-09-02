@@ -403,7 +403,8 @@ def init_app_data():
             he = [elev_map[n] for n in hood]
             elev_std2[nid] = float(np.std(he))
             nbr_elevs = [elev_map[nb] for nb in und_adj[nid]]
-            dep_depth[nid] = float(max(0.0, np.mean(nbr_elevs) - elev_map[nid])) if nbr_elevs else 0.0
+            lowest_exit = min(nbr_elevs) if nbr_elevs else elev_map[nid]
+            dep_depth[nid] = float(max(0.0, lowest_exit - elev_map[nid])) if nbr_elevs else 0.0
             
         surcharge = {}
         for nid in node_list:
@@ -500,7 +501,7 @@ def init_app_data():
             
             elev_above_outlet = max(0.0, rel_drop * 10.0)
             slope_outlet_ratio = max(0.0, max_in_grade / (0.3 + elev_above_outlet))
-            sink_d = d_dep if d_dep >= 0.05 else 0.0
+            sink_d = d_dep if (d_dep >= 0.05 and rel_drop >= 0.50) else 0.0
             inlet_cap = 0.12
             sur_ratio = 100.0 * 50.0
             deg_diff = in_deg - out_deg

@@ -391,15 +391,15 @@ class ProductionFloodPredictorV4:
                 is_free_drain_crossroad | is_upland_slope,
                 0.02,
                 np.where(
-                    sink_d < 0.02,
-                    0.02 if total_r <= 25.0 else (0.05 if total_r <= 80.0 else 0.12),
+                    sink_d < 0.03,
+                    0.02 if intensity_mmhr <= 50.0 else (0.05 if intensity_mmhr <= 80.0 else 0.10),
                     np.where(
                         sink_d < 0.10,
-                        0.05 if total_r <= 50.0 else 0.20,
+                        0.04 if intensity_mmhr <= 50.0 else 0.15,
                         np.where(
                             is_convergent_sag | is_isolated_sink,
                             np.maximum(0.20, np.minimum(3.0, sink_d * (total_r / 40.0) + 0.10)),
-                            np.maximum(0.08, np.minimum(0.35, sink_d * 0.5 + 0.05))
+                            np.clip(sink_d * 0.8 + 0.02, 0.02, 0.25)
                         )
                     )
                 )
@@ -414,5 +414,36 @@ class ProductionFloodPredictorV4:
         pred_final = np.where(is_upland_slope & (p_prob < 0.85) & (total_r <= 100.0), 0.0, pred_final)
         pred_final = np.where(is_free_drain_crossroad & (p_prob < 0.85) & (total_r <= 100.0), 0.0, pred_final)
         pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
+        
+        # 5. Hydrostatic Water Surface Elevation (WSE) Inundation Envelope:
+        # Strictly prevents uphill nodes from falsely receiving flood depth from downhill neighbors
+        if hasattr(batch, 'edge_index') and batch.edge_index is not None and batch.edge_index.numel() > 0:
+            ei = batch.edge_index
+            src = ei[0].cpu().numpy()
+            dst = ei[1].cpu().numpy()
+            num_nodes = len(pred_final)
+            
+            # Ground elevation relative to catchment profile
+            elevs = - rel_drop * 20.0
+            wse = elevs + pred_final
+            
+            backwater_dst = np.maximum(0.0, wse[src] - elevs[dst])
+            backwater_src = np.maximum(0.0, wse[dst] - elevs[src])
+            
+            max_backwater = np.zeros(num_nodes, dtype=np.float32)
+            np.maximum.at(max_backwater, dst, backwater_dst)
+            np.maximum.at(max_backwater, src, backwater_src)
+            
+            # True enclosed valley sinks hold their own pooled water
+            is_true_sink_bowl = (dep_d >= 0.05) & (sink_d >= 0.05) & (rel_drop >= 0.50)
+            sloped_non_sink = ~is_true_sink_bowl
+            
+            pred_final[sloped_non_sink] = np.minimum(
+                pred_final[sloped_non_sink],
+                np.maximum(0.0, max_backwater[sloped_non_sink])
+            )
+            uphill_above_water = sloped_non_sink & (max_backwater < 0.02) & (dep_d < 0.04)
+            pred_final[uphill_above_water] = 0.0
+            pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
         
         return pred_final, p_lin, p_prob
