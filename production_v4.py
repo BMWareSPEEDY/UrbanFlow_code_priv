@@ -350,72 +350,52 @@ class ProductionFloodPredictorV4:
         conv_def = x_raw[:, 30]
         
         # 1. Hydraulic Regime Identification:
-        is_isolated_sink = (out_d <= 1) & (sink_d >= 0.15) & (rel_drop >= 0.50)
-        is_major_flood_bowl = (out_d <= 1) & (p_prob >= 0.96) & (sink_d >= 0.25) & (dep_d >= 0.80) & (conv_def >= 2.2) & (rel_drop >= 0.50)
-        is_convergent_sag = ((in_d > out_d) | (sag_idx >= 0.06)) & (rel_drop >= 0.40)
-        is_hydraulic_bottleneck = is_major_flood_bowl | ((out_d <= 1) & (p_prob >= 0.85) & is_convergent_sag & (sink_d >= 0.35))
+        is_choked_surcharge = (conv_def >= 0.7) | (accum_s >= 1.5) | ((dep_d >= 0.20) & (out_d <= in_d))
+        is_deep_sink = (sink_d >= 0.08) & (rel_drop >= 0.40)
+        is_valley_depression = (dep_d >= 0.05) & (rel_drop >= 0.40)
+        is_convergent_sag = (in_d > out_d) | (sag_idx >= 0.03)
         
-        # Upland slopes and high outflow crossroads drain freely
-        is_upland_slope = (rel_drop < 0.45) & (out_d >= 1) & (sink_d < 0.10)
-        is_free_drain_crossroad = (sink_d < 0.03) & (out_d >= 3) & (out_d >= in_d)
-        is_sloped_conveyance = (sink_d < 0.05) & (out_d >= in_d) & (dep_d < 0.30)
-        is_extreme_cloudburst = (total_r >= 120.0)
+        # Upland Ridge Free Drainage (True hill crests where water cannot pool)
+        is_ridge_crest = (rel_drop < 0.25) & (sink_d < 0.03) & (dep_d < 0.03)
+        is_free_drain_slope = (sink_d < 0.02) & (dep_d < 0.02) & (out_d >= 2) & (~is_choked_surcharge)
         
         # 2. Probability Calibration Threshold (Tau):
         tau = np.where(
-            is_isolated_sink,
-            0.10,
+            is_deep_sink | is_valley_depression,
+            0.15,
             np.where(
-                is_hydraulic_bottleneck,
-                0.20,
+                is_choked_surcharge | is_convergent_sag,
+                0.25,
                 np.where(
-                    is_extreme_cloudburst,
-                    0.20,
-                    np.where(
-                        is_upland_slope | is_free_drain_crossroad,
-                        0.85,
-                        np.where(is_sloped_conveyance | (sink_d < 0.02), 0.65, 0.35)
-                    )
+                    is_ridge_crest | is_free_drain_slope,
+                    0.75,
+                    0.35
                 )
             )
         )
+        conf_gate = 1.0 / (1.0 + np.exp(-12.0 * (p_prob - tau)))
         
-        conf_gate = 1.0 / (1.0 + np.exp(-14.0 * (p_prob - tau)))
-        raw_gated = p_lin * conf_gate
-        
-        # 3. Dynamic Hydrologic Continuity Bounds (UPCB v5):
-        dyn_bound = np.where(
-            is_major_flood_bowl | (is_isolated_sink & (p_prob >= 0.90)),
+        # 3. Dynamic Hydrologic Continuity Bounds:
+        mass_bound = np.where(
+            is_deep_sink | is_valley_depression | is_choked_surcharge,
             3.0,
             np.where(
-                is_free_drain_crossroad | is_upland_slope,
+                is_ridge_crest,
                 0.02,
                 np.where(
-                    sink_d < 0.03,
-                    0.02 if intensity_mmhr <= 50.0 else (0.05 if intensity_mmhr <= 80.0 else 0.10),
-                    np.where(
-                        sink_d < 0.10,
-                        0.04 if intensity_mmhr <= 50.0 else 0.15,
-                        np.where(
-                            is_convergent_sag | is_isolated_sink,
-                            np.maximum(0.20, np.minimum(3.0, sink_d * (total_r / 40.0) + 0.10)),
-                            np.clip(sink_d * 0.8 + 0.02, 0.02, 0.25)
-                        )
-                    )
+                    is_free_drain_slope,
+                    0.04 if total_r[0] <= 50.0 else 0.10,
+                    np.maximum(0.15, sink_d * 1.5 + 0.08)
                 )
             )
         )
         
-        pred_final = np.minimum(p_lin * conf_gate, dyn_bound)
-        
-        # 4. Dry Pavement Clean-Up (Zero-out false standing water in sloped/dry channels):
-        is_dry_pavement = (sink_d < 0.02) & (dep_d < 0.03) & (p_prob < 0.60)
-        pred_final = np.where(is_dry_pavement, 0.0, pred_final)
-        pred_final = np.where(is_upland_slope & (p_prob < 0.85) & (total_r <= 100.0), 0.0, pred_final)
-        pred_final = np.where(is_free_drain_crossroad & (p_prob < 0.85) & (total_r <= 100.0), 0.0, pred_final)
+        pred_final = np.minimum(p_lin * conf_gate, mass_bound)
+        is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.50) & (~is_choked_surcharge)
+        pred_final = np.where(is_flat_dry, 0.0, pred_final)
         pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
         
-        # 5. Hydrostatic Water Surface Elevation (WSE) Inundation Envelope:
+        # 4. Hydrostatic Water Surface Elevation (WSE) Inundation Envelope:
         # Strictly prevents uphill nodes from falsely receiving flood depth from downhill neighbors
         if hasattr(batch, 'edge_index') and batch.edge_index is not None and batch.edge_index.numel() > 0:
             ei = batch.edge_index
@@ -434,16 +414,11 @@ class ProductionFloodPredictorV4:
             np.maximum.at(max_backwater, dst, backwater_dst)
             np.maximum.at(max_backwater, src, backwater_src)
             
-            # True enclosed valley sinks hold their own pooled water
-            is_true_sink_bowl = (dep_d >= 0.05) & (sink_d >= 0.05) & (rel_drop >= 0.50)
-            sloped_non_sink = ~is_true_sink_bowl
-            
-            pred_final[sloped_non_sink] = np.minimum(
-                pred_final[sloped_non_sink],
-                np.maximum(0.0, max_backwater[sloped_non_sink])
+            is_protected = is_deep_sink | is_valley_depression | is_choked_surcharge
+            pred_final[~is_protected] = np.minimum(
+                pred_final[~is_protected],
+                np.maximum(0.0, max_backwater[~is_protected])
             )
-            uphill_above_water = sloped_non_sink & (max_backwater < 0.02) & (dep_d < 0.04)
-            pred_final[uphill_above_water] = 0.0
             pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
         
         return pred_final, p_lin, p_prob
