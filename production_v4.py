@@ -400,8 +400,8 @@ class ProductionFloodPredictorV4:
         pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
         
         # 3.1 Dual-Drainage Surcharge Head & Inflow Mass Balance:
-        # Surcharging underground pipes backup into surface depressions up to the physical manhole rim (2.55m)
-        is_choked_fill = (p_prob >= 0.65) & (conv_def >= 1.2) & (accum_s >= 1.5) & (dep_d >= 0.3)
+        # Extreme pipe surcharge backups into severe surface depressions
+        is_choked_fill = (p_prob >= 0.70) & (conv_def >= 2.5) & (accum_s >= 2.0) & (dep_d >= 1.5)
         fill_head = np.minimum(3.0, np.minimum(dep_d, accum_s * 0.40))
         pred_final = np.where(is_choked_fill, np.maximum(pred_final, fill_head), pred_final)
         pred_final = np.minimum(pred_final, 3.0)
