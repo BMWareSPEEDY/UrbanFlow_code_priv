@@ -351,13 +351,13 @@ def init_app_data():
             else:
                 target_lookup[node_str] = val
 
-    swmm_truth_by_region = {}
+    region_graphs_50 = {}
     if os.path.exists("expanded_master_physics_dataset.pt"):
         dl_targets = torch.load("expanded_master_physics_dataset.pt", weights_only=False)
         for g in dl_targets:
             r = getattr(g, 'region', '') or getattr(g, 'city', '')
-            if r and abs(g.rain_intensity - 50.0) < 1.0 and r not in swmm_truth_by_region:
-                swmm_truth_by_region[r] = g.y.cpu().numpy().ravel()
+            if r and abs(g.rain_intensity - 50.0) < 1.0 and r not in region_graphs_50:
+                region_graphs_50[r] = g
 
     print("3. Pre-loading all regional spatial graphs...")
     for r_key, r_info in REGIONS.items():
@@ -493,8 +493,8 @@ def init_app_data():
             flow_dir = compute_flow_direction(G, node_id)
 
             swmm_depth = 0.0005
-            if r_key in swmm_truth_by_region and idx < len(swmm_truth_by_region[r_key]):
-                swmm_depth = float(swmm_truth_by_region[r_key][idx])
+            if r_key in region_graphs_50 and idx < len(region_graphs_50[r_key].y):
+                swmm_depth = float(region_graphs_50[r_key].y[idx].item())
             else:
                 raw_swmm = target_lookup.get(node_id, target_lookup.get(str(node_id), None))
                 if raw_swmm is not None:
@@ -566,8 +566,11 @@ def init_app_data():
 
         edge_index = torch.tensor([src_nodes, dst_nodes], dtype=torch.long)
         edge_attr = torch.tensor(edge_feat_list, dtype=torch.float)
-        from torch_geometric.data import Data
-        pyg_obj = Data(x=static_features, edge_index=edge_index, edge_attr=edge_attr)
+        if r_key in region_graphs_50 and region_graphs_50[r_key].num_nodes == len(node_list):
+            pyg_obj = region_graphs_50[r_key].clone()
+        else:
+            from torch_geometric.data import Data
+            pyg_obj = Data(x=static_features, edge_index=edge_index, edge_attr=edge_attr)
 
         REGION_CACHE[r_key] = {
             'info': r_info,
