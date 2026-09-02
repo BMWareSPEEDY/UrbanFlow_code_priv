@@ -818,7 +818,9 @@ def predict():
                 'is_basement': info['is_basement'],
                 'upstream_slope': info.get('upstream_slope', 0.0),
                 'flow_dx': info.get('flow_dx', 0.0),
-                'flow_dy': info.get('flow_dy', 0.0)
+                'flow_dy': info.get('flow_dy', 0.0),
+                'error_cm': round(abs(pred_depth - swmm_depth) * 100.0, 1),
+                'status': 'MATCH' if abs(pred_depth - swmm_depth) < 0.15 else ('OVER' if pred_depth > swmm_depth else 'UNDER')
             })
 
         if info['is_basement'] and pred_depth > 0.12:
