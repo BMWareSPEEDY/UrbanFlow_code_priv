@@ -385,7 +385,7 @@ class ProductionFloodPredictorV4:
                 np.where(
                     is_free_drain_slope,
                     0.04 if total_r[0] <= 50.0 else 0.10,
-                    np.maximum(0.15, sink_d * 1.5 + 0.08)
+                    np.where(p_prob >= 0.65, np.maximum(0.40, sink_d * 2.0 + 0.20), np.maximum(0.15, sink_d * 1.5 + 0.08))
                 )
             )
         )

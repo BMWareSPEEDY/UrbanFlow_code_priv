@@ -336,19 +336,28 @@ def init_app_data():
 
     print("2. Loading SWMM ground truth targets...")
     target_lookup = {}
-    df_targets = pd.read_csv("swmm_groundtruth_targets.csv")
-    for _, row in df_targets.iterrows():
-        node_str = str(row['swmm_node_id'])
-        val = float(row['max_water_depth_m'])
-        if node_str.startswith('J_'):
-            raw_id = node_str[2:]
-            try:
-                target_lookup[int(raw_id)] = val
-            except ValueError:
-                pass
-            target_lookup[raw_id] = val
-        else:
-            target_lookup[node_str] = val
+    if os.path.exists("swmm_groundtruth_targets.csv"):
+        df_targets = pd.read_csv("swmm_groundtruth_targets.csv")
+        for _, row in df_targets.iterrows():
+            node_str = str(row['swmm_node_id'])
+            val = float(row['max_water_depth_m'])
+            if node_str.startswith('J_'):
+                raw_id = node_str[2:]
+                try:
+                    target_lookup[int(raw_id)] = val
+                except ValueError:
+                    pass
+                target_lookup[raw_id] = val
+            else:
+                target_lookup[node_str] = val
+
+    swmm_truth_by_region = {}
+    if os.path.exists("expanded_master_physics_dataset.pt"):
+        dl_targets = torch.load("expanded_master_physics_dataset.pt", weights_only=False)
+        for g in dl_targets:
+            r = getattr(g, 'region', '') or getattr(g, 'city', '')
+            if r and abs(g.rain_intensity - 50.0) < 1.0 and r not in swmm_truth_by_region:
+                swmm_truth_by_region[r] = g.y.cpu().numpy().ravel()
 
     print("3. Pre-loading all regional spatial graphs...")
     for r_key, r_info in REGIONS.items():
@@ -449,7 +458,7 @@ def init_app_data():
         graph_crs = G.graph.get('crs', 'EPSG:32643')
         reg_transformer = Transformer.from_crs(graph_crs, 'EPSG:4326', always_xy=True)
 
-        for node_id in node_list:
+        for idx, node_id in enumerate(node_list):
             data = G.nodes[node_id]
             x = float(data.get('x', 0.0))
             y = float(data.get('y', 0.0))
@@ -464,13 +473,13 @@ def init_app_data():
             lats.append(lat)
             lons.append(lon)
 
-            rel_x = (x - min_x) / x_range
-            rel_y = (y - min_y) / y_range
+            rel_x = (x - min_x) / (max_x - min_x + 1e-6)
+            rel_y = (y - min_y) / (max_y - min_y + 1e-6)
             rel_drop = (max_elev - elev) / elev_range
+
             in_deg = in_deg_map.get(node_id, 0)
             out_deg = out_deg_map.get(node_id, 0)
-            accum_score = np.log1p(in_deg * 2.5 + (1.0 if out_deg == 0 else 0.0))
-            
+            accum_score = np.log1p(float(in_deg) * 2.0)
             d_dep = float(dep_depth[node_id])
             is_sink = 1.0 if d_dep >= 0.08 else 0.0
 
@@ -483,11 +492,15 @@ def init_app_data():
             upstream_slope = compute_upstream_slope(G, node_id)
             flow_dir = compute_flow_direction(G, node_id)
 
-            raw_swmm = target_lookup.get(node_id, target_lookup.get(str(node_id), None))
-            if raw_swmm is not None:
-                swmm_depth = float(raw_swmm)
+            swmm_depth = 0.0005
+            if r_key in swmm_truth_by_region and idx < len(swmm_truth_by_region[r_key]):
+                swmm_depth = float(swmm_truth_by_region[r_key][idx])
             else:
-                swmm_depth = round(float(np.clip(accum_score * 0.08 * (rel_drop ** 1.5) + is_sink * 0.12, 0.002, 1.45)), 4)
+                raw_swmm = target_lookup.get(node_id, target_lookup.get(str(node_id), None))
+                if raw_swmm is not None:
+                    swmm_depth = float(raw_swmm)
+                else:
+                    swmm_depth = round(float(np.clip(accum_score * 0.08 * (rel_drop ** 1.5) + is_sink * 0.12, 0.002, 1.45)), 4)
 
             log_area = float(np.log1p(acc_area[node_id]))
             log_imp_area = float(np.log1p(acc_imperv_area[node_id]))
