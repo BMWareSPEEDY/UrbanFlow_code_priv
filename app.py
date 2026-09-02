@@ -594,7 +594,7 @@ def init_app_data():
 
     RESIDUAL_CALIBRATIONS = {}
 
-    v4_ckpt = "hydro_gine_v5_model.pt" if os.path.exists("hydro_gine_v5_model.pt") else ("hydro_gine_v4_3_model.pt" if os.path.exists("hydro_gine_v4_3_model.pt") else "hydro_gine_v4_model.pt")
+    v4_ckpt = "hydro_gine_v5_bottleneck_opt.pt" if os.path.exists("hydro_gine_v5_bottleneck_opt.pt") else ("hydro_gine_v5_model.pt" if os.path.exists("hydro_gine_v5_model.pt") else "hydro_gine_v4_model.pt")
     if os.path.exists(v4_ckpt):
         print(f"   - Initializing {v4_ckpt} zero-leakage neural engine...")
         PRODUCTION_PREDICTOR = ProductionFloodPredictorV4(v4_ckpt, device=device)

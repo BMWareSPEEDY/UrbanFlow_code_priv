@@ -359,6 +359,10 @@ class ProductionFloodPredictorV4:
         is_ridge_crest = (rel_drop < 0.25) & (sink_d < 0.03) & (dep_d < 0.03)
         is_free_drain_slope = (sink_d < 0.02) & (dep_d < 0.02) & (out_d >= 2) & (~is_choked_surcharge)
         
+        # Ridge Pruning: True steep upland ridge crests (high on hill rel_drop < 0.20, steep slope > 0.06)
+        slope_mag = np.abs(x_np[:, 2])
+        is_steep_ridge = (rel_drop < 0.20) & (slope_mag > 0.06) & (accum_s < 0.5) & (sink_d < 0.01) & (~is_choked_surcharge)
+        
         # 2. Probability Calibration Threshold (Tau):
         tau = np.where(
             is_deep_sink | is_valley_depression,
@@ -367,7 +371,7 @@ class ProductionFloodPredictorV4:
                 is_choked_surcharge | is_convergent_sag,
                 0.25,
                 np.where(
-                    is_ridge_crest | is_free_drain_slope,
+                    is_ridge_crest | is_free_drain_slope | is_steep_ridge,
                     0.75,
                     0.35
                 )
@@ -380,8 +384,8 @@ class ProductionFloodPredictorV4:
             is_deep_sink | is_valley_depression | is_choked_surcharge,
             3.0,
             np.where(
-                is_ridge_crest,
-                0.02,
+                is_ridge_crest | is_steep_ridge,
+                0.01,
                 np.where(
                     is_free_drain_slope,
                     0.04 if total_r[0] <= 50.0 else 0.10,
@@ -392,8 +396,15 @@ class ProductionFloodPredictorV4:
         
         pred_final = np.minimum(p_lin * conf_gate, mass_bound)
         is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.50) & (~is_choked_surcharge)
-        pred_final = np.where(is_flat_dry, 0.0, pred_final)
+        pred_final = np.where(is_flat_dry | is_steep_ridge, 0.0, pred_final)
         pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
+        
+        # 3.1 Dual-Drainage Surcharge Head & Inflow Mass Balance:
+        # Surcharging underground pipes backup into surface depressions up to the physical manhole rim (2.55m)
+        is_choked_fill = (p_prob >= 0.65) & (conv_def >= 1.2) & (accum_s >= 1.5) & (dep_d >= 0.3)
+        fill_head = np.minimum(3.0, np.minimum(dep_d, accum_s * 0.40))
+        pred_final = np.where(is_choked_fill, np.maximum(pred_final, fill_head), pred_final)
+        pred_final = np.minimum(pred_final, 3.0)
         
         # 4. Hydrostatic Water Surface Elevation (WSE) Inundation Envelope:
         # Strictly prevents uphill nodes from falsely receiving flood depth from downhill neighbors
