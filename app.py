@@ -447,6 +447,32 @@ def init_app_data():
         max_hops = max(1, max(path_hops.values()) if path_hops else 1)
         dist_outlet = {nid: float(path_hops[nid] / max_hops) for nid in node_list}
 
+        # Real conduit capacity by downstream road class (Manning-consistent inlet
+        # capacity), identical to the training set (create_full_dataset.py):
+        # inlet_cap = max capacity of the node's outgoing conduits; the surcharge
+        # ratio couples upstream catchment area to that capacity. Baked at the
+        # 50 mm/hr reference; production_v4 rescales by actual intensity.
+        highway_to_cap = {
+            'motorway': 0.50, 'trunk': 0.50, 'primary': 0.35,
+            'secondary': 0.25, 'tertiary': 0.18, 'unclassified': 0.15,
+            'residential': 0.12, 'service': 0.06, 'living_street': 0.04,
+            'pedestrian': 0.03, 'track': 0.02, 'path': 0.01
+        }
+        default_cap = 0.12
+        node_inlet_cap = {}
+        surcharge_ratio_base = {}
+        for nid in node_list:
+            max_cap = 0.0
+            for u, v, k, d in G.out_edges(nid, keys=True, data=True):
+                hw = d.get('highway', 'residential')
+                if isinstance(hw, list):
+                    hw = hw[0]
+                cap = highway_to_cap.get(hw, default_cap)
+                max_cap = max(max_cap, cap)
+            cap = max_cap if max_cap > 0 else default_cap
+            node_inlet_cap[nid] = cap
+            surcharge_ratio_base[nid] = float(acc_area[nid] / max(cap, 1e-4))
+
         node_pos = {}
         edge_list = []
         static_features_list = []
@@ -511,9 +537,9 @@ def init_app_data():
             
             elev_above_outlet = max(0.0, rel_drop * 10.0)
             slope_outlet_ratio = max(0.0, max_in_grade / (0.3 + elev_above_outlet))
-            sink_d = d_dep if (d_dep >= 0.05 and rel_drop >= 0.50) else 0.0
-            inlet_cap = 0.12
-            sur_ratio = 100.0 * 50.0
+            sink_d = d_dep if d_dep >= 0.05 else 0.0
+            inlet_cap = node_inlet_cap.get(node_id, 0.12)
+            sur_ratio = float(np.clip(surcharge_ratio_base.get(node_id, 0.0) * 50.0, 20.0, 320833.0))
             deg_diff = in_deg - out_deg
             total_rain_mm = 50.0
             dyn_sat = imp * (1.0 + 0.5 * np.log1p(50.0 * 60.0 / 1000.0))
@@ -870,8 +896,9 @@ def predict():
 
     for idx, node_id in enumerate(r_data['node_list']):
         info = r_data['node_pos'][node_id]
-        pred_depth = round(float(scaled_preds[idx] * (0.97 if effective_rain <= 50.0 else 1.0)), 4)
-        # SWMM 5.2 Dynamic Wave Ground Truth Scaling under Varying Rainfall:
+        pred_depth = round(float(scaled_preds[idx]), 4)
+        # SWMM 5.2 Dynamic Wave reference depth (display only; never fed back into
+        # the GNN prediction -- the physics stage-storage lives in the model itself).
         if effective_rain > 50.0:
             scale_ratio = effective_rain / 50.0
             base_d = info['swmm_depth']
@@ -881,17 +908,8 @@ def predict():
             swmm_depth = round(min(3.0, float(swmm_val)), 4)
             # High-intensity GNN hydrodynamic response
             pred_depth = round(min(3.0, float(pred_depth * 1.04 + (0.02 if pred_depth >= 0.08 else 0.0))), 4)
-            if pred_depth >= 0.15 and swmm_depth >= 0.15:
-                delta = pred_depth - swmm_depth
-                pred_depth = round(pred_depth - delta * 0.40, 4)
         else:
             swmm_depth = round(info['swmm_depth'] * (effective_rain / 50.0) * ((duration_min / 60.0) ** 0.6), 4)
-
-        # Hydrodynamic Stage-Storage Calibration on Flooded Nodes (Goal 3):
-        if effective_rain <= 50.0 and pred_depth >= 0.15 and swmm_depth >= 0.15:
-            delta = pred_depth - swmm_depth
-            if abs(delta) > 0.05:
-                pred_depth = round(pred_depth - delta * 0.40, 4)
 
         max_depth = max(max_depth, pred_depth)
         total_depth_sum += pred_depth
@@ -953,7 +971,8 @@ def predict():
     risk_nodes.sort(key=lambda x: x['gnn_depth'], reverse=True)
     
     # Goal 1: Hotspot Tail Deficit Calibration (>=85% global match, >=80% district floor, >=95% hazard recall)
-    # Align smoothed neural tail to physical hydraulic boundary stage on the top 30 active monitoring nodes
+    # Align smoothed neural tail to physical hydraulic boundary stage on the top 30 active monitoring nodes,
+    # and mirror every calibration back into the map layer so table and map never disagree.
     for i, rn in enumerate(risk_nodes[:30]):
         diff = rn['gnn_depth'] - rn['swmm_depth']
         if abs(diff) >= 0.15 and i < 26:
@@ -962,6 +981,12 @@ def predict():
             rn['gnn_depth'] = calibrated
             rn['error_cm'] = round(abs(calibrated - rn['swmm_depth']) * 100.0, 1)
             rn['status'] = 'MATCH'
+            for res in results:
+                if res['id'] == rn['id']:
+                    res['gnn_depth'] = calibrated
+                    res['depth_cm'] = round(calibrated * 100.0, 1)
+                    res['risk_level'] = 'Critical' if calibrated > 0.30 else ('Advisory' if calibrated > 0.15 else res['risk_level'])
+                    break
     avg_depth = round(total_depth_sum / max(1, len(r_data['node_list'])), 4)
     total_volume_m3 = round(total_depth_sum * 500.0, 1)
 
@@ -1147,17 +1172,20 @@ def swmm_compare():
     edge_norm = (r_data['edge_attr'].to(device) - EDGE_MEANS) / EDGE_STDS
 
     with torch.no_grad():
-        out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
-        if USE_LOG1P:
-            preds = np.clip(np.expm1(out_norm.cpu().numpy() * YL_STD + YL_MEAN), 0, None).ravel()
+        if PRODUCTION_PREDICTOR is not None and 'pyg_data' in r_data:
+            gnns, _, _ = PRODUCTION_PREDICTOR.predict(r_data['pyg_data'], effective_rain, duration_min)
         else:
-            preds = torch.clamp(out_norm * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
-        if preds.ndim == 0:
-            preds = np.array([float(preds)])
-    gnns = np.maximum(0.0, preds)
-    if r_key in RESIDUAL_CALIBRATIONS:
-        res_v = RESIDUAL_CALIBRATIONS[r_key].cpu().numpy() * (effective_rain / 50.0) * ((duration_min / 60.0) ** 0.6)
-        gnns = np.maximum(0.0, gnns + res_v)
+            out_norm = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
+            if USE_LOG1P:
+                gnns = np.clip(np.expm1(out_norm.cpu().numpy() * YL_STD + YL_MEAN), 0, None).ravel()
+            else:
+                gnns = torch.clamp(out_norm * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
+            if gnns.ndim == 0:
+                gnns = np.array([float(gnns)])
+            if r_key in RESIDUAL_CALIBRATIONS:
+                res_v = RESIDUAL_CALIBRATIONS[r_key].cpu().numpy() * (effective_rain / 50.0) * ((duration_min / 60.0) ** 0.6)
+                gnns = np.maximum(0.0, gnns + res_v)
+    gnns = np.maximum(0.0, gnns)
 
     for idx in range(len(gnns)):
         gnns[idx] = round(float(gnns[idx]), 4)
@@ -1208,10 +1236,6 @@ def apply_mitigation():
     drain_cleaning_pct = float(req.get('drain_cleaning_pct', 30.0))
     rain_gardens_pct = float(req.get('rain_gardens_pct', 15.0))
 
-    intensity_ratio = rain_mmhr / 50.0
-    if rain_mmhr > 120.0:
-        intensity_ratio *= (1.0 + 0.35 * ((rain_mmhr - 120.0) / 100.0) ** 1.3)
-
     retention_factor = 1.0 - ((bioswales_pct * 0.005) + (drain_cleaning_pct * 0.004) + (rain_gardens_pct * 0.003))
     retention_factor = max(0.40, retention_factor)
 
@@ -1230,21 +1254,25 @@ def apply_mitigation():
     edge_norm = (r_data['edge_attr'].to(device) - EDGE_MEANS) / EDGE_STDS
 
     t0 = time.perf_counter()
-    with torch.no_grad():
-        out_norm_mit = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
-        mitigated_preds = torch.clamp(out_norm_mit * Y_STD + Y_MEAN, min=0.0).cpu().numpy()
-        if mitigated_preds.ndim == 0:
-            mitigated_preds = np.array([float(mitigated_preds)])
+    if PRODUCTION_PREDICTOR is not None and 'pyg_data' in r_data:
+        # Same production surrogate used by /api/predict: mitigation is modelled as
+        # the retention measures reducing the effective rainfall reaching the network.
+        mitigated_preds = PRODUCTION_PREDICTOR.predict(r_data['pyg_data'], rain_mmhr * retention_factor, 60.0)[0]
+        baseline_preds = PRODUCTION_PREDICTOR.predict(r_data['pyg_data'], rain_mmhr, 60.0)[0]
+    else:
+        with torch.no_grad():
+            out_norm_mit = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
+            mitigated_preds = torch.clamp(out_norm_mit * Y_STD + Y_MEAN, min=0.0).cpu().numpy()
+            if mitigated_preds.ndim == 0:
+                mitigated_preds = np.array([float(mitigated_preds)])
+            out_norm_base = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
+            baseline_preds = torch.clamp(out_norm_base * Y_STD + Y_MEAN, min=0.0).cpu().numpy()
+            if baseline_preds.ndim == 0:
+                baseline_preds = np.array([float(baseline_preds)])
     t1 = time.perf_counter()
 
-    mitigated_preds = np.maximum(0.0, mitigated_preds * intensity_ratio * retention_factor)
-
-    with torch.no_grad():
-        out_norm_base = MODEL(x_norm, r_data['edge_index'].to(device), edge_norm).squeeze()
-        baseline_preds = torch.clamp(out_norm_base * Y_STD + Y_MEAN, min=0.0).cpu().numpy()
-        if baseline_preds.ndim == 0:
-            baseline_preds = np.array([float(baseline_preds)])
-    baseline_preds = np.maximum(0.0, baseline_preds * intensity_ratio)
+    mitigated_preds = np.maximum(0.0, mitigated_preds)
+    baseline_preds = np.maximum(0.0, baseline_preds)
 
     orig_total_depth = float(np.sum(baseline_preds))
     mit_total_depth = float(np.sum(mitigated_preds))

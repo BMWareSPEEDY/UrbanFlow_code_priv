@@ -317,7 +317,7 @@ class ProductionFloodPredictorV4:
             total_rain_mm = intensity_mmhr * (duration_min / 60.0)
             x_np[:, 13] = intensity_mmhr
             x_np[:, 14] = duration_min
-            x_np[:, 25] = 100.0 * intensity_mmhr
+            x_np[:, 25] = np.clip(x_np[:, 25] * (intensity_mmhr / 50.0), 20.0, 320833.0)
             x_np[:, 27] = total_rain_mm
             x_np[:, 28] = imp * (1.0 + 0.5 * np.log1p(intensity_mmhr * duration_min / 1000.0))
             x_np[:, 29] = np.log1p(sink_depth * total_rain_mm / (np.maximum(0.2, out_deg) + 0.3))
@@ -356,8 +356,13 @@ class ProductionFloodPredictorV4:
         # inflating them toward 3.0m (false criticals). It must be ANDed with a real physical
         # sag or convergence deficit so only genuinely choked low pockets open up.
         is_choked_surcharge = (conv_def >= 0.7) & ((sag_idx > 0.01) | (dep_d > 0.02) | (out_d < in_d))
-        is_deep_sink = (sink_d >= 0.08) & (rel_drop >= 0.40)
-        is_valley_depression = (dep_d >= 0.05) & (rel_drop >= 0.40)
+        # Terrain-adaptive sink classification: a local basin is defined by its OWN
+        # depression storage (dep_d in real meters), independent of where it sits on
+        # the normalized rel_drop profile. The rel_drop >= 0.40 gate wrongly excluded
+        # genuine 0.2-0.5m low-lying catchment bowls on flat/low-relief districts.
+        is_sink_flag = x_raw[:, 6] == 1.0
+        is_deep_sink = is_sink_flag & (dep_d >= 0.20)
+        is_valley_depression = (dep_d >= 0.20)
         is_convergent_sag = (in_d > out_d) | (sag_idx >= 0.03)
         
         # Upland Ridge Free Drainage (True hill crests where water cannot pool)
@@ -385,26 +390,34 @@ class ProductionFloodPredictorV4:
         conf_gate = 1.0 / (1.0 + np.exp(-6.0 * (p_prob - tau)))
         
         # 3. Dynamic Hydrologic Continuity Bounds:
+        # Sink/valley classes cap by their own depression storage (stage-storage:
+        # a bowl holds at most ~1.5x its rim-to-floor depth before spilling downhill,
+        # with 0.3m freeboard, never below 1.0m). Surcharge-blocked junctions keep
+        # the full 3.0m ceiling because inlet blockage can back up far beyond relief.
         mass_bound = np.where(
-            is_deep_sink | is_valley_depression | is_choked_surcharge,
+            is_choked_surcharge,
             3.0,
             np.where(
-                is_ridge_crest | is_steep_ridge,
-                0.01,
+                is_deep_sink | is_valley_depression,
+                np.clip(dep_d * 1.5 + 0.3, 1.0, 3.0),
                 np.where(
-                    is_free_drain_slope,
-                    0.04 if total_r[0] <= 50.0 else 0.10,
+                    is_ridge_crest | is_steep_ridge,
+                    0.01,
                     np.where(
-                    (p_prob >= 0.65) & is_convergent_sag,
-                    np.maximum(0.90, sink_d * 3.0 + 0.35),
-                    np.where(p_prob >= 0.65, np.maximum(0.45, sink_d * 2.0 + 0.20), np.maximum(0.15, sink_d * 1.5 + 0.08))
-                )
+                        is_free_drain_slope,
+                        0.04 if total_r[0] <= 50.0 else 0.10,
+                        np.where(
+                        (p_prob >= 0.65) & is_convergent_sag,
+                        np.maximum(0.90, sink_d * 3.0 + 0.35),
+                        np.where(p_prob >= 0.65, np.maximum(0.90, sink_d * 2.0 + 0.35), np.maximum(0.15, sink_d * 1.5 + 0.08))
+                    )
+                    )
                 )
             )
         )
         
         pred_final = np.minimum(p_lin * conf_gate, mass_bound)
-        is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.55) & (~is_choked_surcharge)
+        is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.50) & (~is_choked_surcharge)
         pred_final = np.where(is_flat_dry | is_steep_ridge, 0.0, pred_final)
         pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
         
@@ -422,15 +435,22 @@ class ProductionFloodPredictorV4:
         pred_final = np.minimum(pred_final, 3.0)
         
         # 4. Hydrostatic Water Surface Elevation (WSE) Inundation Envelope:
-        # Strictly prevents uphill nodes from falsely receiving flood depth from downhill neighbors
+        # Bounds an un-protected node's depth by the backwater surface reachable
+        # from adjacent nodes. Ground relief is expressed in REAL meters via the
+        # local depression storage (dep_d / sink_d, features 16/23) instead of the
+        # artificial `-rel_drop * 20.0` normalized scale, which compressed true
+        # relief on flat cities and forcibly zeroed legitimate 0.2-0.4m ponding.
+        # The cap is a soft upper bound only: a node always keeps at least its own
+        # depression storage, so the envelope never zeroes a real flood.
         if hasattr(batch, 'edge_index') and batch.edge_index is not None and batch.edge_index.numel() > 0:
             ei = batch.edge_index
             src = ei[0].cpu().numpy()
             dst = ei[1].cpu().numpy()
             num_nodes = len(pred_final)
             
-            # Ground elevation relative to catchment profile
-            elevs = - rel_drop * 20.0
+            # Ground elevation profile from true depression storage (meters below the
+            # mean surface of adjacent nodes); deeper bowls sit lower relative to flow.
+            elevs = -np.maximum(dep_d, sink_d)
             wse = elevs + pred_final
             
             backwater_dst = np.maximum(0.0, wse[src] - elevs[dst])
@@ -441,9 +461,10 @@ class ProductionFloodPredictorV4:
             np.maximum.at(max_backwater, src, backwater_src)
             
             is_protected = is_deep_sink | is_valley_depression | is_choked_surcharge
+            own_storage = np.minimum(np.maximum(dep_d, sink_d), 3.0)
             pred_final[~is_protected] = np.minimum(
                 pred_final[~is_protected],
-                np.maximum(0.0, max_backwater[~is_protected])
+                np.maximum(max_backwater[~is_protected], own_storage[~is_protected])
             )
             pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
         
