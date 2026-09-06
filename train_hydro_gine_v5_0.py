@@ -28,7 +28,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Training HydroGINE-v5.0 on device: {device}")
 
 DATASET_PATH = "expanded_master_physics_dataset.pt"
-OUT_MODEL_PATH = "hydro_gine_v5_9_model.pt"
+OUT_MODEL_PATH = "hydro_gine_v5_10_model.pt"
 WARM_START_PATH = "hydro_gine_v5_8_model.pt"
 
 EPOCHS = 300
@@ -60,8 +60,8 @@ MATCH_HINGE_STRENGTH = 0.0  # multiplier on flooded-gated match-hinge residuals 
 # must (a) push the model DEEP on true deep floods and (b) not punish keeping the
 # extreme dry bowls low. Overweight true-deep flooded targets (y>=0.5m) so the
 # model commits to big values there; these are the recoverable UNDERs.
-DEEP_TARGET_W = 3.0      # extra weight on y_true >= 0.50m cells (recover the UNDER deep tail)
-DEEP_TARGET_W_MID = 1.4  # extra weight on y_true in [0.30, 0.50) (deep-adjacent advisers)
+DEEP_TARGET_W = 1.6      # extra weight on y_true >= 0.50m cells (v5.10: moderate, between v5.8=0/OVER977 and v5.9=3.0/OVER1623)
+DEEP_TARGET_W_MID = 1.2  # extra weight on y_true in [0.30, 0.50) (deep-adjacent advisers)
 # Equal-weight region selection (v5.8) maximizes precision (OVER 977) at the cost
 # of the deep tail (UNDER 875->1539). Rebalance: overweight deep-true targets above.
 SELECT_RAIL_MATCH = True
