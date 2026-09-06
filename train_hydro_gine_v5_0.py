@@ -28,10 +28,10 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Training HydroGINE-v5.0 on device: {device}")
 
 DATASET_PATH = "expanded_master_physics_dataset.pt"
-OUT_MODEL_PATH = "hydro_gine_v5_0_model.pt"
-WARM_START_PATH = "hydro_gine_v5_bangalore_opt.pt"
+OUT_MODEL_PATH = "hydro_gine_v5_5_model.pt"
+WARM_START_PATH = "hydro_gine_v5_2_model.pt"
 
-EPOCHS = 200
+EPOCHS = 220
 LR = 3e-4
 WEIGHT_DECAY = 1e-4
 HIDDEN_DIM = 128
@@ -40,14 +40,20 @@ N_CHUNK = 25000  # Safe CUDA memory chunk
 
 # Deep-Valley Tail-Aware Regression Loss (Item #8):
 # log(1+y) targets amplify small log-domain errors into meter-scale spikes on
-# deep basins after expm1 inversion. Asymmetric Huber penalizes log-space
-# over-prediction harder; a power-law ramp (2nd order) boosts gradient weight
-# on nodes whose depression storage dep_d exceeds 1.5 m.
-LOSS_ASSYM_UP = 1.5      # extra multiplier on positive (over-prediction) residuals
+# deep basins after expm1 inversion. Scenario-conditional asymmetry:
+# over-prediction penalized harder on DRY cells (roads/pavement false alarms),
+# under-prediction penalized harder on FLOODED cells (deep-valley misses).
+# PLUS a linear-depth match-hinge gated to flooded cells ONLY (y>0.15): it
+# pushes deep valleys UP into the +-15cm band without touching dry cells
+# (that global version inflated OVER massively in v5.1).
+LOSS_ASSYM_UP = 1.5      # extra multiplier on positive (over-prediction) residuals on DRY/shallow cells
+LOSS_ASSYM_UNDER = 2.0   # extra multiplier on negative (under-prediction) residuals on FLOODED cells
 DEEP_W_STRENGTH = 3.0    # max power-law boost at the deepest basins
 DEEP_W_THRESH = 1.5      # dep_d (m) above which the ramp engages
 DEEP_W_RANGE = 2.5       # ramp width (m) to saturation
 DEEP_W_POWER = 2.0       # power-law exponent on (dep_d - thresh)
+MATCH_BAND_M = 0.12      # linear meters within which no flood-gated hinge penalty
+MATCH_HINGE_STRENGTH = 2.0  # multiplier on flooded-gated match-hinge residuals
 
 class GravityGINEConv(nn.Module):
     def __init__(self, in_c, out_c, edge_c=2):
@@ -253,9 +259,23 @@ def train():
                 delta = 0.10
                 abs_diff = torch.abs(diff)
                 huber = torch.where(abs_diff < delta, 0.5 * (diff ** 2), delta * (abs_diff - 0.5 * delta))
-                # Asymmetric: log-space over-prediction inverts to meter-scale
-                # overshoot on deep valleys (expm1 amplification), so penalize it harder.
-                huber = huber * torch.where(diff > 0.0, LOSS_ASSYM_UP, 1.0)
+                # Scenario-conditional asymmetry:
+                #  - Over-prediction on DRY/shallow cells (y <= 0.15): penalized harder
+                #    (the road/pavement false-alarms that killed old match rate).
+                #  - Under-prediction on genuinely FLOODED cells (y > 0.15): penalized
+                #    harder (the deep-valley misses: pred 0.55 vs swmm 1.0m).
+                #  - Everywhere else: symmetric. This stops the blanket 1.5x over-penalty
+                #    from pressing ALL deep predictions down toward the shallow mean.
+                asym = torch.where(
+                    (diff > 0.0) & (y_true <= 0.15),
+                    LOSS_ASSYM_UP,
+                    torch.where(
+                        (diff < 0.0) & (y_true > 0.15),
+                        LOSS_ASSYM_UNDER,
+                        1.0
+                    )
+                )
+                huber = huber * asym
                 
                 # Weights:
                 # Critical flood nodes (>= 0.30m): 3.0x
@@ -278,7 +298,24 @@ def train():
                 
                 loss_reg = (w * huber).mean()
                 
-                total_loss = loss_cls + 1.5 * loss_reg
+                # 3. Flood-Gated Linear Match-Hinge Regression Loss:
+                # Applied ONLY to genuinely flooded cells (y_true > 0.15). The
+                # linear-depth residual beyond MATCH_BAND_M directly maps to the
+                # production +-15cm match band, so this lifts deep valleys that
+                # the log-space Huber alone saturates on (residual -0.3 to -1.2m
+                # at swmm 0.5-3.0m). Dry cells are untouched, avoiding the OVER
+                # inflation seen with the global hinge (v5.1).
+                if MATCH_HINGE_STRENGTH > 0.0:
+                    pred_lin = torch.clamp(torch.expm1(depth_pred_log * yl_std + yl_mean), min=0.0)
+                    res_lin = pred_lin - y_true
+                    hinge_mask = (y_true > 0.15)
+                    match_hinge = F.relu(torch.abs(res_lin) - MATCH_BAND_M)
+                    n_flooded = hinge_mask.sum().clamp(min=1)
+                    loss_match = (MATCH_HINGE_STRENGTH * hinge_mask.float() * w * match_hinge).sum() / n_flooded
+                else:
+                    loss_match = torch.zeros((), device=device)
+                
+                total_loss = loss_cls + 1.5 * loss_reg + 0.8 * loss_match
                 total_loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
