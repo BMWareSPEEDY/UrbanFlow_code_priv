@@ -28,10 +28,10 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Training HydroGINE-v5.0 on device: {device}")
 
 DATASET_PATH = "expanded_master_physics_dataset.pt"
-OUT_MODEL_PATH = "hydro_gine_v5_5_model.pt"
+OUT_MODEL_PATH = "hydro_gine_v5_6_model.pt"
 WARM_START_PATH = "hydro_gine_v5_2_model.pt"
 
-EPOCHS = 220
+EPOCHS = 300
 LR = 3e-4
 WEIGHT_DECAY = 1e-4
 HIDDEN_DIM = 128
@@ -43,9 +43,6 @@ N_CHUNK = 25000  # Safe CUDA memory chunk
 # deep basins after expm1 inversion. Scenario-conditional asymmetry:
 # over-prediction penalized harder on DRY cells (roads/pavement false alarms),
 # under-prediction penalized harder on FLOODED cells (deep-valley misses).
-# PLUS a linear-depth match-hinge gated to flooded cells ONLY (y>0.15): it
-# pushes deep valleys UP into the +-15cm band without touching dry cells
-# (that global version inflated OVER massively in v5.1).
 LOSS_ASSYM_UP = 1.5      # extra multiplier on positive (over-prediction) residuals on DRY/shallow cells
 LOSS_ASSYM_UNDER = 2.0   # extra multiplier on negative (under-prediction) residuals on FLOODED cells
 DEEP_W_STRENGTH = 3.0    # max power-law boost at the deepest basins
@@ -53,7 +50,12 @@ DEEP_W_THRESH = 1.5      # dep_d (m) above which the ramp engages
 DEEP_W_RANGE = 2.5       # ramp width (m) to saturation
 DEEP_W_POWER = 2.0       # power-law exponent on (dep_d - thresh)
 MATCH_BAND_M = 0.12      # linear meters within which no flood-gated hinge penalty
-MATCH_HINGE_STRENGTH = 2.0  # multiplier on flooded-gated match-hinge residuals
+MATCH_HINGE_STRENGTH = 0.0  # multiplier on flooded-gated match-hinge residuals (v5.5 test)
+# Select checkpoints by the POST-RAIL val live match rate (the exact production
+# leaderboard quantity), rather than the raw pre-rail expm1 depth. Rails change
+# raw ~47% into deploy-time ~83%, so raw selection may favor checkpoints whose
+# rails are suboptimal.
+SELECT_RAIL_MATCH = True
 
 class GravityGINEConv(nn.Module):
     def __init__(self, in_c, out_c, edge_c=2):
@@ -162,6 +164,103 @@ class MarginFocalLoss(nn.Module):
         focal_weight = alpha_t * ((1.0 - p_t) ** self.gamma)
         bce = F.binary_cross_entropy_with_logits(logits, targets_m, reduction='none')
         return (focal_weight * bce).mean()
+
+
+def apply_production_rails(x_np, edge_index, p_lin, p_prob):
+    """Replicate production_v4's inference rails on a single graph.
+
+    Mirrors ProductionFloodPredictorV4.predict() post-head transforms:
+    hydraulic regime classification, conf_gate, mass_bound, and the WSE
+    envelope. This lets checkpoint selection score the SAME quantity the
+    deploy-time leaderboard measures (post-rail live match rate), instead of
+    the raw expm1 depth which rails transform by +35pp.
+    """
+    x_np = np.asarray(x_np)
+    rel_drop = x_np[:, 0]
+    in_d = x_np[:, 3]
+    out_d = x_np[:, 4]
+    accum_s = x_np[:, 5]
+    sag_idx = x_np[:, 8]
+    dep_d = x_np[:, 16]
+    sink_d = x_np[:, 23]
+    total_r = x_np[:, 27]
+    conv_def = x_np[:, 30]
+
+    is_choked_surcharge = (conv_def >= 0.7) & ((sag_idx > 0.01) | (dep_d > 0.02) | (out_d < in_d))
+    is_sink_flag = x_np[:, 6] == 1.0
+    is_deep_sink = is_sink_flag & (dep_d >= 0.20)
+    is_valley_depression = (dep_d >= 0.20)
+    is_convergent_sag = (in_d > out_d) | (sag_idx >= 0.03)
+
+    is_ridge_crest = (rel_drop < 0.25) & (sink_d < 0.03) & (dep_d < 0.03)
+    is_free_drain_slope = (sink_d < 0.02) & (dep_d < 0.02) & (out_d >= 2) & (~is_choked_surcharge)
+    slope_mag = np.abs(x_np[:, 2])
+    is_steep_ridge = (rel_drop < 0.20) & (slope_mag > 0.06) & (accum_s < 0.5) & (sink_d < 0.01) & (~is_choked_surcharge)
+
+    tau = np.where(
+        is_deep_sink | is_valley_depression,
+        0.15,
+        np.where(
+            is_choked_surcharge | is_convergent_sag,
+            0.25,
+            np.where(
+                is_ridge_crest | is_free_drain_slope | is_steep_ridge,
+                0.75,
+                0.35
+            )
+        )
+    )
+    conf_gate = 1.0 / (1.0 + np.exp(-6.0 * (p_prob - tau)))
+
+    mass_bound = np.where(
+        is_choked_surcharge,
+        3.0,
+        np.where(
+            is_deep_sink | is_valley_depression,
+            np.clip(dep_d * 1.5 + 0.3, 1.0, 3.0),
+            np.where(
+                is_ridge_crest | is_steep_ridge,
+                0.01,
+                np.where(
+                    is_free_drain_slope,
+                    0.04 if total_r[0] <= 50.0 else 0.10,
+                    np.where(
+                    (p_prob >= 0.65) & is_convergent_sag,
+                    np.maximum(0.50, sink_d * 2.0 + 0.25),
+                    np.where(p_prob >= 0.65, np.maximum(0.50, sink_d * 1.5 + 0.20), np.maximum(0.15, sink_d * 1.5 + 0.08))
+                )
+                )
+            )
+        )
+    )
+
+    pred_final = np.minimum(p_lin * conf_gate, mass_bound)
+    is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.50) & (~is_choked_surcharge)
+    pred_final = np.where(is_flat_dry | is_steep_ridge, 0.0, pred_final)
+    pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
+    pred_final = np.minimum(pred_final, 3.0)
+
+    if edge_index is not None and edge_index.numel() > 0:
+        src = edge_index[0].cpu().numpy()
+        dst = edge_index[1].cpu().numpy()
+        num_nodes = len(pred_final)
+        relief_m = 15.0
+        elevs = -np.maximum(np.maximum(dep_d, sink_d), rel_drop * relief_m)
+        wse = elevs + pred_final
+        backwater_dst = np.maximum(0.0, wse[src] - elevs[dst])
+        backwater_src = np.maximum(0.0, wse[dst] - elevs[src])
+        max_backwater = np.zeros(num_nodes, dtype=np.float32)
+        np.maximum.at(max_backwater, dst, backwater_dst)
+        np.maximum.at(max_backwater, src, backwater_src)
+        is_protected = is_deep_sink | is_valley_depression | is_choked_surcharge
+        own_storage = np.minimum(np.maximum(dep_d, sink_d), 3.0)
+        pred_final[~is_protected] = np.minimum(
+            pred_final[~is_protected],
+            np.maximum(max_backwater[~is_protected], own_storage[~is_protected])
+        )
+        pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
+
+    return pred_final
 
 
 def train():
@@ -335,6 +434,8 @@ def train():
             val_errs = []
             val_risk = 0
             val_match = 0
+            val_rail_risk = 0
+            val_rail_match = 0
             
             with torch.no_grad():
                 for g in val_graphs:
@@ -361,6 +462,15 @@ def train():
                     diff = p_depth[risk] - y_np[risk]
                     val_risk += int(np.sum(risk))
                     val_match += int(np.sum(np.abs(diff) < 0.15))
+
+                    # Post-rail live match rate (exactly what the production
+                    # leaderboard measures: rails applied to raw depth, then the
+                    # pred > 0.08 / |pred - swmm| < 0.15 definition).
+                    p_rail = apply_production_rails(gb.x.cpu().numpy(), gb.edge_index, p_depth, p_prob)
+                    rail_risk = p_rail > 0.08
+                    rail_diff = p_rail[rail_risk] - y_np[rail_risk]
+                    val_rail_risk += int(np.sum(rail_risk))
+                    val_rail_match += int(np.sum(np.abs(rail_diff) < 0.15))
                     
             prec = val_tp / max(1, val_tp + val_fp)
             rec = val_tp / max(1, val_tp + val_fn)
@@ -369,17 +479,19 @@ def train():
             mae_cm = np.mean(all_e) * 100.0
             pct_30 = np.mean(all_e <= 0.30) * 100.0
             val_match_rate = (val_match / max(1, val_risk)) * 100.0
+            val_rail_rate = (val_rail_match / max(1, val_rail_risk)) * 100.0
             
             elapsed = (time.time() - start_time) / 60.0
-            print(f"Epoch {epoch:3d}/{EPOCHS} [{elapsed:4.1f}m] | Loss: {total_loss_accum/max(1,n_batches):.4f} | Val F1: {f1:.4f} (P={prec*100:.1f}%, R={rec*100:.1f}%) | Val Match: {val_match_rate:.1f}% | MAE: {mae_cm:.2f}cm | <=30cm: {pct_30:.1f}%")
+            print(f"Epoch {epoch:3d}/{EPOCHS} [{elapsed:4.1f}m] | Loss: {total_loss_accum/max(1,n_batches):.4f} | Val F1: {f1:.4f} (P={prec*100:.1f}%, R={rec*100:.1f}%) | Val Match: {val_match_rate:.1f}% | Val Rail-Match: {val_rail_rate:.1f}% | MAE: {mae_cm:.2f}cm | <=30cm: {pct_30:.1f}%")
             
             if f1 > best_val_f1:
                 best_val_f1 = f1
 
-            if val_match_rate > best_val_match:
-                best_val_match = val_match_rate
+            val_selection = val_rail_rate if SELECT_RAIL_MATCH else val_match_rate
+            if val_selection > best_val_match:
+                best_val_match = val_selection
                 no_improve_evals = 0
-                print(f"  -> Saving new best model with Val Match = {best_val_match:.1f}% to {OUT_MODEL_PATH}...")
+                print(f"  -> Saving new best model with Val {'Rail-' if SELECT_RAIL_MATCH else ''}Match = {best_val_match:.1f}% to {OUT_MODEL_PATH}...")
                 torch.save({
                     'model': model.state_dict(),
                     'in_c': x_mean.shape[1],
@@ -392,7 +504,7 @@ def train():
                     'yl_mean': yl_mean,
                     'yl_std': yl_std,
                     'val_f1': f1,
-                    'val_match_rate': best_val_match,
+                    'val_match_rate': val_rail_rate if SELECT_RAIL_MATCH else best_val_match,
                     'epoch': epoch
                 }, OUT_MODEL_PATH)
             else:
@@ -401,7 +513,7 @@ def train():
                     print(f"  Early stop: no val match improvement for {no_improve_evals} evaluations (best {best_val_match:.1f}%).")
                     break
                 
-    print(f"\nHydroGINE-v5.0 Training Complete! Best Validation Match Rate: {best_val_match:.1f}% (best hazard F1: {best_val_f1:.4f})")
+    print(f"\nHydroGINE-v5.0 Training Complete! Best Validation {'Rail-' if SELECT_RAIL_MATCH else ''}Match Rate: {best_val_match:.1f}% (best hazard F1: {best_val_f1:.4f})")
 
 if __name__ == '__main__':
     train()

@@ -394,6 +394,10 @@ class ProductionFloodPredictorV4:
         # a bowl holds at most ~1.5x its rim-to-floor depth before spilling downhill,
         # with 0.3m freeboard, never below 1.0m). Surcharge-blocked junctions keep
         # the full 3.0m ceiling because inlet blockage can back up far beyond relief.
+        # High-probability NON-sink junctions (p_prob >= 0.65) cap at a 0.50m floor,
+        # not 0.90m: the deep-valley tail is already handled by the sink/valley branch
+        # above, so a tall floor on plain confident nodes only inflated shallow
+        # over-predictions (MAE/FP regression) without protecting any real tail.
         mass_bound = np.where(
             is_choked_surcharge,
             3.0,
@@ -408,8 +412,8 @@ class ProductionFloodPredictorV4:
                         0.04 if total_r[0] <= 50.0 else 0.10,
                         np.where(
                         (p_prob >= 0.65) & is_convergent_sag,
-                        np.maximum(0.90, sink_d * 3.0 + 0.35),
-                        np.where(p_prob >= 0.65, np.maximum(0.90, sink_d * 2.0 + 0.35), np.maximum(0.15, sink_d * 1.5 + 0.08))
+                        np.maximum(0.50, sink_d * 2.0 + 0.25),
+                        np.where(p_prob >= 0.65, np.maximum(0.50, sink_d * 1.5 + 0.20), np.maximum(0.15, sink_d * 1.5 + 0.08))
                     )
                     )
                 )
@@ -436,10 +440,12 @@ class ProductionFloodPredictorV4:
         
         # 4. Hydrostatic Water Surface Elevation (WSE) Inundation Envelope:
         # Bounds an un-protected node's depth by the backwater surface reachable
-        # from adjacent nodes. Ground relief is expressed in REAL meters via the
-        # local depression storage (dep_d / sink_d, features 16/23) instead of the
-        # artificial `-rel_drop * 20.0` normalized scale, which compressed true
-        # relief on flat cities and forcibly zeroed legitimate 0.2-0.4m ponding.
+        # from adjacent nodes. Ground relief is the node's TRUE depth below the
+        # catchment maximum elevation (rel_drop * elev_range, in REAL meters;
+        # elev_range is baked onto pyg_data at load time). This restores inter-node
+        # grading so backwater cannot bleed up into materially higher dry neighbors,
+        # while max(., dep_d, sink_d) keeps every node at least its own local
+        # depression storage -- the envelope never zeroes a real flood.
         # The cap is a soft upper bound only: a node always keeps at least its own
         # depression storage, so the envelope never zeroes a real flood.
         if hasattr(batch, 'edge_index') and batch.edge_index is not None and batch.edge_index.numel() > 0:
@@ -448,9 +454,10 @@ class ProductionFloodPredictorV4:
             dst = ei[1].cpu().numpy()
             num_nodes = len(pred_final)
             
-            # Ground elevation profile from true depression storage (meters below the
-            # mean surface of adjacent nodes); deeper bowls sit lower relative to flow.
-            elevs = -np.maximum(dep_d, sink_d)
+            # Ground elevation profile: max(local depression storage, true catchment
+            # relief in meters). Deeper valleys sit lower relative to flow.
+            relief_m = float(getattr(batch, 'elev_range', 15.0))
+            elevs = -np.maximum(np.maximum(dep_d, sink_d), rel_drop * relief_m)
             wse = elevs + pred_final
             
             backwater_dst = np.maximum(0.0, wse[src] - elevs[dst])
