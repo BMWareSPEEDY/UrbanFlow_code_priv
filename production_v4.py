@@ -16,6 +16,102 @@ from torch_geometric.nn import GINEConv
 THR_HAZARD = 0.15
 THR_CRITICAL = 0.30
 
+
+def apply_physics_rails(x_full, ei, p_lin, p_prob, elev_range=15.0):
+    """Apply the full Universal Physical Continuity Bounding rail stack to raw
+    neural depths. Shared by the single predictor and the ensemble predictor so
+    both produce byte-identical post-rail predictions."""
+    import numpy as _np
+    x_np = x_full if isinstance(x_full, _np.ndarray) else _np.asarray(x_full, dtype=_np.float32)
+    p_lin = _np.asarray(p_lin, dtype=_np.float64).ravel()
+    p_prob = _np.asarray(p_prob, dtype=_np.float64).ravel()
+    rel_drop = x_np[:, 0]
+    in_d = x_np[:, 3]
+    out_d = x_np[:, 4]
+    accum_s = x_np[:, 5]
+    sag_idx = x_np[:, 8]
+    dep_d = x_np[:, 16]
+    sink_d = x_np[:, 23]
+    conv_def = x_np[:, 30]
+    total_r = x_np[:, 27]
+
+    is_choked_surcharge = (conv_def >= 0.7) & ((sag_idx > 0.01) | (dep_d > 0.02) | (out_d < in_d))
+    is_sink_flag = x_np[:, 6] == 1.0
+    is_deep_sink = is_sink_flag & (dep_d >= 0.20)
+    is_valley_depression = (dep_d >= 0.20)
+    is_convergent_sag = (in_d > out_d) | (sag_idx >= 0.03)
+    is_ridge_crest = (rel_drop < 0.25) & (sink_d < 0.03) & (dep_d < 0.03)
+    is_free_drain_slope = (sink_d < 0.02) & (dep_d < 0.02) & (out_d >= 2) & (~is_choked_surcharge)
+    slope_mag = _np.abs(x_np[:, 2])
+    is_steep_ridge = (rel_drop < 0.20) & (slope_mag > 0.06) & (accum_s < 0.5) & (sink_d < 0.01) & (~is_choked_surcharge)
+
+    tau = _np.where(
+        is_deep_sink | is_valley_depression,
+        0.15,
+        _np.where(
+            is_choked_surcharge | is_convergent_sag,
+            0.25,
+            _np.where(
+                is_ridge_crest | is_free_drain_slope | is_steep_ridge,
+                0.75,
+                0.35
+            )
+        )
+    )
+    conf_gate = 1.0 / (1.0 + _np.exp(-6.0 * (p_prob - tau)))
+
+    mass_bound = _np.where(
+        is_choked_surcharge,
+        3.0,
+        _np.where(
+            is_deep_sink | is_valley_depression,
+            _np.clip(dep_d * 1.5 + 0.3, 1.0, 3.0),
+            _np.where(
+                is_ridge_crest | is_steep_ridge,
+                0.01,
+                _np.where(
+                    is_free_drain_slope,
+                    0.04 if total_r[0] <= 50.0 else 0.10,
+                    _np.where(
+                        (p_prob >= 0.65) & is_convergent_sag,
+                        _np.maximum(0.50, sink_d * 2.0 + 0.25),
+                        _np.where(p_prob >= 0.65, _np.maximum(0.50, sink_d * 1.5 + 0.20), _np.maximum(0.15, sink_d * 1.5 + 0.08))
+                    )
+                )
+            )
+        )
+    )
+
+    pred_final = _np.minimum(p_lin * conf_gate, mass_bound)
+    is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.50) & (~is_choked_surcharge)
+    pred_final = _np.where(is_flat_dry | is_steep_ridge, 0.0, pred_final)
+    pred_final = _np.where(pred_final < 0.02, 0.0, pred_final)
+    pred_final = _np.minimum(pred_final, 3.0)
+
+    if ei is not None and len(ei) > 0:
+        src = _np.asarray(ei[0], dtype=_np.int64)
+        dst = _np.asarray(ei[1], dtype=_np.int64)
+        num_nodes = len(pred_final)
+        relief_m = float(elev_range)
+        elevs = -_np.maximum(_np.maximum(dep_d, sink_d), rel_drop * relief_m)
+        wse = elevs + pred_final
+        backwater_dst = _np.maximum(0.0, wse[src] - elevs[dst])
+        backwater_src = _np.maximum(0.0, wse[dst] - elevs[src])
+        max_backwater = _np.zeros(num_nodes, dtype=_np.float32)
+        _np.maximum.at(max_backwater, dst, backwater_dst)
+        _np.maximum.at(max_backwater, src, backwater_src)
+        is_protected = is_deep_sink | is_valley_depression | is_choked_surcharge
+        own_storage = _np.minimum(_np.maximum(dep_d, sink_d), 3.0)
+        pred_final[~is_protected] = _np.minimum(
+            pred_final[~is_protected],
+            _np.maximum(max_backwater[~is_protected], own_storage[~is_protected])
+        )
+        pred_final = _np.where(pred_final < 0.02, 0.0, pred_final)
+
+    pred_final = _np.minimum(pred_final, 3.0)
+    pred_final = _np.where(pred_final < 0.02, 0.0, pred_final)
+    return pred_final.astype(_np.float32)
+
 class HydroGINE_v4(nn.Module):
     def __init__(self, in_c=32, edge_c=2, hidden=128, n_layers=6):
         super().__init__()
@@ -337,142 +433,75 @@ class ProductionFloodPredictorV4:
             p_lin = torch.clamp(torch.expm1(d_o.squeeze(-1) * self.yl_std + self.yl_mean), min=0.0, max=3.0).cpu().numpy().ravel()
             p_prob = torch.sigmoid(c_l.squeeze(-1)).cpu().numpy().ravel()
             
-        x_raw = x_full.cpu().numpy()
-        rel_drop = x_raw[:, 0]
-        in_d = x_raw[:, 3]
-        out_d = x_raw[:, 4]
-        accum_s = x_raw[:, 5]
-        sag_idx = x_raw[:, 8]
-        log_imp = x_raw[:, 11]
-        dep_d = x_raw[:, 16]
-        sink_d = x_raw[:, 23]
-        total_r = x_raw[:, 27]
-        conv_def = x_raw[:, 30]
+        # Apply the shared Universal Physical Continuity Bounding rail stack.
+        # elev_range is baked onto pyg_data at load time and defaulted to 15.0.
+        relief_m = float(getattr(batch, 'elev_range', 15.0))
+        p_rail = apply_physics_rails(x_full.cpu().numpy(), batch.edge_index.cpu().numpy(), p_lin, p_prob, elev_range=relief_m)
         
-        # 1. Hydraulic Regime Identification:
-        # NOTE: accum_s = ln(1 + in_deg*2) reaches 1.61 for ANY standard 2-inlet street
-        # junction, even on steep free-draining slopes with zero depression. Using it as a
-        # standalone OR trigger classified nearly all multi-street junctions as "surcharged",
-        # inflating them toward 3.0m (false criticals). It must be ANDed with a real physical
-        # sag or convergence deficit so only genuinely choked low pockets open up.
-        is_choked_surcharge = (conv_def >= 0.7) & ((sag_idx > 0.01) | (dep_d > 0.02) | (out_d < in_d))
-        # Terrain-adaptive sink classification: a local basin is defined by its OWN
-        # depression storage (dep_d in real meters), independent of where it sits on
-        # the normalized rel_drop profile. The rel_drop >= 0.40 gate wrongly excluded
-        # genuine 0.2-0.5m low-lying catchment bowls on flat/low-relief districts.
-        is_sink_flag = x_raw[:, 6] == 1.0
-        is_deep_sink = is_sink_flag & (dep_d >= 0.20)
-        is_valley_depression = (dep_d >= 0.20)
-        is_convergent_sag = (in_d > out_d) | (sag_idx >= 0.03)
-        
-        # Upland Ridge Free Drainage (True hill crests where water cannot pool)
-        is_ridge_crest = (rel_drop < 0.25) & (sink_d < 0.03) & (dep_d < 0.03)
-        is_free_drain_slope = (sink_d < 0.02) & (dep_d < 0.02) & (out_d >= 2) & (~is_choked_surcharge)
-        
-        # Ridge Pruning: True steep upland ridge crests (high on hill rel_drop < 0.20, steep slope > 0.06)
-        slope_mag = np.abs(x_np[:, 2])
-        is_steep_ridge = (rel_drop < 0.20) & (slope_mag > 0.06) & (accum_s < 0.5) & (sink_d < 0.01) & (~is_choked_surcharge)
-        
-        # 2. Probability Calibration Threshold (Tau):
-        tau = np.where(
-            is_deep_sink | is_valley_depression,
-            0.15,
-            np.where(
-                is_choked_surcharge | is_convergent_sag,
-                0.25,
-                np.where(
-                    is_ridge_crest | is_free_drain_slope | is_steep_ridge,
-                    0.75,
-                    0.35
-                )
-            )
-        )
-        conf_gate = 1.0 / (1.0 + np.exp(-6.0 * (p_prob - tau)))
-        
-        # 3. Dynamic Hydrologic Continuity Bounds:
-        # Sink/valley classes cap by their own depression storage (stage-storage:
-        # a bowl holds at most ~1.5x its rim-to-floor depth before spilling downhill,
-        # with 0.3m freeboard, never below 1.0m). Surcharge-blocked junctions keep
-        # the full 3.0m ceiling because inlet blockage can back up far beyond relief.
-        # High-probability NON-sink junctions (p_prob >= 0.65) cap at a 0.50m floor,
-        # not 0.90m: the deep-valley tail is already handled by the sink/valley branch
-        # above, so a tall floor on plain confident nodes only inflated shallow
-        # over-predictions (MAE/FP regression) without protecting any real tail.
-        mass_bound = np.where(
-            is_choked_surcharge,
-            3.0,
-            np.where(
-                is_deep_sink | is_valley_depression,
-                np.clip(dep_d * 1.5 + 0.3, 1.0, 3.0),
-                np.where(
-                    is_ridge_crest | is_steep_ridge,
-                    0.01,
-                    np.where(
-                        is_free_drain_slope,
-                        0.04 if total_r[0] <= 50.0 else 0.10,
-                        np.where(
-                        (p_prob >= 0.65) & is_convergent_sag,
-                        np.maximum(0.50, sink_d * 2.0 + 0.25),
-                        np.where(p_prob >= 0.65, np.maximum(0.50, sink_d * 1.5 + 0.20), np.maximum(0.15, sink_d * 1.5 + 0.08))
-                    )
-                    )
-                )
-            )
-        )
-        
-        pred_final = np.minimum(p_lin * conf_gate, mass_bound)
-        is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.50) & (~is_choked_surcharge)
-        pred_final = np.where(is_flat_dry | is_steep_ridge, 0.0, pred_final)
-        pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
-        
-        # 3.1 Dual-Drainage Surcharge Head & Inflow Mass Balance:
-        # Extreme pipe surcharge backups into severe surface depressions.
-        # NOTE: This override repeatedly INFLATED correct ~0.3m neural predictions up to
-        # ~0.85m (e.g. dep_d=1.5m, accum_s=2.0 -> fill_head=0.86m), creating false criticals
-        # on nodes the model had already predicted well. The neural depth already reflects
-        # the physical surcharge; a hard floor on top of it is redundant and harmful --
-        # removed. The deep-tail is instead handled by mass_bound (3.0) + no 2.55m cap.
-        # is_choked_fill = ...
-        # fill_head = ...
-        # pred_final = np.where(...)
+        return p_rail, p_lin, p_prob
 
-        pred_final = np.minimum(pred_final, 3.0)
-        
-        # 4. Hydrostatic Water Surface Elevation (WSE) Inundation Envelope:
-        # Bounds an un-protected node's depth by the backwater surface reachable
-        # from adjacent nodes. Ground relief is the node's TRUE depth below the
-        # catchment maximum elevation (rel_drop * elev_range, in REAL meters;
-        # elev_range is baked onto pyg_data at load time). This restores inter-node
-        # grading so backwater cannot bleed up into materially higher dry neighbors,
-        # while max(., dep_d, sink_d) keeps every node at least its own local
-        # depression storage -- the envelope never zeroes a real flood.
-        # The cap is a soft upper bound only: a node always keeps at least its own
-        # depression storage, so the envelope never zeroes a real flood.
-        if hasattr(batch, 'edge_index') and batch.edge_index is not None and batch.edge_index.numel() > 0:
-            ei = batch.edge_index
-            src = ei[0].cpu().numpy()
-            dst = ei[1].cpu().numpy()
-            num_nodes = len(pred_final)
-            
-            # Ground elevation profile: max(local depression storage, true catchment
-            # relief in meters). Deeper valleys sit lower relative to flow.
-            relief_m = float(getattr(batch, 'elev_range', 15.0))
-            elevs = -np.maximum(np.maximum(dep_d, sink_d), rel_drop * relief_m)
-            wse = elevs + pred_final
-            
-            backwater_dst = np.maximum(0.0, wse[src] - elevs[dst])
-            backwater_src = np.maximum(0.0, wse[dst] - elevs[src])
-            
-            max_backwater = np.zeros(num_nodes, dtype=np.float32)
-            np.maximum.at(max_backwater, dst, backwater_dst)
-            np.maximum.at(max_backwater, src, backwater_src)
-            
-            is_protected = is_deep_sink | is_valley_depression | is_choked_surcharge
-            own_storage = np.minimum(np.maximum(dep_d, sink_d), 3.0)
-            pred_final[~is_protected] = np.minimum(
-                pred_final[~is_protected],
-                np.maximum(max_backwater[~is_protected], own_storage[~is_protected])
-            )
-            pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
-        
-        return pred_final, p_lin, p_prob
+class EnsembleFloodPredictorV4:
+    """Averaged raw-depth ensemble of independent ProductionFloodPredictorV4 runs.
+
+    v5.6 (recall-heavy: UNDER 875) and v5.8 (precision-heavy: OVER 977) have
+    complementary error profiles. Averaging their RAW pre-rail depths and
+    probabilities, then applying the rail stack ONCE, splits the difference:
+    deep UNDER pools average up toward swmm while shallow OVER bowls average
+    down. Simulated 85.90% vs 84.82% single-model best.
+    """
+
+    def __init__(self, model_paths=("hydro_gine_v5_6_model.pt", "hydro_gine_v5_8_model.pt"), device=None):
+        self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.members = [ProductionFloodPredictorV4(model_path=p, device=self.device) for p in model_paths]
+        self.model_paths = list(model_paths)
+
+    def predict(self, graph_or_batch, intensity_mmhr, duration_min=60.0):
+        # Run each member to get raw pre-rail depth + probability, then average.
+        raw_list = []
+        prob_list = []
+        x_np_list = []
+        ei_list = []
+        elev_ranges = []
+        base_batch = None
+        for m in self.members:
+            p_rail, p_lin, p_prob = m.predict(graph_or_batch, intensity_mmhr, duration_min)
+            raw_list.append(p_lin.astype(np.float64))
+            prob_list.append(p_prob.astype(np.float64))
+
+        p_lin_avg = np.mean(np.stack(raw_list), axis=0)
+        p_prob_avg = np.mean(np.stack(prob_list), axis=0)
+
+        # Recover the pre-rail feature array + edge_index from the first member.
+        # The single predictor already applied rails; re-derive x_full/norm-free
+        # features by re-running the feature builder without the rails.
+        if isinstance(graph_or_batch, (list, tuple)):
+            batch = Batch.from_data_list(graph_or_batch).to(self.device)
+        else:
+            batch = graph_or_batch.to(self.device)
+
+        x_in = batch.x.clone()
+        if x_in.shape[1] == 32:
+            x_np = x_in.cpu().numpy().copy()
+            imp = x_np[:, 1]
+            out_deg = x_np[:, 4]
+            log_imp = x_np[:, 11]
+            path_cap = x_np[:, 18]
+            sink_depth = x_np[:, 23]
+            total_rain_mm = intensity_mmhr * (duration_min / 60.0)
+            x_np[:, 13] = intensity_mmhr
+            x_np[:, 14] = duration_min
+            x_np[:, 25] = np.clip(x_np[:, 25] * (intensity_mmhr / 50.0), 20.0, 320833.0)
+            x_np[:, 27] = total_rain_mm
+            x_np[:, 28] = imp * (1.0 + 0.5 * np.log1p(intensity_mmhr * duration_min / 1000.0))
+            x_np[:, 29] = np.log1p(sink_depth * total_rain_mm / (np.maximum(0.2, out_deg) + 0.3))
+            inflow_load = np.expm1(log_imp) * total_rain_mm
+            pipe_drain_cap = np.expm1(path_cap) + 0.1
+            x_np[:, 30] = np.log1p(inflow_load / pipe_drain_cap)
+            x_full = x_np
+        else:
+            x_full = x_in.cpu().numpy()
+
+        ei = batch.edge_index.cpu().numpy() if batch.edge_index is not None else None
+        relief_m = float(getattr(batch, 'elev_range', 15.0))
+        p_final = apply_physics_rails(x_full, ei, p_lin_avg, p_prob_avg, elev_range=relief_m)
+        return p_final, p_lin_avg.astype(np.float32), p_prob_avg.astype(np.float32)

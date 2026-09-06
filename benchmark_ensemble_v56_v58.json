@@ -1,0 +1,145 @@
+[
+ {
+  "name": "Ensemble v5.6+v5.8",
+  "match_rate": 85.87850849040089,
+  "global_mae_cm": 2.668020248413086,
+  "haz_mae_cm": 9.894021034240723,
+  "nse": 0.8911267518997192,
+  "avg_city_latency_ms": 26.697218767367303,
+  "swmm_speedup": 1966.4969769874342,
+  "risk_nodes": 17137,
+  "matches": 14717,
+  "over": 1261,
+  "under": 1159,
+  "city_rates": [
+   {
+    "key": "hsr",
+    "nodes": 216,
+    "match": 169,
+    "over": 29,
+    "under": 18,
+    "rate": 78.24
+   },
+   {
+    "key": "bellandur",
+    "nodes": 370,
+    "match": 261,
+    "over": 46,
+    "under": 63,
+    "rate": 70.54
+   },
+   {
+    "key": "whitefield",
+    "nodes": 435,
+    "match": 374,
+    "over": 21,
+    "under": 40,
+    "rate": 85.98
+   },
+   {
+    "key": "ecity",
+    "nodes": 840,
+    "match": 708,
+    "over": 58,
+    "under": 74,
+    "rate": 84.29
+   },
+   {
+    "key": "koramangala",
+    "nodes": 963,
+    "match": 732,
+    "over": 102,
+    "under": 129,
+    "rate": 76.01
+   },
+   {
+    "key": "tokyo",
+    "nodes": 2859,
+    "match": 2654,
+    "over": 106,
+    "under": 99,
+    "rate": 92.83
+   },
+   {
+    "key": "hongkong",
+    "nodes": 876,
+    "match": 763,
+    "over": 82,
+    "under": 31,
+    "rate": 87.1
+   },
+   {
+    "key": "singapore",
+    "nodes": 584,
+    "match": 542,
+    "over": 33,
+    "under": 9,
+    "rate": 92.81
+   },
+   {
+    "key": "london",
+    "nodes": 2753,
+    "match": 2050,
+    "over": 404,
+    "under": 299,
+    "rate": 74.46
+   },
+   {
+    "key": "paris",
+    "nodes": 1438,
+    "match": 1297,
+    "over": 97,
+    "under": 44,
+    "rate": 90.19
+   },
+   {
+    "key": "nyc",
+    "nodes": 698,
+    "match": 641,
+    "over": 35,
+    "under": 22,
+    "rate": 91.83
+   },
+   {
+    "key": "chicago",
+    "nodes": 462,
+    "match": 415,
+    "over": 21,
+    "under": 26,
+    "rate": 89.83
+   },
+   {
+    "key": "berlin",
+    "nodes": 591,
+    "match": 550,
+    "over": 16,
+    "under": 25,
+    "rate": 93.06
+   },
+   {
+    "key": "bangkok",
+    "nodes": 2912,
+    "match": 2664,
+    "over": 111,
+    "under": 137,
+    "rate": 91.48
+   },
+   {
+    "key": "mumbai",
+    "nodes": 556,
+    "match": 441,
+    "over": 48,
+    "under": 67,
+    "rate": 79.32
+   },
+   {
+    "key": "delhi",
+    "nodes": 584,
+    "match": 456,
+    "over": 52,
+    "under": 76,
+    "rate": 78.08
+   }
+  ]
+ }
+]
