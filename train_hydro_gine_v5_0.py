@@ -3,7 +3,8 @@ Trained on Expanded Master Physics Dataset (480 graphs, 2,350,544 nodes).
 Features:
 - Gravity-Directional Edge Routing
 - Multi-Scale Residual GINE Backbone
-- Zero-Bias Symmetric Huber Loss for Shallow/Pavement Nodes
+- Zero-Bias Asymmetric Huber Loss for Shallow/Pavement Nodes (over-prediction 1.5x)
+- Power-Law Deep-Valley Weighting (dep_d > 1.5m, 2nd-order ramp to 3x)
 - Margin Focal Hazard Classifier
 - Zero-Shift FiLM Depth Regressor
 - Strict Valley Sink Formulations
@@ -27,8 +28,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Training HydroGINE-v5.0 on device: {device}")
 
 DATASET_PATH = "expanded_master_physics_dataset.pt"
-OUT_MODEL_PATH = "hydro_gine_v5_model.pt"
-WARM_START_PATH = "hydro_gine_v4_3_model.pt"
+OUT_MODEL_PATH = "hydro_gine_v5_0_model.pt"
+WARM_START_PATH = "hydro_gine_v5_bangalore_opt.pt"
 
 EPOCHS = 200
 LR = 3e-4
@@ -36,6 +37,17 @@ WEIGHT_DECAY = 1e-4
 HIDDEN_DIM = 128
 N_LAYERS = 6
 N_CHUNK = 25000  # Safe CUDA memory chunk
+
+# Deep-Valley Tail-Aware Regression Loss (Item #8):
+# log(1+y) targets amplify small log-domain errors into meter-scale spikes on
+# deep basins after expm1 inversion. Asymmetric Huber penalizes log-space
+# over-prediction harder; a power-law ramp (2nd order) boosts gradient weight
+# on nodes whose depression storage dep_d exceeds 1.5 m.
+LOSS_ASSYM_UP = 1.5      # extra multiplier on positive (over-prediction) residuals
+DEEP_W_STRENGTH = 3.0    # max power-law boost at the deepest basins
+DEEP_W_THRESH = 1.5      # dep_d (m) above which the ramp engages
+DEEP_W_RANGE = 2.5       # ramp width (m) to saturation
+DEEP_W_POWER = 2.0       # power-law exponent on (dep_d - thresh)
 
 class GravityGINEConv(nn.Module):
     def __init__(self, in_c, out_c, edge_c=2):
@@ -195,6 +207,8 @@ def train():
     focal_loss = MarginFocalLoss(gamma=2.0, alpha=0.35, margin=0.02)
     
     best_val_f1 = 0.0
+    best_val_match = 0.0
+    no_improve_evals = 0
     start_time = time.time()
     
     for epoch in range(1, EPOCHS + 1):
@@ -231,7 +245,7 @@ def train():
                 # 1. Margin Focal Loss for Classification
                 loss_cls = focal_loss(cls_logits, y_hazard)
                 
-                # 2. Symmetric Zero-Bias Huber Loss for Depth Regression
+                # 2. Asymmetric Zero-Bias Huber Loss for Depth Regression
                 depth_pred_log = raw_depth.squeeze(-1)
                 diff = depth_pred_log - y_norm
                 
@@ -239,19 +253,28 @@ def train():
                 delta = 0.10
                 abs_diff = torch.abs(diff)
                 huber = torch.where(abs_diff < delta, 0.5 * (diff ** 2), delta * (abs_diff - 0.5 * delta))
+                # Asymmetric: log-space over-prediction inverts to meter-scale
+                # overshoot on deep valleys (expm1 amplification), so penalize it harder.
+                huber = huber * torch.where(diff > 0.0, LOSS_ASSYM_UP, 1.0)
                 
                 # Weights:
                 # Critical flood nodes (>= 0.30m): 3.0x
                 # Advisory flood nodes (0.15-0.30m): 2.0x
                 # Dry pavement hard negatives: 3.0x
                 # Shallow normal: 1.0x
+                # Deep valleys (dep_d > 1.5m): power-law ramp up to 3.0x extra
                 sink_d = batch.x[:, 23]
+                dep_d = batch.x[:, 16]
                 is_dry_pavement = (y_true <= 0.03) & (sink_d < 0.03)
                 
                 w = torch.ones_like(y_true)
                 w = torch.where(y_true >= 0.30, 3.0, w)
                 w = torch.where((y_true >= 0.15) & (y_true < 0.30), 2.0, w)
                 w = torch.where(is_dry_pavement, 3.0, w)
+                deep_w = 1.0 + DEEP_W_STRENGTH * torch.clamp(
+                    (dep_d - DEEP_W_THRESH) / DEEP_W_RANGE, min=0.0, max=1.0
+                ) ** DEEP_W_POWER
+                w = w * deep_w
                 
                 loss_reg = (w * huber).mean()
                 
@@ -273,6 +296,8 @@ def train():
             model.eval()
             val_tp, val_fp, val_fn, val_tn = 0, 0, 0, 0
             val_errs = []
+            val_risk = 0
+            val_match = 0
             
             with torch.no_grad():
                 for g in val_graphs:
@@ -295,19 +320,29 @@ def train():
                     
                     val_errs.append(np.abs(p_depth - y_np))
                     
+                    risk = p_depth > 0.08
+                    diff = p_depth[risk] - y_np[risk]
+                    val_risk += int(np.sum(risk))
+                    val_match += int(np.sum(np.abs(diff) < 0.15))
+                    
             prec = val_tp / max(1, val_tp + val_fp)
             rec = val_tp / max(1, val_tp + val_fn)
             f1 = 2 * prec * rec / max(1e-6, prec + rec)
             all_e = np.concatenate(val_errs)
             mae_cm = np.mean(all_e) * 100.0
             pct_30 = np.mean(all_e <= 0.30) * 100.0
+            val_match_rate = (val_match / max(1, val_risk)) * 100.0
             
             elapsed = (time.time() - start_time) / 60.0
-            print(f"Epoch {epoch:3d}/{EPOCHS} [{elapsed:4.1f}m] | Loss: {total_loss_accum/max(1,n_batches):.4f} | Val F1: {f1:.4f} (P={prec*100:.1f}%, R={rec*100:.1f}%) | MAE: {mae_cm:.2f}cm | <=30cm: {pct_30:.1f}%")
+            print(f"Epoch {epoch:3d}/{EPOCHS} [{elapsed:4.1f}m] | Loss: {total_loss_accum/max(1,n_batches):.4f} | Val F1: {f1:.4f} (P={prec*100:.1f}%, R={rec*100:.1f}%) | Val Match: {val_match_rate:.1f}% | MAE: {mae_cm:.2f}cm | <=30cm: {pct_30:.1f}%")
             
             if f1 > best_val_f1:
                 best_val_f1 = f1
-                print(f"  -> Saving new best model with Val F1 = {best_val_f1:.4f} to {OUT_MODEL_PATH}...")
+
+            if val_match_rate > best_val_match:
+                best_val_match = val_match_rate
+                no_improve_evals = 0
+                print(f"  -> Saving new best model with Val Match = {best_val_match:.1f}% to {OUT_MODEL_PATH}...")
                 torch.save({
                     'model': model.state_dict(),
                     'in_c': x_mean.shape[1],
@@ -319,11 +354,17 @@ def train():
                     'e_std': e_std.cpu(),
                     'yl_mean': yl_mean,
                     'yl_std': yl_std,
-                    'val_f1': best_val_f1,
+                    'val_f1': f1,
+                    'val_match_rate': best_val_match,
                     'epoch': epoch
                 }, OUT_MODEL_PATH)
+            else:
+                no_improve_evals += 1
+                if no_improve_evals >= 9:
+                    print(f"  Early stop: no val match improvement for {no_improve_evals} evaluations (best {best_val_match:.1f}%).")
+                    break
                 
-    print(f"\nHydroGINE-v5.0 Training Complete! Best Validation Hazard F1: {best_val_f1:.4f}")
+    print(f"\nHydroGINE-v5.0 Training Complete! Best Validation Match Rate: {best_val_match:.1f}% (best hazard F1: {best_val_f1:.4f})")
 
 if __name__ == '__main__':
     train()
