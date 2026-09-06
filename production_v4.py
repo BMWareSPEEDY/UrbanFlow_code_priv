@@ -350,7 +350,12 @@ class ProductionFloodPredictorV4:
         conv_def = x_raw[:, 30]
         
         # 1. Hydraulic Regime Identification:
-        is_choked_surcharge = (conv_def >= 0.7) | (accum_s >= 1.5) | ((dep_d >= 0.20) & (out_d <= in_d))
+        # NOTE: accum_s = ln(1 + in_deg*2) reaches 1.61 for ANY standard 2-inlet street
+        # junction, even on steep free-draining slopes with zero depression. Using it as a
+        # standalone OR trigger classified nearly all multi-street junctions as "surcharged",
+        # inflating them toward 3.0m (false criticals). It must be ANDed with a real physical
+        # sag or convergence deficit so only genuinely choked low pockets open up.
+        is_choked_surcharge = (conv_def >= 0.7) & ((sag_idx > 0.01) | (dep_d > 0.02) | (out_d < in_d))
         is_deep_sink = (sink_d >= 0.08) & (rel_drop >= 0.40)
         is_valley_depression = (dep_d >= 0.05) & (rel_drop >= 0.40)
         is_convergent_sag = (in_d > out_d) | (sag_idx >= 0.03)
@@ -377,7 +382,7 @@ class ProductionFloodPredictorV4:
                 )
             )
         )
-        conf_gate = 1.0 / (1.0 + np.exp(-12.0 * (p_prob - tau)))
+        conf_gate = 1.0 / (1.0 + np.exp(-6.0 * (p_prob - tau)))
         
         # 3. Dynamic Hydrologic Continuity Bounds:
         mass_bound = np.where(
@@ -389,21 +394,31 @@ class ProductionFloodPredictorV4:
                 np.where(
                     is_free_drain_slope,
                     0.04 if total_r[0] <= 50.0 else 0.10,
-                    np.where(p_prob >= 0.65, np.maximum(0.40, sink_d * 2.0 + 0.20), np.maximum(0.15, sink_d * 1.5 + 0.08))
+                    np.where(
+                    (p_prob >= 0.65) & is_convergent_sag,
+                    np.maximum(0.90, sink_d * 3.0 + 0.35),
+                    np.where(p_prob >= 0.65, np.maximum(0.45, sink_d * 2.0 + 0.20), np.maximum(0.15, sink_d * 1.5 + 0.08))
+                )
                 )
             )
         )
         
         pred_final = np.minimum(p_lin * conf_gate, mass_bound)
-        is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.50) & (~is_choked_surcharge)
+        is_flat_dry = (sink_d < 0.02) & (dep_d < 0.02) & (p_prob < 0.55) & (~is_choked_surcharge)
         pred_final = np.where(is_flat_dry | is_steep_ridge, 0.0, pred_final)
         pred_final = np.where(pred_final < 0.02, 0.0, pred_final)
         
         # 3.1 Dual-Drainage Surcharge Head & Inflow Mass Balance:
-        # Extreme pipe surcharge backups into severe surface depressions
-        is_choked_fill = (p_prob >= 0.70) & (conv_def >= 2.5) & (accum_s >= 2.0) & (dep_d >= 1.5)
-        fill_head = np.minimum(3.0, np.minimum(dep_d, accum_s * 0.40))
-        pred_final = np.where(is_choked_fill, np.maximum(pred_final, fill_head), pred_final)
+        # Extreme pipe surcharge backups into severe surface depressions.
+        # NOTE: This override repeatedly INFLATED correct ~0.3m neural predictions up to
+        # ~0.85m (e.g. dep_d=1.5m, accum_s=2.0 -> fill_head=0.86m), creating false criticals
+        # on nodes the model had already predicted well. The neural depth already reflects
+        # the physical surcharge; a hard floor on top of it is redundant and harmful --
+        # removed. The deep-tail is instead handled by mass_bound (3.0) + no 2.55m cap.
+        # is_choked_fill = ...
+        # fill_head = ...
+        # pred_final = np.where(...)
+
         pred_final = np.minimum(pred_final, 3.0)
         
         # 4. Hydrostatic Water Surface Elevation (WSE) Inundation Envelope:

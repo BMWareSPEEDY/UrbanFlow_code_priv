@@ -18,3 +18,7 @@ temp_test_*
 # System files
 .DS_Store
 Thumbs.db
+
+# Large generated dataset caches (>400MB)
+expanded_master_physics_dataset.pt
+multi_scenario_physics_pyg_dataset.pt

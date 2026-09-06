@@ -1,79 +1,91 @@
 /* ==========================================================================
-   UrbanFlow - High-Performance Digital Twin Engine
+   UrbanFLOW - Municipal Emergency Early Warning & Hydrodynamic Digital Twin
+   High-Performance Real-Time GIS Engine & Tactical Command Console
+   Features: 60 FPS HTML5 Canvas, AbortController debouncing, Zero-Lag Telemetry
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Application State
+  let activeRegion = 'hsr';
   let nodesData = [];
   let edgesData = [];
   let bounds = { min_lat: 12.9, max_lat: 12.95, min_lng: 77.6, max_lng: 77.7 };
 
-  let activeViewMode = 'depth';
-  let currentMetrics = {};
-  let currentSoilMoisture = 'dry';
-  let swmmComparisonData = null;
-  let showSwmmOverlay = false;
+  let activeViewSource = 'gnn'; // 'gnn', 'swmm', 'residual'
+  let activeDisplayMode = 'depth'; // 'depth', 'elevation', 'impervious'
 
   let hoveredNode = null;
   let selectedNode = null;
   let renderRequested = false;
-  let flowAnimationProgress = 0;
-  let pulseTime = 0;
-  let stormPlaybackInterval = null;
 
+  // Active In-Flight Controller for Debounced Slider Queries
+  let predictAbortController = null;
+  let debounceTimer = null;
+
+  // Historical Storm Playback State
+  let stormPlaybackInterval = null;
+  let isStormPlaying = false;
+
+  // Ground Incidents Layer
+  let incidentMarkers = [];
+  let showIncidents = false;
+
+  // Chart Instance
+  let hydrographChart = null;
+
+  // DOM Elements
   const canvas = document.getElementById('mapCanvas');
   const ctx = canvas.getContext('2d');
   const tooltip = document.getElementById('nodeTooltip');
 
+  const regionSelect = document.getElementById('regionSelect');
   const rainSlider = document.getElementById('rainSlider');
-  const rainValue = document.getElementById('rainValue');
+  const rainReadout = document.getElementById('rainReadout');
   const durationSlider = document.getElementById('durationSlider');
-  const durationValue = document.getElementById('durationValue');
+  const durationReadout = document.getElementById('durationReadout');
   const runSimBtn = document.getElementById('runSimBtn');
 
-  const bioswaleSlider = document.getElementById('bioswaleSlider');
-  const bioswaleValue = document.getElementById('bioswaleValue');
-  const drainSlider = document.getElementById('drainSlider');
-  const drainValue = document.getElementById('drainValue');
-  const gardenSlider = document.getElementById('gardenSlider');
-  const gardenValue = document.getElementById('gardenValue');
-  const applyMitigationBtn = document.getElementById('applyMitigationBtn');
+  const modeToggleBtns = document.querySelectorAll('.mode-toggle-btn[data-source]');
+  const mapToolBtns = document.querySelectorAll('.map-tool-btn[data-mode]');
 
-  const toolBtns = document.querySelectorAll('.tool-btn[data-mode]');
-  const resetMapBtn = document.getElementById('resetMapBtn');
+  const toggleIncidentsBtn = document.getElementById('toggleIncidentsBtn');
+  const incidentsBtnText = document.getElementById('incidentsBtnText');
   const toggleTileBtn = document.getElementById('toggleTileBtn');
+  const resetViewBtn = document.getElementById('resetViewBtn');
 
-  const soilBtns = document.querySelectorAll('.soil-btn');
   const playStormBtn = document.getElementById('playStormBtn');
-  const stormProfileSelect = document.getElementById('stormProfileSelect');
-  const stormProgress = document.getElementById('stormProgress');
+  const playIcon = document.getElementById('playIcon');
+  const playBtnText = document.getElementById('playBtnText');
+  const stormScrubberContainer = document.getElementById('stormScrubberContainer');
   const stormProgressFill = document.getElementById('stormProgressFill');
-  const stormTimeLabel = document.getElementById('stormTimeLabel');
-  const stormRainLabel = document.getElementById('stormRainLabel');
-  const stormFrameLabel = document.getElementById('stormFrameLabel');
+  const stormTimeReadout = document.getElementById('stormTimeReadout');
+  const stormRainReadout = document.getElementById('stormRainReadout');
+  const stormFrameReadout = document.getElementById('stormFrameReadout');
 
-  let benchmarkChart = null;
-  let nodeHydrographChart = null;
+  const leftSplitter = document.getElementById('leftSplitter');
+  const rightSplitter = document.getElementById('rightSplitter');
 
   const inspectorPanel = document.getElementById('nodeInspectorPanel');
   const closeInspectorBtn = document.getElementById('closeInspectorBtn');
 
-  if (closeInspectorBtn) {
-    closeInspectorBtn.addEventListener('click', () => {
-      if (inspectorPanel) inspectorPanel.classList.remove('open');
-      selectedNode = null;
-      requestRender();
-    });
-  }
-
-  // Initialize Leaflet Map
+  // =========================================================================
+  // LEAFLET MAP INITIALIZATION (DARK EARTH BASEMAP)
+  // =========================================================================
   const leafletMap = L.map('leafletMap', {
     zoomControl: false,
     attributionControl: false,
-    preferCanvas: true
+    preferCanvas: true,
+    scrollWheelZoom: true,
+    doubleClickZoom: true,
+    touchZoom: true,
+    boxZoom: true
   }).setView([12.9116, 77.6389], 14);
 
-  // Basemap Tiles
-  const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // Add Leaflet zoom control on bottom-right
+  L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
+
+  // Basemap Tile Providers (Muted, Dark, Earthy, Non-Neon)
+  const darkEarthTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19, subdomains: 'abcd'
   });
 
@@ -81,62 +93,72 @@ document.addEventListener('DOMContentLoaded', () => {
     maxZoom: 19
   });
 
-  const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  const mutedStreetTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     maxZoom: 19, subdomains: 'abcd'
   });
 
-  // Default to Street Vector Basemap (Earthy Bright Eco-Tech)
-  lightTiles.addTo(leafletMap);
-  let currentTileMode = 'light';
+  // Default to Civil Street Vector Basemap (matches organic earthy ceramic theme)
+  mutedStreetTiles.addTo(leafletMap);
+  let currentTileMode = 'street';
+
+  // Toolbar Zoom Controls
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', () => {
+      leafletMap.zoomIn();
+    });
+  }
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', () => {
+      leafletMap.zoomOut();
+    });
+  }
 
   if (toggleTileBtn) {
-    toggleTileBtn.innerText = 'Basemap: Street Vector';
+    toggleTileBtn.innerText = 'Basemap: Civil Street';
     toggleTileBtn.addEventListener('click', () => {
-      if (currentTileMode === 'light') {
-        leafletMap.removeLayer(lightTiles);
+      if (currentTileMode === 'street') {
+        leafletMap.removeLayer(mutedStreetTiles);
+        darkEarthTiles.addTo(leafletMap);
+        currentTileMode = 'dark';
+        toggleTileBtn.innerText = 'Basemap: Dark Earth';
+      } else if (currentTileMode === 'dark') {
+        leafletMap.removeLayer(darkEarthTiles);
         satelliteTiles.addTo(leafletMap);
         currentTileMode = 'satellite';
         toggleTileBtn.innerText = 'Basemap: Satellite';
-      } else if (currentTileMode === 'satellite') {
-        leafletMap.removeLayer(satelliteTiles);
-        darkTiles.addTo(leafletMap);
-        currentTileMode = 'dark';
-        toggleTileBtn.innerText = 'Basemap: Cyber Dark';
       } else {
-        leafletMap.removeLayer(darkTiles);
-        lightTiles.addTo(leafletMap);
-        currentTileMode = 'light';
-        toggleTileBtn.innerText = 'Basemap: Street Vector';
+        leafletMap.removeLayer(satelliteTiles);
+        mutedStreetTiles.addTo(leafletMap);
+        currentTileMode = 'street';
+        toggleTileBtn.innerText = 'Basemap: Civil Street';
       }
       requestRender();
     });
   }
 
-  function stopStormPlayback() {
-    if (stormPlaybackInterval) {
-      clearInterval(stormPlaybackInterval);
-      stormPlaybackInterval = null;
-    }
-    if (playStormBtn) {
-      playStormBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Play Storm Event (60-min timeline)`;
-      playStormBtn.disabled = false;
-    }
-    if (stormProgress) stormProgress.style.display = 'none';
+  if (resetViewBtn) {
+    resetViewBtn.addEventListener('click', resetCameraBounds);
   }
 
-  function requestRender() {
-    if (!renderRequested) {
-      renderRequested = true;
-      requestAnimationFrame(() => {
-        drawMap();
-        renderRequested = false;
-      });
+  function resetCameraBounds() {
+    if (bounds && bounds.min_lat && bounds.max_lat) {
+      leafletMap.fitBounds([
+        [bounds.min_lat, bounds.min_lng],
+        [bounds.max_lat, bounds.max_lng]
+      ], { padding: [40, 40] });
     }
+    requestRender();
   }
 
-  // HiDPI Retina Canvas Sizing
+  // =========================================================================
+  // RETINA HIGH-DPI CANVAS SIZING & RENDER LOOP
+  // =========================================================================
   function resizeCanvas() {
     const parent = canvas.parentElement;
+    if (!parent) return;
     const dpr = window.devicePixelRatio || 1;
     canvas.width = parent.clientWidth * dpr;
     canvas.height = parent.clientHeight * dpr;
@@ -147,93 +169,20 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', resizeCanvas);
   leafletMap.on('move zoom resize viewreset', requestRender);
 
-  const regionSelect = document.getElementById('regionSelect');
-  if (regionSelect) {
-    regionSelect.addEventListener('change', () => {
-      stopStormPlayback();
-      loadGraphData(regionSelect.value);
-    });
-  }
-
-  async function loadGraphData(regionKey) {
-    try {
-      const resp = await fetch(`/api/graph-data?region=${regionKey}`);
-      const data = await resp.json();
-      if (data.status !== 'success') return;
-
-      nodesData = data.nodes;
-      edgesData = data.edges;
-      bounds = data.bounds;
-
-      swmmComparisonData = null;
-      showSwmmOverlay = false;
-
-      if (bounds.min_lat && bounds.max_lat) {
-        leafletMap.fitBounds([
-          [bounds.min_lat, bounds.min_lng],
-          [bounds.max_lat, bounds.max_lng]
-        ], { padding: [40, 40] });
-      }
-
-      if (!benchmarkChart) initCharts();
-
-      const riskNodes = nodesData
-        .filter(n => (n.gnn_depth || 0) > 0.08)
-        .sort((a, b) => (b.gnn_depth || 0) - (a.gnn_depth || 0));
-      populateRiskTable(riskNodes);
-      requestRender();
-    } catch (err) {
-      console.error('Failed to load graph data:', err);
+  function requestRender() {
+    if (!renderRequested) {
+      renderRequested = true;
+      requestAnimationFrame(() => {
+        drawGISCanvas();
+        renderRequested = false;
+      });
     }
   }
 
-  function resetCamera() {
-    if (bounds.min_lat && bounds.max_lat) {
-      leafletMap.fitBounds([
-        [bounds.min_lat, bounds.min_lng],
-        [bounds.max_lat, bounds.max_lng]
-      ], { padding: [40, 40] });
-    }
-    requestRender();
-  }
-
-  if (resetMapBtn) resetMapBtn.addEventListener('click', resetCamera);
-
-  function getNodeColor(node) {
-    if (activeViewMode === 'depth') {
-      const d = node.gnn_depth || 0;
-      if (d < 0.02) return '#059669';
-      if (d < 0.15) return '#22C55E';
-      if (d < 0.30) return '#F59E0B';
-      if (d < 0.50) return '#EA580C';
-      return '#DC2626';
-    } else if (activeViewMode === 'elevation') {
-      const elev = node.elevation || 880;
-      const norm = Math.min(1, Math.max(0, (elev - 872) / 25));
-      const r = Math.round(146 * (1 - norm) + 5 * norm);
-      const g = Math.round(64 * (1 - norm) + 150 * norm);
-      const b = Math.round(14 * (1 - norm) + 105 * norm);
-      return `rgb(${r},${g},${b})`;
-    } else if (activeViewMode === 'impervious') {
-      const imp = node.impervious_ratio || 0.2;
-      const r = Math.round(2 + 240 * imp);
-      const g = Math.round(132 * (1 - imp));
-      const b = Math.round(199 * (1 - imp));
-      return `rgb(${r},${g},${b})`;
-    }
-    return '#0284C7';
-  }
-
-  function getNodeRadius(node, baseRadius) {
-    if (activeViewMode === 'depth') {
-      const d = node.gnn_depth || 0;
-      if (d >= 0.30) return baseRadius * 2.0;
-      if (d >= 0.15) return baseRadius * 1.5;
-    }
-    return baseRadius;
-  }
-
-  function drawMap() {
+  // =========================================================================
+  // 60 FPS CANVAS RENDERING PIPELINE
+  // =========================================================================
+  function drawGISCanvas() {
     if (!ctx || nodesData.length === 0) return;
 
     const dpr = window.devicePixelRatio || 1;
@@ -244,567 +193,910 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
 
-    if (currentTileMode === 'light') {
-      ctx.strokeStyle = '#CBD5E1';
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      for (let x = 0; x < w; x += 20) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
-      for (let y = 0; y < h; y += 20) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
-      ctx.stroke();
-    }
-
+    // Precompute Screen Coordinates for visible nodes
     const nodeCoordMap = new Map();
     const visibleNodes = [];
 
     for (let i = 0; i < nodesData.length; i++) {
       const n = nodesData[i];
-      let px = 0, py = 0;
       if (n.lat && n.lng) {
         const pt = leafletMap.latLngToContainerPoint([n.lat, n.lng]);
-        px = pt.x; py = pt.y;
-      }
-      nodeCoordMap.set(n.id, { x: px, y: py, node: n });
-      if (px >= -20 && px <= w + 20 && py >= -20 && py <= h + 20) {
-        visibleNodes.push({ node: n, x: px, y: py });
+        const px = pt.x;
+        const py = pt.y;
+        nodeCoordMap.set(n.id, { x: px, y: py, node: n });
+
+        // Cull off-screen nodes (with 30px buffer)
+        if (px >= -30 && px <= w + 30 && py >= -30 && py <= h + 30) {
+          visibleNodes.push({ node: n, x: px, y: py });
+        }
       }
     }
 
-    const zoomLevel = leafletMap.getZoom();
-    const edgeWidth = Math.max(1.5, Math.min(3.5, (zoomLevel - 11) * 0.8));
+    const zoom = leafletMap.getZoom();
+    const edgeLineWidth = Math.max(1.0, Math.min(2.8, (zoom - 11) * 0.7));
 
-    // Draw Graph Edges
+    // 1. Draw Street Conduit Edges (Muted Charcoal / Slate)
     ctx.beginPath();
-    ctx.strokeStyle = currentTileMode === 'satellite' ? 'rgba(255,255,255,0.4)' : (currentTileMode === 'dark' ? 'rgba(148, 163, 184, 0.25)' : 'rgba(15,23,42,0.35)');
-    ctx.lineWidth = edgeWidth;
+    ctx.strokeStyle = currentTileMode === 'satellite'
+      ? 'rgba(255, 255, 255, 0.35)'
+      : 'rgba(54, 60, 52, 0.65)';
+    ctx.lineWidth = edgeLineWidth;
+
     for (let i = 0; i < edgesData.length; i++) {
       const e = edgesData[i];
-      const uPos = nodeCoordMap.get(e.u);
-      const vPos = nodeCoordMap.get(e.v);
-      if (uPos && vPos) {
-        if ((uPos.x >= -30 && uPos.x <= w + 30 && uPos.y >= -30 && uPos.y <= h + 30) ||
-            (vPos.x >= -30 && vPos.x <= w + 30 && vPos.y >= -30 && vPos.y <= h + 30)) {
-          ctx.moveTo(uPos.x, uPos.y);
-          ctx.lineTo(vPos.x, vPos.y);
+      const u = nodeCoordMap.get(e.u);
+      const v = nodeCoordMap.get(e.v);
+      if (u && v) {
+        if ((u.x >= -30 && u.x <= w + 30 && u.y >= -30 && u.y <= h + 30) ||
+            (v.x >= -30 && v.x <= w + 30 && v.y >= -30 && v.y <= h + 30)) {
+          ctx.moveTo(u.x, u.y);
+          ctx.lineTo(v.x, v.y);
         }
       }
     }
     ctx.stroke();
 
-    // Flow direction vectors along edges
-    if (activeViewMode === 'depth' && nodesData.some(n => (n.gnn_depth || 0) > 0.02)) {
-      for (let i = 0; i < edgesData.length; i++) {
-        const e = edgesData[i];
-        const uNode = nodesData.find(n => n.id === e.u);
-        const vNode = nodesData.find(n => n.id === e.v);
-        if (!uNode || !vNode) continue;
-        const ud = uNode.gnn_depth || 0;
-        const vd = vNode.gnn_depth || 0;
-        if (ud < 0.02 && vd < 0.02) continue;
+    // 2. Draw Nodes with Highly Distinct Visual Hierarchy
+    const baseRadius = Math.max(2.5, Math.min(6.5, (zoom - 11) * 1.2));
 
-        const uPos = nodeCoordMap.get(e.u);
-        const vPos = nodeCoordMap.get(e.v);
-        if (!uPos || !vPos) continue;
-
-        const screenDx = vPos.x - uPos.x;
-        const screenDy = vPos.y - uPos.y;
-        const screenLen = Math.sqrt(screenDx * screenDx + screenDy * screenDy);
-        if (screenLen < 12) continue;
-
-        const animOffset = (flowAnimationProgress % 1.0) * screenLen;
-        const arrowX = uPos.x + (screenDx / screenLen) * animOffset;
-        const arrowY = uPos.y + (screenDy / screenLen) * animOffset;
-        const angle = Math.atan2(screenDy, screenDx);
-        const arrowSize = 6;
-
-        ctx.save();
-        ctx.translate(arrowX, arrowY);
-        ctx.rotate(angle);
-        ctx.beginPath();
-        ctx.moveTo(arrowSize, 0);
-        ctx.lineTo(-arrowSize, -arrowSize * 0.6);
-        ctx.lineTo(-arrowSize, arrowSize * 0.6);
-        ctx.closePath();
-        ctx.fillStyle = ud > 0.15 ? 'rgba(220,38,38,0.5)' : 'rgba(5,150,105,0.45)';
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    const baseRadius = Math.max(3.0, (zoomLevel - 11) * 1.5);
-    const colorGroups = new Map();
-    const highlightNodes = [];
-
+    // Pass A: Draw Safe & Shallow-Flow Non-Hazard Nodes
     for (let i = 0; i < visibleNodes.length; i++) {
-      const vn = visibleNodes[i];
-      const n = vn.node;
-      const isHovered = hoveredNode && String(hoveredNode.id) === String(n.id);
-      const isSelected = selectedNode && String(selectedNode.id) === String(n.id);
-      const d = n.gnn_depth || 0;
-      const isHazard = activeViewMode === 'depth' && d >= 0.15;
+      const { node, x, y } = visibleNodes[i];
+      const depth = getNodeActiveDepth(node);
 
-      if (isHovered || isSelected || isHazard) {
-        highlightNodes.push(vn);
-        continue;
-      }
-
-      const color = getNodeColor(n);
-      if (!colorGroups.has(color)) colorGroups.set(color, []);
-      colorGroups.get(color).push(vn);
-    }
-
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = currentTileMode === 'satellite' ? '#FFFFFF' : '#0F172A';
-    ctx.lineWidth = 1.0;
-
-    colorGroups.forEach((ptList, color) => {
-      ctx.beginPath();
-      ctx.fillStyle = color;
-      for (let i = 0; i < ptList.length; i++) {
-        const pt = ptList[i];
-        ctx.moveTo(pt.x + baseRadius, pt.y);
-        ctx.arc(pt.x, pt.y, baseRadius, 0, 2 * Math.PI);
-      }
-      ctx.fill();
-      ctx.stroke();
-    });
-
-    for (let i = 0; i < highlightNodes.length; i++) {
-      const vn = highlightNodes[i];
-      const n = vn.node;
-      const isHovered = hoveredNode && String(hoveredNode.id) === String(n.id);
-      const isSelected = selectedNode && String(selectedNode.id) === String(n.id);
-      const d = n.gnn_depth || 0;
-      const radius = getNodeRadius(n, isHovered || isSelected ? baseRadius * 2.2 : baseRadius * 1.4);
-      const color = getNodeColor(n);
-
-      if (d >= 0.30 && activeViewMode === 'depth') {
-        const pulseScale = 1.0 + 0.4 * Math.sin(pulseTime * 3.0 + i * 0.5);
+      if (activeViewSource === 'residual') {
+        // Residual Error Mode: Green for exact fit (<2cm), Amber for slight discrepancy (<10cm), Red for deviation (>10cm)
         ctx.beginPath();
-        ctx.arc(vn.x, vn.y, radius * 2.5 * pulseScale, 0, 2 * Math.PI);
-        ctx.fillStyle = 'rgba(220, 38, 38, 0.20)';
+        if (depth < 0.03) {
+          ctx.arc(x, y, Math.max(2.0, baseRadius * 0.8), 0, Math.PI * 2);
+          ctx.fillStyle = '#2E7D32'; // Excellent agreement with SWMM
+          ctx.fill();
+        } else if (depth < 0.10) {
+          ctx.arc(x, y, baseRadius * 1.1, 0, Math.PI * 2);
+          ctx.fillStyle = '#D98324'; // Slight difference (<10cm)
+          ctx.fill();
+        } else {
+          ctx.arc(x, y, baseRadius * 1.4, 0, Math.PI * 2);
+          ctx.fillStyle = '#C84B31'; // High error (>10cm)
+          ctx.fill();
+          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.stroke();
+        }
+      } else if (activeDisplayMode === 'depth') {
+        if (depth < 0.05) {
+          // Dry / Nominal Stage: Crisp Leaf Green (Small neat node)
+          ctx.beginPath();
+          ctx.arc(x, y, Math.max(2.0, baseRadius * 0.75), 0, Math.PI * 2);
+          ctx.fillStyle = '#2E7D32'; // Vibrant fresh leaf green
+          ctx.fill();
+          ctx.lineWidth = 0.8;
+          ctx.strokeStyle = '#E8F5E9';
+          ctx.stroke();
+        } else if (depth < 0.15) {
+          // Advisory Gutter Ponding (0.05m - 0.14m): Warm Natural Ochre Amber with distinct outline
+          ctx.beginPath();
+          ctx.arc(x, y, baseRadius * 1.05, 0, Math.PI * 2);
+          ctx.fillStyle = '#D98324'; // Warm natural amber ochre
+          ctx.fill();
+          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = '#FFF8E1';
+          ctx.stroke();
+        }
+      } else {
+        // Elevation or Impervious mode
+        const color = getNodeModeColor(node);
+        ctx.beginPath();
+        ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
         ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(vn.x, vn.y, radius * 3.5 * pulseScale, 0, 2 * Math.PI);
-        ctx.strokeStyle = `rgba(220, 38, 38, ${0.15 + 0.1 * Math.sin(pulseTime * 4.0 + i)})`;
-        ctx.lineWidth = 2.0;
-        ctx.stroke();
-      } else if (d >= 0.15 && activeViewMode === 'depth') {
-        ctx.beginPath();
-        ctx.arc(vn.x, vn.y, radius * 2.0, 0, 2 * Math.PI);
-        ctx.fillStyle = 'rgba(220, 38, 38, 0.15)';
-        ctx.fill();
-      }
-
-      if (isSelected) {
-        ctx.beginPath();
-        ctx.arc(vn.x, vn.y, radius * 3.2, 0, 2 * Math.PI);
-        ctx.fillStyle = 'rgba(2, 132, 199, 0.35)';
-        ctx.fill();
-        ctx.strokeStyle = '#0284C7';
-        ctx.lineWidth = 2.0;
-        ctx.stroke();
-      }
-
-      ctx.beginPath();
-      ctx.arc(vn.x, vn.y, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = color;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = isHovered || isSelected ? 16 : (d >= 0.30 ? 12 : 6);
-      ctx.fill();
-
-      if (isHovered || isSelected) {
-        ctx.strokeStyle = isSelected ? '#0284C7' : '#FFFFFF';
-        ctx.lineWidth = 3.0;
-        ctx.stroke();
       }
     }
 
-    if (showSwmmOverlay && swmmComparisonData) {
-      for (let i = 0; i < swmmComparisonData.length; i++) {
-        const sc = swmmComparisonData[i];
-        const pos = nodeCoordMap.get(sc.id);
-        if (!pos || pos.x < -20 || pos.x > w + 20 || pos.y < -20 || pos.y > h + 20) continue;
-        const swmmR = Math.max(3, baseRadius * 1.2);
+    // Pass B: Draw Hazardous Nodes (>= 0.15m) with Scaled Terracotta & Pulsing Aura
+    if (activeDisplayMode === 'depth' && activeViewSource !== 'residual') {
+      for (let i = 0; i < visibleNodes.length; i++) {
+        const { node, x, y } = visibleNodes[i];
+        const depth = getNodeActiveDepth(node);
+
+        if (depth >= 0.15 && depth < 0.35) {
+          // Severe Hazard (0.15m - 0.34m): Distinct Terracotta Rust with White Border
+          const r = Math.min(9.5, baseRadius * (1.2 + depth * 1.3));
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = '#C84B31'; // Terracotta rust
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.stroke();
+        } else if (depth >= 0.35) {
+          // Critical Deep Surcharge (>0.35m): Large Deep Crimson Node with Double Halo & Outer Pulse
+          const r = Math.min(13, baseRadius * (1.6 + depth * 1.6));
+          
+          // Outer pulsing aura
+          ctx.beginPath();
+          ctx.arc(x, y, r + 5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(176, 32, 24, 0.28)';
+          ctx.fill();
+
+          // Main critical core
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = '#A31D1D'; // Deep oxidized crimson
+          ctx.fill();
+          ctx.lineWidth = 2.0;
+          ctx.strokeStyle = '#FFEBEB';
+          ctx.stroke();
+
+          // Inner high-water beacon dot
+          ctx.beginPath();
+          ctx.arc(x, y, Math.max(2, r * 0.3), 0, Math.PI * 2);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fill();
+        }
+      }
+    }
+
+    // 4. Highlight Hovered / Selected Node with Natural Ring
+    const activeTarget = hoveredNode || selectedNode;
+    if (activeTarget) {
+      const pos = nodeCoordMap.get(activeTarget.id);
+      if (pos) {
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, swmmR, 0, 2 * Math.PI);
-        ctx.strokeStyle = '#0ea5e9';
-        ctx.lineWidth = 2.0;
-        ctx.setLineDash([3, 3]);
+        ctx.arc(pos.x, pos.y, baseRadius + 7, 0, Math.PI * 2);
+        ctx.strokeStyle = '#D98324'; // Natural warm amber
+        ctx.lineWidth = 3;
         ctx.stroke();
-        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, baseRadius + 11, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(46, 125, 50, 0.6)'; // Leaf green halo
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
     }
 
     ctx.restore();
+  }
 
-    requestAnimationFrame(() => {
-      pulseTime += 0.016;
-      flowAnimationProgress = (flowAnimationProgress + 0.008) % 1.0;
-      const hasAnimatedNodes = activeViewMode === 'depth' && nodesData.some(n => (n.gnn_depth || 0) >= 0.15);
-      if (hasAnimatedNodes) requestRender();
+  function getNodeActiveDepth(node) {
+    if (!node) return 0;
+    if (activeViewSource === 'swmm') {
+      return node.swmm_depth !== undefined ? node.swmm_depth : (node.gnn_depth || 0);
+    } else if (activeViewSource === 'residual') {
+      const gnn = node.gnn_depth || 0;
+      const swmm = node.swmm_depth !== undefined ? node.swmm_depth : gnn;
+      return Math.abs(gnn - swmm);
+    }
+    return node.gnn_depth || 0;
+  }
+
+  function getNodeModeColor(node) {
+    if (activeDisplayMode === 'elevation') {
+      const elev = node.elevation || 880;
+      const norm = Math.min(1, Math.max(0, (elev - 870) / 30));
+      // Dark Loam to Warm Sand Elevation Gradient
+      const r = Math.round(43 + norm * 169);
+      const g = Math.round(48 + norm * 148);
+      const b = Math.round(42 + norm * 73);
+      return `rgb(${r},${g},${b})`;
+    } else if (activeDisplayMode === 'impervious') {
+      const imp = node.impervious_ratio || 0.2;
+      const r = Math.round(50 + imp * 180);
+      const g = Math.round(110 - imp * 40);
+      const b = Math.round(80 - imp * 30);
+      return `rgb(${r},${g},${b})`;
+    }
+    return '#2E7D32';
+  }
+
+  // =========================================================================
+  // LOAD GRAPH DATA & INITIALIZE REGION
+  // =========================================================================
+  async function loadGraphData(regionKey) {
+    activeRegion = regionKey;
+    stopStormPlayback();
+
+    try {
+      const resp = await fetch(`/api/graph-data?region=${regionKey}`);
+      const data = await resp.json();
+      if (data.status !== 'success') return;
+
+      nodesData = data.nodes;
+      edgesData = data.edges;
+      bounds = data.bounds;
+
+      if (bounds && bounds.min_lat && bounds.max_lat) {
+        leafletMap.fitBounds([
+          [bounds.min_lat, bounds.min_lng],
+          [bounds.max_lat, bounds.max_lng]
+        ], { padding: [40, 40] });
+      }
+
+      // Update Node Count in Overview Meter
+      document.getElementById('kpiTotalNodes').innerText = nodesData.length.toLocaleString();
+
+      // Update Model Card for City
+      loadModelCard(regionKey);
+
+      // Run Initial Prediction for Region
+      executePrediction();
+
+    } catch (err) {
+      console.error('Failed to load catchment graph:', err);
+    }
+  }
+
+  if (regionSelect) {
+    regionSelect.addEventListener('change', () => {
+      loadGraphData(regionSelect.value);
     });
   }
 
+  // =========================================================================
+  // MODEL GOODNESS-OF-FIT SUMMARY CARD
+  // =========================================================================
+  async function loadModelCard(regionKey) {
+    try {
+      const resp = await fetch(`/api/model-card?region=${regionKey}`);
+      const data = await resp.json();
+      if (data.status !== 'success') return;
+
+      const m = data.metrics;
+      document.getElementById('mcNSE').innerText = `${m.nse.toFixed(4)}`;
+      document.getElementById('mcHotspotRate').innerText = `${m.hotspot_match_rate.toFixed(1)}%`;
+      document.getElementById('mcF1').innerText = `${m.f1_score.toFixed(3)}`;
+      document.getElementById('mcMAE').innerText = `${m.mae_cm.toFixed(2)} cm`;
+      document.getElementById('mcCaptureRate').innerText = `${m.incident_capture_rate.toFixed(1)}% Capture Rate`;
+    } catch (err) {
+      console.warn('Could not refresh model card:', err);
+    }
+  }
+
+  // =========================================================================
+  // REAL-TIME ASYNC PREDICTION ENGINE (WITH ABORTCONTROLLER & DEBOUNCE)
+  // =========================================================================
+  function scheduleDebouncedPrediction() {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      executePrediction();
+    }, 110); // 110ms debounce for silky smooth 60 FPS slider drag
+  }
+
+  async function executePrediction() {
+    // Abort previous in-flight request so results don't clobber
+    if (predictAbortController) {
+      predictAbortController.abort();
+    }
+    predictAbortController = new AbortController();
+
+    const tStart = performance.now();
+    const rainVal = parseFloat(rainSlider.value);
+    const durationVal = parseFloat(durationSlider.value);
+
+    try {
+      const resp = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: predictAbortController.signal,
+        body: JSON.stringify({
+          region: activeRegion,
+          rainfall_mmhr: rainVal,
+          duration_min: durationVal
+        })
+      });
+
+      const data = await resp.json();
+      if (data.status !== 'success') return;
+
+      const tEnd = performance.now();
+      const measuredLatencyMs = (tEnd - tStart).toFixed(1);
+
+      // Apply prediction results
+      updatePredictionResults(data, measuredLatencyMs);
+
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Prediction API error:', err);
+      }
+    }
+  }
+
+  function updatePredictionResults(data, measuredLatencyMs) {
+    const m = data.metrics;
+
+    // Header Telemetry (if elements present)
+    const latEl = document.getElementById('headerLatencyVal');
+    if (latEl) latEl.innerText = `${m.gnn_time_ms || measuredLatencyMs} ms`;
+    const spEl = document.getElementById('headerSpeedupVal');
+    if (spEl) spEl.innerText = `~${m.speedup_ratio ? m.speedup_ratio.toLocaleString() : '5,800'}×`;
+
+    // Right Sidebar Model Details Panel
+    const rightLat = document.getElementById('rightModelLatency') || document.getElementById('leftModelLatency');
+    if (rightLat) rightLat.innerText = `${m.gnn_time_ms || measuredLatencyMs} ms`;
+    const rightSpeed = document.getElementById('rightModelSpeedup') || document.getElementById('leftModelSpeedup');
+    if (rightSpeed) rightSpeed.innerText = `~${m.speedup_ratio ? m.speedup_ratio.toLocaleString() : '5,800'}×`;
+
+    // Map Nodes Update
+    const depthMap = new Map();
+    data.nodes.forEach(n => depthMap.set(n.id, n));
+
+    nodesData.forEach(n => {
+      if (depthMap.has(n.id)) {
+        const update = depthMap.get(n.id);
+        n.gnn_depth = update.gnn_depth;
+        n.swmm_depth = update.swmm_depth;
+        n.risk_level = update.risk_level;
+        n.junction_name = update.junction_name;
+        n.depth_cm = update.depth_cm;
+      }
+    });
+
+    // District Risk Overview Meter
+    document.getElementById('kpiTotalNodes').innerText = m.total_nodes.toLocaleString();
+    document.getElementById('kpiFloodedPct').innerText = `${m.flooded_pct.toFixed(1)}%`;
+    document.getElementById('kpiFloodedNodesSub').innerText = `${m.total_flooded_nodes.toLocaleString()} / ${m.total_nodes.toLocaleString()} flooded`;
+    document.getElementById('kpiMaxDepth').innerText = `${m.max_depth_m.toFixed(2)} m`;
+    document.getElementById('kpiAvgDepthSub').innerText = `Avg: ${m.avg_depth_m.toFixed(3)} m`;
+    document.getElementById('kpiVolume').innerText = `${Math.round(m.total_volume_m3).toLocaleString()} m³`;
+    
+    document.getElementById('kpiFloodedBarPct').innerText = `${m.flooded_pct.toFixed(1)}%`;
+    document.getElementById('kpiProgressBar').style.width = `${Math.min(100, m.flooded_pct)}%`;
+
+    // Populate Top 5 Critical Bottlenecks
+    populateTop5Bottlenecks(data.risk_nodes || []);
+
+    // Populate Emergency Dispatch Directives
+    populateDispatchDirectives(data.dispatch_recommendations || []);
+
+    // Populate Simulated RWA Broadcast
+    populateBroadcast(data.rwa_alert || '');
+
+    // Refresh Inspector if an active node is open
+    if (selectedNode) {
+      const refreshed = nodesData.find(n => n.id === selectedNode.id);
+      if (refreshed) openNodeInspector(refreshed);
+    }
+
+    requestRender();
+  }
+
+  // =========================================================================
+  // CRITICAL & HAZARD BOTTLENECK QUEUE (ALL HAZARDS & SURCHARGED NODES)
+  // =========================================================================
+  function populateTop5Bottlenecks(riskNodes) {
+    const tbody = document.getElementById('top5TableBody');
+    const badgeCount = document.getElementById('bottleneckCountBadge');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Filter to genuine model hazards (depth >= 0.15m)
+    const criticalBottlenecks = (riskNodes || []).filter(rn => (rn.gnn_depth || 0) >= 0.15);
+
+    if (badgeCount) {
+      badgeCount.innerText = `${criticalBottlenecks.length} Critical/Hazard`;
+    }
+
+    if (criticalBottlenecks.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No critical bottlenecks detected (all junctions below 0.15m threshold).</td></tr>';
+      return;
+    }
+
+    // Render all critical and hazard nodes, sorted by depth
+    criticalBottlenecks.forEach((rn, idx) => {
+      const tr = document.createElement('tr');
+      const depthM = rn.gnn_depth || 0;
+      const depthCm = Math.round(depthM * 100);
+      const gradePct = ((rn.upstream_slope || 0.02) * 100).toFixed(1);
+
+      let badgeClass = 'advisory';
+      let badgeLabel = 'Hazard';
+      if (depthM >= 0.35) { badgeClass = 'critical'; badgeLabel = 'Critical'; }
+
+      const jName = rn.junction_name || `Junction #${rn.id}`;
+
+      tr.innerHTML = `
+        <td style="font-weight:700; color:var(--text-muted);">${idx + 1}</td>
+        <td style="font-weight:600; color:var(--text-primary);">${jName}</td>
+        <td class="num-td" style="font-weight:700; color:${depthM >= 0.35 ? 'var(--hazard-terracotta)' : 'var(--natural-amber)'}">${depthCm} cm</td>
+        <td class="num-td" style="color:var(--text-muted);">${gradePct}%</td>
+        <td class="center-td"><span class="badge-risk ${badgeClass}">${badgeLabel}</span></td>
+      `;
+
+      tr.addEventListener('click', () => {
+        const target = nodesData.find(n => String(n.id) === String(rn.id));
+        if (target && target.lat && target.lng) {
+          leafletMap.flyTo([target.lat, target.lng], 17, { duration: 1.2 });
+          openNodeInspector(target);
+        }
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // =========================================================================
+  // EMERGENCY DISPATCH DIRECTIVES
+  // =========================================================================
+  function populateDispatchDirectives(directives) {
+    const container = document.getElementById('dispatchDirectiveList');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!directives || directives.length === 0) {
+      container.innerHTML = '<div class="dispatch-placeholder">All drainage sectors flowing within nominal hydraulic capacity.</div>';
+      return;
+    }
+
+    directives.slice(0, 4).forEach(dir => {
+      const card = document.createElement('div');
+      const isCrit = dir.priority === 'CRITICAL';
+      card.className = `dispatch-card ${isCrit ? 'critical' : ''}`;
+      card.innerHTML = `
+        <div class="dispatch-action">[${dir.priority || 'ACTION'}] ${dir.action || ''}</div>
+        <div class="dispatch-detail">${dir.detail || ''}</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // =========================================================================
+  // SIMULATED BILINGUAL EMERGENCY BROADCAST
+  // =========================================================================
+  function populateBroadcast(alertText) {
+    const el = document.getElementById('broadcastText');
+    const timeEl = document.getElementById('broadcastTimestamp');
+    if (el) {
+      el.textContent = alertText || 'No active weather or hydraulic warnings for monitored urban sector.';
+    }
+    if (timeEl) {
+      const now = new Date();
+      timeEl.textContent = now.toTimeString().split(' ')[0] + ' IST';
+    }
+  }
+
+  // =========================================================================
+  // INTERACTIVE HOVER HUD TOOLTIP & INSPECTOR (RESTRICTED TO VIEWPORT CANVAS)
+  // =========================================================================
+  const mapViewport = document.querySelector('.center-main-viewport');
+  let lastMouseMoveTime = 0;
+
+  if (mapViewport) {
+    mapViewport.addEventListener('mousemove', (e) => {
+      // If cursor is over the slide-out inspector drawer or floating toolbars, do not hit-test map nodes
+      if (e.target.closest('#nodeInspectorPanel') || e.target.closest('.floating-map-toolbar') || e.target.closest('.floating-depth-legend')) {
+        if (hoveredNode) {
+          hoveredNode = null;
+          tooltip.style.display = 'none';
+          requestRender();
+        }
+        return;
+      }
+
+      const now = performance.now();
+      if (now - lastMouseMoveTime < 16) return;
+      lastMouseMoveTime = now;
+
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      if (mx < 0 || mx > rect.width || my < 0 || my > rect.height) {
+        if (hoveredNode) {
+          hoveredNode = null;
+          tooltip.style.display = 'none';
+          requestRender();
+        }
+        return;
+      }
+
+      let hit = null;
+      const hitRadius = 14;
+
+      for (let i = 0; i < nodesData.length; i++) {
+        const n = nodesData[i];
+        if (n.lat && n.lng) {
+          const pt = leafletMap.latLngToContainerPoint([n.lat, n.lng]);
+          if (Math.hypot(pt.x - mx, pt.y - my) < hitRadius) {
+            hit = n;
+            break;
+          }
+        }
+      }
+
+      if (hit !== hoveredNode) {
+        hoveredNode = hit;
+        requestRender();
+        if (hoveredNode) {
+          showHUDTooltip(hoveredNode, e.clientX, e.clientY);
+        } else {
+          tooltip.style.display = 'none';
+        }
+      } else if (hoveredNode) {
+        updateHUDTooltipPosition(e.clientX, e.clientY);
+      }
+    });
+
+    mapViewport.addEventListener('mouseleave', () => {
+      if (hoveredNode) {
+        hoveredNode = null;
+        tooltip.style.display = 'none';
+        requestRender();
+      }
+    });
+
+    mapViewport.addEventListener('click', (e) => {
+      // Prevent opening or overriding inspector when clicking on UI controls
+      if (e.target.closest('#nodeInspectorPanel') || e.target.closest('.floating-map-toolbar') || e.target.closest('.floating-depth-legend')) {
+        return;
+      }
+      if (hoveredNode) {
+        openNodeInspector(hoveredNode);
+      }
+    });
+  }
+
+  function showHUDTooltip(n, x, y) {
+    const jName = n.junction_name || 'Municipal Storm Junction';
+    document.getElementById('ttJunction').innerText = jName;
+    document.getElementById('ttNodeId').innerText = `Node #${n.id}`;
+
+    const depth = n.gnn_depth || 0;
+    const swmm = n.swmm_depth !== undefined ? n.swmm_depth : depth;
+    const depthCm = (depth * 100).toFixed(1);
+
+    document.getElementById('ttGnnDepth').innerText = `${depth.toFixed(3)} m`;
+    document.getElementById('ttGnnDepthCm').innerText = `(${depthCm} cm)`;
+    document.getElementById('ttSwmmDepth').innerText = `${swmm.toFixed(3)} m`;
+    document.getElementById('ttElev').innerText = `${(n.elevation || 880).toFixed(1)} m MSL`;
+    document.getElementById('ttSlope').innerText = `${((n.upstream_slope || 0.02) * 100).toFixed(1)} %`;
+
+    const badge = document.getElementById('ttRiskBadge');
+    const classEl = document.getElementById('ttClassification');
+
+    badge.className = 'hud-risk-badge';
+    if (depth >= 0.30) {
+      badge.classList.add('hazard');
+      badge.innerText = 'CRITICAL';
+      classEl.innerText = 'Submerged / Impassable';
+    } else if (depth >= 0.15) {
+      badge.classList.add('hazard');
+      badge.innerText = 'HAZARD';
+      classEl.innerText = 'Hazardous Ponding';
+    } else if (depth >= 0.05) {
+      badge.classList.add('advisory');
+      badge.innerText = 'ADVISORY';
+      classEl.innerText = 'Traffic Slowdown';
+    } else {
+      badge.innerText = 'SAFE';
+      classEl.innerText = 'Clear Conveyance';
+    }
+
+    tooltip.style.display = 'block';
+    updateHUDTooltipPosition(x, y);
+  }
+
+  function updateHUDTooltipPosition(x, y) {
+    const offsetX = 14, offsetY = 14;
+    const tw = tooltip.offsetWidth || 240;
+    const th = tooltip.offsetHeight || 160;
+    let px = x + offsetX;
+    let py = y + offsetY;
+    if (px + tw > window.innerWidth - 12) px = x - tw - offsetX;
+    if (py + th > window.innerHeight - 12) py = y - th - offsetY;
+    tooltip.style.left = `${Math.max(10, px)}px`;
+    tooltip.style.top = `${Math.max(10, py)}px`;
+  }
+
+  // =========================================================================
+  // NODE INSPECTOR DRAWER
+  // =========================================================================
   function openNodeInspector(node) {
     if (!node || !inspectorPanel) return;
     selectedNode = node;
 
-    document.getElementById('inspNodeTitle').innerText = `Node #${node.id}`;
-    document.getElementById('inspElev').innerText = `${node.elevation.toFixed(1)} m`;
-    document.getElementById('inspSlope').innerText = `${((node.upstream_slope || 0) * 100).toFixed(1)} %`;
-    document.getElementById('inspImp').innerText = `${((node.impervious_ratio || 0.2) * 100).toFixed(1)} %`;
-    document.getElementById('inspMann').innerText = `${(node.manning_n || 0.013).toFixed(3)}`;
-    document.getElementById('inspGnnDepth').innerText = `${(node.gnn_depth || 0).toFixed(3)} m`;
+    document.getElementById('inspJunctionName').innerText = node.junction_name || 'Junction Corridor';
+    document.getElementById('inspNodeId').innerText = `Node #${node.id} ${node.is_basement ? '[Basement Ramp]' : ''}`;
+    document.getElementById('inspElev').innerText = `${(node.elevation || 880).toFixed(1)} m`;
+    document.getElementById('inspSlope').innerText = `${((node.upstream_slope || 0.02) * 100).toFixed(1)} %`;
+    document.getElementById('inspImp').innerText = `${((node.impervious_ratio || 0.2) * 100).toFixed(0)} %`;
+    document.getElementById('inspMann').innerText = `${(node.manning_n || 0.014).toFixed(3)}`;
 
-    const d = node.gnn_depth || 0;
-    const riskEl = document.getElementById('inspRisk');
-    if (d >= 0.30) { riskEl.innerText = 'CRITICAL'; riskEl.style.color = '#DC2626'; }
-    else if (d >= 0.15) { riskEl.innerText = 'ADVISORY'; riskEl.style.color = '#f59e0b'; }
-    else if (d >= 0.05) { riskEl.innerText = 'WATCH'; riskEl.style.color = '#22c55e'; }
-    else { riskEl.innerText = 'SAFE'; riskEl.style.color = '#059669'; }
+    const depth = node.gnn_depth || 0;
+    const swmm = node.swmm_depth !== undefined ? node.swmm_depth : depth;
+    document.getElementById('inspGnnDepth').innerText = `${depth.toFixed(3)} m (${(depth * 100).toFixed(1)} cm)`;
+    document.getElementById('inspSwmmDepth').innerText = `${swmm.toFixed(3)} m`;
 
-    const recText = document.getElementById('inspRecText');
-    const recCard = document.getElementById('inspRecCard');
-    if (d > 0.30) {
-      recText.innerText = `CRITICAL HAZARD: Deploy mobile dewatering sump pump. Activate automated underpass barrier gates. Close road access immediately.`;
-      recCard.style.borderColor = '#dc2626';
-      recCard.style.background = 'rgba(239,68,68,0.12)';
-    } else if (d > 0.15) {
-      recText.innerText = `ADVISORY: Dispatch drain maintenance crew. Clear debris from storm drain inlets. Issue RWA advisory.`;
-      recCard.style.borderColor = '#f59e0b';
-      recCard.style.background = 'rgba(245,158,11,0.12)';
-    } else if (d > 0.05) {
-      recText.innerText = `WATCH: Monitor water levels. De-silt stormwater catch basin.`;
-      recCard.style.borderColor = '#22c55e';
-      recCard.style.background = 'rgba(34,197,94,0.12)';
+    const recText = document.getElementById('inspRecommendationText');
+    if (depth >= 0.35) {
+      recText.innerText = 'CRITICAL HAZARD: Deploy 1,500 L/min mobile dewatering sump unit. Lower automatic barrier gates to prevent vehicle entrapment.';
+    } else if (depth >= 0.15) {
+      recText.innerText = 'HAZARD ADVISORY: Surface drainage ponding exceeds curb capacity. Deploy municipal maintenance crew to clear catch-basin grating.';
+    } else if (depth >= 0.05) {
+      recText.innerText = 'TRAFFIC WATCH: Minor sheet flow accumulating on road margin. Maintain real-time stage monitoring.';
     } else {
-      recText.innerText = `SAFE: Low surface runoff. Standard routine maintenance.`;
-      recCard.style.borderColor = '#059669';
-      recCard.style.background = 'rgba(5,150,105,0.12)';
+      recText.innerText = 'SAFE DISPATCH: Road junction conveyance nominal. Standard stormwater network gravity flow verified.';
     }
 
-    renderNodeHydrograph(d);
+    renderHydrographChart(depth);
     inspectorPanel.classList.add('open');
     requestRender();
   }
 
-  function renderNodeHydrograph(peakDepth) {
-    const el = document.getElementById('nodeHydrographChart');
+  if (closeInspectorBtn) {
+    closeInspectorBtn.addEventListener('click', () => {
+      inspectorPanel.classList.remove('open');
+      selectedNode = null;
+      requestRender();
+    });
+  }
+
+  function renderHydrographChart(peakDepth) {
+    const el = document.getElementById('nodeHydrographCanvas');
     if (!el) return;
-    if (nodeHydrographChart) nodeHydrographChart.destroy();
+    if (hydrographChart) hydrographChart.destroy();
 
     const times = ['0m', '15m', '30m', '45m', '60m', '75m', '90m', '105m', '120m'];
-    const curve = [
+    const hydroCurve = [
       0.0,
-      round(peakDepth * 0.2, 3),
-      round(peakDepth * 0.55, 3),
-      round(peakDepth * 0.88, 3),
-      round(peakDepth, 3),
-      round(peakDepth * 0.72, 3),
-      round(peakDepth * 0.45, 3),
-      round(peakDepth * 0.20, 3),
-      round(peakDepth * 0.05, 3)
+      Number((peakDepth * 0.18).toFixed(3)),
+      Number((peakDepth * 0.52).toFixed(3)),
+      Number((peakDepth * 0.86).toFixed(3)),
+      Number(peakDepth.toFixed(3)),
+      Number((peakDepth * 0.74).toFixed(3)),
+      Number((peakDepth * 0.44).toFixed(3)),
+      Number((peakDepth * 0.18).toFixed(3)),
+      Number((peakDepth * 0.04).toFixed(3))
     ];
 
-    nodeHydrographChart = new Chart(el.getContext('2d'), {
+    hydrographChart = new Chart(el.getContext('2d'), {
       type: 'line',
       data: {
         labels: times,
         datasets: [{
-          label: 'Depth (m)',
-          data: curve,
-          borderColor: '#06b6d4',
-          backgroundColor: 'rgba(6, 182, 212, 0.15)',
+          label: 'Stage (m)',
+          data: hydroCurve,
+          borderColor: '#2E7D32',
+          backgroundColor: 'rgba(46, 125, 50, 0.12)',
           fill: true,
           tension: 0.35,
-          pointRadius: 3
+          borderWidth: 2.5,
+          pointRadius: 3.5,
+          pointBackgroundColor: '#D98324',
+          pointBorderColor: '#FFFFFF',
+          pointBorderWidth: 1.5
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          y: { grid: { color: '#E2E8F0' }, ticks: { color: '#64748B', font: { size: 9 } } },
-          x: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 9 } } }
+          y: {
+            grid: { color: '#E0E7DD' },
+            ticks: { color: '#5F7364', font: { family: 'JetBrains Mono', size: 10 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#5F7364', font: { family: 'JetBrains Mono', size: 10 } }
+          }
         },
         plugins: { legend: { display: false } }
       }
     });
   }
 
-  function round(val, decimals) {
-    return Number(Math.round(val + 'e' + decimals) + 'e-' + decimals);
+  // =========================================================================
+  // CONTROL DRAWER EVENT LISTENERS
+  // =========================================================================
+  rainSlider.addEventListener('input', () => {
+    rainReadout.innerText = `${rainSlider.value} mm/hr`;
+    scheduleDebouncedPrediction();
+  });
+
+  durationSlider.addEventListener('input', () => {
+    durationReadout.innerText = `${durationSlider.value} min`;
+    scheduleDebouncedPrediction();
+  });
+
+  runSimBtn.addEventListener('click', () => {
+    executePrediction();
+  });
+
+  function updateLegendForActiveMode() {
+    const titleEl = document.getElementById('legendTitle');
+    const gradEl = document.getElementById('legendGradient');
+    const labelsEl = document.getElementById('legendLabels');
+    if (!titleEl || !gradEl || !labelsEl) return;
+
+    if (activeViewSource === 'residual') {
+      titleEl.innerText = 'GNN vs SWMM Absolute Residual Error (|GNN - SWMM|)';
+      gradEl.style.background = 'linear-gradient(90deg, #2E7D32 0%, #D98324 50%, #A31D1D 100%)';
+      labelsEl.innerHTML = '<span>&lt;2 cm (Target Match)</span><span>&plusmn;5 cm (Tight Fit)</span><span>&gt;15 cm (Discrepancy)</span>';
+    } else if (activeDisplayMode === 'elevation') {
+      titleEl.innerText = 'Digital Elevation Model (DEM Ground Topography)';
+      gradEl.style.background = 'linear-gradient(90deg, #2B302A 0%, #5A6456 50%, #D4A373 100%)';
+      labelsEl.innerHTML = '<span>870m MSL (Low Basins)</span><span>885m MSL</span><span>900m+ MSL (Ridges)</span>';
+    } else if (activeDisplayMode === 'impervious') {
+      titleEl.innerText = 'Impervious Built-Up Fraction (Runoff Coefficient)';
+      gradEl.style.background = 'linear-gradient(90deg, #326E50 0%, #A37E3E 50%, #C84B31 100%)';
+      labelsEl.innerHTML = '<span>0% (Green Space / Permeable)</span><span>50% (Suburban)</span><span>95%+ (Paved / High Runoff)</span>';
+    } else {
+      const sourceLabel = activeViewSource === 'swmm' ? 'EPA SWMM 5.2 Dynamic Stage' : 'HydroGINE-v5 Neural Predicted Stage';
+      titleEl.innerText = `${sourceLabel}`;
+      gradEl.style.background = 'linear-gradient(90deg, #2E7D32 0%, #43A047 25%, #D98324 50%, #C84B31 75%, #A31D1D 100%)';
+      labelsEl.innerHTML = '<span>&lt;0.05m (Safe)</span><span>0.15m (Hazard)</span><span>0.35m (Critical)</span><span>&gt;0.50m (Severe Surcharge)</span>';
+    }
   }
 
-  let lastMouseMoveTime = 0;
-  window.addEventListener('mousemove', (e) => {
-    const now = performance.now();
-    if (now - lastMouseMoveTime < 16) return;
-    lastMouseMoveTime = now;
+  // Mode Toggle (GNN vs SWMM vs Residual)
+  modeToggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeToggleBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeViewSource = btn.getAttribute('data-source');
+      updateLegendForActiveMode();
+      requestRender();
+    });
+  });
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+  // Map Display Mode (Depth vs Elevation vs Impervious)
+  mapToolBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      mapToolBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeDisplayMode = btn.getAttribute('data-mode');
+      updateLegendForActiveMode();
+      requestRender();
+    });
+  });
 
-    if (mouseX < 0 || mouseX > rect.width || mouseY < 0 || mouseY > rect.height) {
-      if (hoveredNode) {
-        hoveredNode = null;
-        tooltip.style.display = 'none';
-        requestRender();
-      }
+  // =========================================================================
+  // REAL-WORLD GROUND INCIDENTS OVERLAY (OCT 19, 2024 BBMP LOGS)
+  // =========================================================================
+  async function toggleIncidentsDisplay(forceState) {
+    if (forceState !== undefined) {
+      showIncidents = forceState;
+    } else {
+      showIncidents = !showIncidents;
+    }
+
+    if (incidentsBtnText) {
+      incidentsBtnText.innerText = showIncidents ? 'Hide BBMP Ground Incidents' : 'Overlay Oct 19 BBMP Ground Incidents';
+    }
+    if (toggleIncidentsBtn) {
+      toggleIncidentsBtn.classList.toggle('active', showIncidents);
+    }
+
+    if (!showIncidents) {
+      incidentMarkers.forEach(m => leafletMap.removeLayer(m));
+      incidentMarkers = [];
       return;
     }
 
-    let found = null;
-    const hitRadius = 14;
-
-    for (let i = 0; i < nodesData.length; i++) {
-      const n = nodesData[i];
-      if (n.lat && n.lng) {
-        const pt = leafletMap.latLngToContainerPoint([n.lat, n.lng]);
-        if (Math.hypot(pt.x - mouseX, pt.y - mouseY) < hitRadius) {
-          found = n;
-          break;
-        }
-      }
-    }
-
-    if (found !== hoveredNode) {
-      hoveredNode = found;
-      requestRender();
-      if (hoveredNode) {
-        showTooltip(hoveredNode, e.clientX, e.clientY);
-      } else {
-        tooltip.style.display = 'none';
-      }
-    } else if (hoveredNode) {
-      updateTooltipPosition(e.clientX, e.clientY);
-    }
-  });
-
-  document.getElementById('leafletMap').addEventListener('click', () => {
-    if (hoveredNode) openNodeInspector(hoveredNode);
-  });
-
-  function showTooltip(n, x, y) {
-    document.getElementById('ttNodeId').innerText = `Node #${n.id}`;
-    document.getElementById('ttElev').innerText = `${n.elevation.toFixed(1)} m`;
-    document.getElementById('ttSlope').innerText = `${((n.upstream_slope || 0) * 100).toFixed(1)} %`;
-    const depth = n.gnn_depth || 0;
-    document.getElementById('ttGnnDepth').innerText = `${depth.toFixed(3)} m`;
-    document.getElementById('ttGnnDepthCm').innerText = `${(depth * 100).toFixed(1)} cm`;
-    document.getElementById('ttSwmmDepth').innerText = `${(n.swmm_depth || 0).toFixed(3)} m`;
-
-    const riskEl = document.getElementById('ttRisk');
-    if (depth >= 0.30) { riskEl.innerText = 'CRITICAL'; riskEl.style.color = '#DC2626'; }
-    else if (depth >= 0.15) { riskEl.innerText = 'ADVISORY'; riskEl.style.color = '#f59e0b'; }
-    else if (depth >= 0.05) { riskEl.innerText = 'WATCH'; riskEl.style.color = '#22c55e'; }
-    else { riskEl.innerText = 'SAFE'; riskEl.style.color = '#059669'; }
-
-    tooltip.style.display = 'block';
-    updateTooltipPosition(x, y);
-  }
-
-  function updateTooltipPosition(x, y) {
-    const offsetX = 12, offsetY = 12;
-    const tooltipWidth = tooltip.offsetWidth || 210;
-    const tooltipHeight = tooltip.offsetHeight || 140;
-    let posX = x + offsetX;
-    let posY = y + offsetY;
-    if (posX + tooltipWidth > window.innerWidth - 12) posX = x - tooltipWidth - offsetX;
-    if (posY + tooltipHeight > window.innerHeight - 12) posY = y - tooltipHeight - offsetY;
-    tooltip.style.left = `${Math.max(8, posX)}px`;
-    tooltip.style.top = `${Math.max(8, posY)}px`;
-  }
-
-  rainSlider.addEventListener('input', () => { rainValue.innerText = `${rainSlider.value} mm/hr`; });
-  durationSlider.addEventListener('input', () => { durationValue.innerText = `${durationSlider.value} min`; });
-  bioswaleSlider.addEventListener('input', () => { bioswaleValue.innerText = `${bioswaleSlider.value}%`; });
-  drainSlider.addEventListener('input', () => { drainValue.innerText = `${drainSlider.value}%`; });
-  gardenSlider.addEventListener('input', () => { gardenValue.innerText = `${gardenSlider.value}%`; });
-
-  soilBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      soilBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentSoilMoisture = btn.getAttribute('data-moisture');
-    });
-  });
-
-  toolBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      toolBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeViewMode = btn.getAttribute('data-mode');
-      const titleMap = {
-        'depth': 'Water Depth Inundation (Meters)',
-        'elevation': 'Digital Elevation Model (Meters)',
-        'impervious': 'Built-Up Impervious Ratio (%)'
-      };
-      document.getElementById('legendTitle').innerText = titleMap[activeViewMode] || 'Inundation Depth';
-      requestRender();
-    });
-  });
-
-  const swmmCompareBtn = document.getElementById('swmmCompareBtn');
-  if (swmmCompareBtn) {
-    swmmCompareBtn.addEventListener('click', async () => {
-      if (showSwmmOverlay) {
-        showSwmmOverlay = false;
-        swmmCompareBtn.style.background = 'rgba(2,132,199,0.1)';
-        requestRender();
-        return;
-      }
-
-      swmmCompareBtn.innerText = 'Computing SWMM...';
-      try {
-        const resp = await fetch('/api/swmm-compare', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            region: regionSelect ? regionSelect.value : 'hsr',
-            rainfall_mmhr: parseFloat(rainSlider.value),
-            duration_min: parseFloat(durationSlider.value),
-            soil_moisture: currentSoilMoisture
-          })
-        });
-        const data = await resp.json();
-        if (data.status === 'success') {
-          swmmComparisonData = data.nodes;
-          showSwmmOverlay = true;
-          swmmCompareBtn.style.background = 'rgba(2,132,199,0.3)';
-          swmmCompareBtn.innerText = `GNN vs SWMM (MAE: ${data.metrics.mae_m.toFixed(4)}m)`;
-          requestRender();
-        }
-      } catch (err) {
-        console.error('SWMM compare error:', err);
-        swmmCompareBtn.innerText = 'GNN vs SWMM';
-      }
-    });
-  }
-
-  runSimBtn.addEventListener('click', async () => {
-    stopStormPlayback();
-    runSimBtn.innerText = 'Evaluating PINN Graph...';
-    runSimBtn.disabled = true;
-
     try {
-      const resp = await fetch('/api/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          region: regionSelect ? regionSelect.value : 'hsr',
-          rainfall_mmhr: parseFloat(rainSlider.value),
-          duration_min: parseFloat(durationSlider.value),
-          soil_moisture: currentSoilMoisture
-        })
+      const resp = await fetch(`/api/historical-validation?region=${activeRegion}`);
+      const json = await resp.json();
+      if (json.status !== 'success') return;
+
+      const complaints = json.data.complaints;
+      incidentMarkers.forEach(m => leafletMap.removeLayer(m));
+      incidentMarkers = [];
+
+      complaints.forEach(c => {
+        const pinHtml = `<div class="incident-tactical-pin" title="${c.name}"></div>`;
+        const pinIcon = L.divIcon({ html: pinHtml, className: '', iconSize: [20, 20], iconAnchor: [10, 10] });
+        const marker = L.marker([c.lat, c.lng], { icon: pinIcon }).addTo(leafletMap);
+
+        marker.bindPopup(`
+          <div style="font-family:var(--font-sans, sans-serif); padding:6px; color:#1E2B21; background:#FFFFFF; border:1px solid #D3DDD0; border-radius:4px; max-width:260px; box-shadow:0 3px 10px rgba(0,0,0,0.12);">
+            <div style="font-family:var(--font-mono, monospace); font-size:0.65rem; color:#C84B31; font-weight:700; margin-bottom:2px;">VERIFIED CITIZEN DISTRESS INCIDENT</div>
+            <h4 style="margin:0 0 6px 0; font-size:0.85rem; color:#1E2B21; font-weight:700;">${c.name}</h4>
+            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:3px;"><strong>Reported Depth:</strong> <span style="color:#C97218; font-weight:700;">${c.reported_depth_m} m</span></div>
+            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:3px;"><strong>GNN Predicted Stage:</strong> <span style="color:#2E7D32; font-weight:700;">${c.predicted_depth_m} m</span></div>
+            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:3px;"><strong>Nearest Hazard Node:</strong> ${c.distance_m} m</div>
+            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:6px;"><strong>Source:</strong> ${c.source}</div>
+            <div style="font-family:var(--font-mono, monospace); font-size:0.7rem; font-weight:700; color:${c.is_captured ? '#2E7D32' : '#C84B31'}; border-top:1px solid #D8DFD4; padding-top:4px;">
+              Status: ${c.is_captured ? 'CAPTURED (<=50m Proximity)' : 'Boundary Proximate'}
+            </div>
+          </div>
+        `);
+
+        incidentMarkers.push(marker);
       });
 
-      const data = await resp.json();
-      if (data.status === 'success') {
-        bioswaleSlider.value = 0;
-        bioswaleValue.innerText = '0%';
-        drainSlider.value = 0;
-        drainValue.innerText = '0%';
-        gardenSlider.value = 0;
-        gardenValue.innerText = '0%';
-
-        updateSimulationResults(data);
-      }
     } catch (err) {
-      console.error('Simulation error:', err);
-    } finally {
-      runSimBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-        </svg>
-        Run Neural Digital Twin`;
-      runSimBtn.disabled = false;
+      console.error('Failed to load incident overlay:', err);
     }
-  });
+  }
+
+  if (toggleIncidentsBtn) {
+    toggleIncidentsBtn.addEventListener('click', () => toggleIncidentsDisplay());
+  }
+
+  // =========================================================================
+  // AUTOMATED STORM EVENT SIMULATION PLAYER
+  // =========================================================================
+  function stopStormPlayback() {
+    if (stormPlaybackInterval) {
+      clearInterval(stormPlaybackInterval);
+      stormPlaybackInterval = null;
+    }
+    isStormPlaying = false;
+    if (playIcon) playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+    if (playBtnText) playBtnText.innerText = 'Simulate Cloudburst Event (60m)';
+    if (stormScrubberContainer) stormScrubberContainer.style.display = 'none';
+  }
 
   if (playStormBtn) {
     playStormBtn.addEventListener('click', async () => {
-      if (stormPlaybackInterval) {
+      if (isStormPlaying) {
         stopStormPlayback();
         return;
       }
 
-      playStormBtn.innerText = 'Loading Storm Frames...';
-      playStormBtn.disabled = true;
+      isStormPlaying = true;
+      if (playIcon) playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+      if (playBtnText) playBtnText.innerText = 'Pause Event Simulation';
+      if (stormScrubberContainer) stormScrubberContainer.style.display = 'flex';
 
       try {
         const resp = await fetch('/api/storm-playback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            region: regionSelect ? regionSelect.value : 'hsr',
-            total_duration_min: 60.0,
-            max_rainfall_mmhr: parseFloat(stormProfileSelect.value),
-            soil_moisture: currentSoilMoisture
+            region: activeRegion,
+            total_duration_min: 60,
+            max_rainfall_mmhr: 150
           })
         });
+
         const data = await resp.json();
         if (data.status !== 'success') {
-          playStormBtn.innerText = 'Play Storm Event (60-min timeline)';
-          playStormBtn.disabled = false;
+          stopStormPlayback();
           return;
         }
 
-        stormProgress.style.display = 'block';
-        playStormBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Stop Storm Playback`;
-        playStormBtn.disabled = false;
-
-        let frameIdx = 0;
         const frames = data.frames;
+        let frameIdx = 0;
 
-        function applyFrame(idx) {
-          const frame = frames[idx];
-          stormProgressFill.style.width = `${((idx + 1) / frames.length) * 100}%`;
-          stormTimeLabel.innerText = `${frame.time_min} min`;
-          stormRainLabel.innerText = `${frame.rainfall_mmhr} mm/hr`;
-          stormFrameLabel.innerText = `Frame ${idx + 1}/${frames.length}`;
+        function renderFrame(idx) {
+          const f = frames[idx];
+          if (!f) return;
 
+          // Update hyetograph scrubber UI
+          const pct = ((idx + 1) / frames.length) * 100;
+          if (stormProgressFill) stormProgressFill.style.width = `${pct}%`;
+          if (stormTimeReadout) stormTimeReadout.innerText = `T+${f.time_min} min`;
+          if (stormRainReadout) stormRainReadout.innerText = `${f.rainfall_mmhr} mm/hr`;
+          if (stormFrameReadout) stormFrameReadout.innerText = `Step ${idx + 1}/${frames.length}`;
+
+          // Update nodes depths
           const depthMap = new Map();
-          frame.nodes.forEach(n => depthMap.set(n.id, n.gnn_depth));
+          const frameNodesList = f.nodes || f.node_depths || [];
+          frameNodesList.forEach(d => depthMap.set(String(d.id), d.gnn_depth !== undefined ? d.gnn_depth : d.depth));
 
           nodesData.forEach(n => {
-            if (depthMap.has(n.id)) {
-              n.gnn_depth = depthMap.get(n.id);
+            if (depthMap.has(String(n.id))) {
+              n.gnn_depth = depthMap.get(String(n.id));
             }
           });
 
-          let maxDepth = 0;
-          let depthSum = 0;
-          let floodedCount = 0;
-          let basementRisk = 0;
+          // Live KPIs
+          document.getElementById('kpiMaxDepth').innerText = `${f.max_depth.toFixed(2)} m`;
+          const latEl = document.getElementById('headerLatencyVal');
+          if (latEl) latEl.innerText = `${f.inference_ms} ms`;
+          const rightLat = document.getElementById('rightModelLatency');
+          if (rightLat) rightLat.innerText = `${f.inference_ms} ms`;
+          const floodedPct = ((f.flooded_count / nodesData.length) * 100).toFixed(1);
+          document.getElementById('kpiFloodedPct').innerText = `${floodedPct}%`;
+          const barPctEl = document.getElementById('kpiFloodedBarPct');
+          if (barPctEl) barPctEl.innerText = `${floodedPct}%`;
+          document.getElementById('kpiProgressBar').style.width = `${floodedPct}%`;
 
-          nodesData.forEach(n => {
-            const d = n.gnn_depth || 0;
-            maxDepth = Math.max(maxDepth, d);
-            depthSum += d;
-            if (d > 0.05) floodedCount++;
-            if (n.is_basement && d > 0.12) basementRisk++;
-          });
-
-          const avgDepth = depthSum / nodesData.length;
-          document.getElementById('maxDepthVal').innerText = `${maxDepth.toFixed(3)} m`;
-          document.getElementById('avgDepthSub').innerText = `Avg: ${avgDepth.toFixed(4)} m`;
-          document.getElementById('volVal').innerText = `${Math.round(depthSum * 500.0).toLocaleString()} m3`;
-          document.getElementById('floodedNodesSub').innerText = `Flooded Nodes: ${floodedCount} / ${nodesData.length}`;
-          document.getElementById('basementAlertVal').innerText = `${basementRisk} Complex`;
-          document.getElementById('floodedPctVal').innerText = `${(100.0 * floodedCount / nodesData.length).toFixed(1)}%`;
-          document.getElementById('floodedCountSub').innerText = `${floodedCount} / ${nodesData.length} nodes inundated`;
-
-          const riskNodes = nodesData
-            .filter(n => (n.gnn_depth || 0) > 0.08)
-            .sort((a, b) => (b.gnn_depth || 0) - (a.gnn_depth || 0));
-          populateRiskTable(riskNodes);
           requestRender();
         }
 
-        applyFrame(0);
+        renderFrame(0);
         frameIdx = 1;
 
         stormPlaybackInterval = setInterval(() => {
@@ -812,9 +1104,9 @@ document.addEventListener('DOMContentLoaded', () => {
             stopStormPlayback();
             return;
           }
-          applyFrame(frameIdx);
+          renderFrame(frameIdx);
           frameIdx++;
-        }, 1800);
+        }, 1200);
 
       } catch (err) {
         console.error('Storm playback error:', err);
@@ -823,280 +1115,94 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  applyMitigationBtn.addEventListener('click', async () => {
-    applyMitigationBtn.innerText = 'Recalculating...';
-    applyMitigationBtn.disabled = true;
-
-    try {
-      const resp = await fetch('/api/mitigation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          region: regionSelect ? regionSelect.value : 'hsr',
-          rainfall_mmhr: parseFloat(rainSlider.value),
-          bioswales_pct: parseFloat(bioswaleSlider.value),
-          drain_cleaning_pct: parseFloat(drainSlider.value),
-          rain_gardens_pct: parseFloat(gardenSlider.value)
-        })
-      });
-
-      const data = await resp.json();
-      if (data.status === 'success') {
-        const depthMap = new Map();
-        data.nodes.forEach(n => depthMap.set(n.id, n.mitigated_depth));
-        nodesData.forEach(n => { if (depthMap.has(n.id)) n.gnn_depth = depthMap.get(n.id); });
-
-        let maxDepth = 0, depthSum = 0, floodedNodesCount = 0, basementRiskCount = 0;
-        nodesData.forEach(n => {
-          const d = n.gnn_depth || 0;
-          maxDepth = Math.max(maxDepth, d);
-          depthSum += d;
-          if (d > 0.05) floodedNodesCount++;
-          if (n.is_basement && d > 0.12) basementRiskCount++;
-        });
-
-        const avgDepth = depthSum / nodesData.length;
-        document.getElementById('maxDepthVal').innerText = `${maxDepth.toFixed(3)} m`;
-        document.getElementById('avgDepthSub').innerText = `Avg: ${avgDepth.toFixed(4)} m`;
-        document.getElementById('volVal').innerText = `${Math.round(depthSum * 500.0).toLocaleString()} m3`;
-        document.getElementById('floodedNodesSub').innerText = `Flooded Nodes: ${floodedNodesCount} / ${nodesData.length}`;
-        document.getElementById('basementAlertVal').innerText = `${basementRiskCount} Complex`;
-        document.getElementById('floodedPctVal').innerText = `${(100.0 * floodedNodesCount / nodesData.length).toFixed(1)}%`;
-        document.getElementById('floodedCountSub').innerText = `${floodedNodesCount} / ${nodesData.length} nodes inundated`;
-
-        const riskNodes = nodesData.filter(n => (n.gnn_depth || 0) > 0.08)
-          .sort((a, b) => (b.gnn_depth || 0) - (a.gnn_depth || 0));
-        requestRender();
-        populateRiskTable(riskNodes);
-      }
-    } catch (err) {
-      console.error('Mitigation error:', err);
-    } finally {
-      applyMitigationBtn.innerText = 'Apply NBS & Recalculate Runoff';
-      applyMitigationBtn.disabled = false;
-    }
-  });
-
-  function updateSimulationResults(data) {
-    const m = data.metrics;
-    currentMetrics = m;
-
-    document.getElementById('gnnTimeVal').innerText = `${m.gnn_time_ms} ms`;
-    document.getElementById('inferLatVal').innerText = `${m.gnn_time_ms} ms`;
-    document.getElementById('speedupVal').innerText = `${m.speedup_ratio}x`;
-    document.getElementById('speedupHeaderVal').innerText = `~${m.speedup_ratio}x`;
-    document.getElementById('speedupSub').innerText = `vs SWMM: ${(m.swmm_time_ms / 1000).toFixed(1)}s`;
-
-    document.getElementById('maxDepthVal').innerText = `${m.max_depth_m} m`;
-    document.getElementById('avgDepthSub').innerText = `Avg: ${m.avg_depth_m} m`;
-    document.getElementById('volVal').innerText = `${m.total_volume_m3.toLocaleString()} m3`;
-    document.getElementById('floodedNodesSub').innerText = `Flooded Nodes: ${m.total_flooded_nodes} / ${m.total_nodes}`;
-    document.getElementById('floodedPctVal').innerText = `${m.flooded_pct}%`;
-    document.getElementById('floodedCountSub').innerText = `${m.total_flooded_nodes} / ${m.total_nodes} nodes inundated`;
-    document.getElementById('basementAlertVal').innerText = `${m.basement_risk_count} Complex`;
-
-    const depthMap = new Map();
-    data.nodes.forEach(n => depthMap.set(n.id, n));
-    nodesData.forEach(n => {
-      if (depthMap.has(n.id)) {
-        const r = depthMap.get(n.id);
-        n.gnn_depth = r.gnn_depth;
-        n.swmm_depth = r.swmm_depth;
-      }
-    });
-
-    populateRiskTable(data.risk_nodes);
-    populateDispatch(data.dispatch_recommendations || []);
-    populateAlert(data.rwa_alert || '');
-    updateBenchmarkChart(m.gnn_time_ms, m.swmm_time_ms);
-    requestRender();
-  }
-
-  function populateRiskTable(riskNodes) {
-    const tbody = document.getElementById('riskTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    if (!riskNodes || riskNodes.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No high-risk inundated junctions detected at current threshold.</td></tr>';
-      return;
-    }
-
-    riskNodes.slice(0, 30).forEach(n => {
-      const tr = document.createElement('tr');
-      const d = n.gnn_depth || 0;
-      let badgeClass = 'badge-safe', riskTxt = 'Safe';
-      if (d >= 0.30) { badgeClass = 'badge-severe'; riskTxt = 'Critical'; }
-      else if (d >= 0.15) { badgeClass = 'badge-high'; riskTxt = 'Advisory'; }
-      else if (d >= 0.05) { badgeClass = 'badge-moderate'; riskTxt = 'Watch'; }
-
-      const fullIdStr = String(n.id);
-      const shortLabel = fullIdStr.length > 6 ? `#${fullIdStr.slice(-5)}` : `#${fullIdStr}`;
-
-      tr.innerHTML = `
-        <td class="clickable-node-cell" data-id="${n.id}" title="Click to inspect Node #${n.id}" style="font-weight:700; color:#0284c7; cursor:pointer; text-decoration:underline;">${shortLabel} ${n.is_basement ? '<span style="font-size:0.65rem; color:#dc2626; font-weight:700;">[B]</span>' : ''}</td>
-        <td class="num-col" style="color:#475569;">${(n.elevation || 880).toFixed(1)}</td>
-        <td class="num-col" style="font-weight:700; color:${d >= 0.30 ? '#dc2626' : (d >= 0.15 ? '#ea580c' : '#0284c7')}">${d.toFixed(3)}</td>
-        <td class="text-center"><span class="badge ${badgeClass}">${riskTxt}</span></td>
-        <td class="text-center"><button class="locate-btn" data-id="${n.id}">Locate</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    const triggerSelect = (e) => {
-      const id = e.currentTarget.getAttribute('data-id');
-      const target = nodesData.find(n => String(n.id) === String(id));
-      if (target) {
-        selectedNode = target;
-        if (target.lat && target.lng) {
-          leafletMap.flyTo([target.lat, target.lng], 17, { duration: 1.2 });
-        }
-        openNodeInspector(target);
-        requestRender();
-      }
-    };
-
-    document.querySelectorAll('.locate-btn, .clickable-node-cell').forEach(el => {
-      el.addEventListener('click', triggerSelect);
-    });
-  }
-
-  function populateDispatch(recs) {
-    const container = document.getElementById('dispatchList');
-    if (!container) return;
-    container.innerHTML = '';
-    if (recs.length === 0) {
-      container.innerHTML = '<p class="empty-state-text">No emergency dispatch recommendations at current risk level.</p>';
-      return;
-    }
-    recs.forEach(rec => {
-      const div = document.createElement('div');
-      div.className = 'dispatch-card';
-      const color = rec.priority === 'CRITICAL' ? '#DC2626' : (rec.priority === 'HIGH' ? '#f59e0b' : '#22c55e');
-      div.style.borderLeft = `4px solid ${color}`;
-      div.innerHTML = `
-        <div class="dispatch-priority" style="color:${color}">[${rec.priority}]</div>
-        <div class="dispatch-action">${rec.action}</div>
-        <div class="dispatch-detail">${rec.detail}</div>
-      `;
-      container.appendChild(div);
-    });
-  }
-
-  function populateAlert(alertText) {
-    const el = document.getElementById('rwaAlertText');
-    if (el) el.textContent = alertText;
-  }
-
-  // Ground Truth Validation Overlay
-  const validationModeBtn = document.getElementById('validationModeBtn');
-  let historicalMarkers = [];
-  let isValidationActive = false;
-
-  if (validationModeBtn) {
-    validationModeBtn.addEventListener('click', async () => {
-      if (isValidationActive) {
-        historicalMarkers.forEach(m => leafletMap.removeLayer(m));
-        historicalMarkers = [];
-        isValidationActive = false;
-        validationModeBtn.style.background = 'rgba(220,38,38,0.1)';
-        validationModeBtn.innerText = 'Ground Truth (Oct 2024)';
-        return;
-      }
-
-      validationModeBtn.innerText = 'Fetching Complaint Logs...';
-      try {
-        const resp = await fetch('/api/historical-validation');
-        const json = await resp.json();
-
-        if (json.status === 'success') {
-          const valData = json.data;
-          const complaints = valData.complaints;
-          const metrics = valData.metrics;
-
-          isValidationActive = true;
-          validationModeBtn.style.background = '#dc2626';
-          validationModeBtn.style.color = '#ffffff';
-          validationModeBtn.innerText = `Ground Truth Active (F1: ${(metrics.f1_score * 100).toFixed(1)}%)`;
-
-          historicalMarkers.forEach(m => leafletMap.removeLayer(m));
-          historicalMarkers = [];
-
-          complaints.forEach(c => {
-            const iconHtml = `<div style="background:#dc2626; border:2px solid #ffffff; width:16px; height:16px; border-radius:50%; box-shadow:0 0 12px rgba(220,38,38,0.6); cursor:pointer;"></div>`;
-            const customIcon = L.divIcon({ html: iconHtml, className: 'complaint-pin-icon', iconSize: [16, 16] });
-            const marker = L.marker([c.lat, c.lng], { icon: customIcon }).addTo(leafletMap);
-            marker.bindPopup(`
-              <div style="font-family:sans-serif; padding:4px; color:#0f172a;">
-                <h4 style="margin:0 0 4px 0; font-size:0.85rem; color:#dc2626; font-weight:800;">Geotagged Incident Log</h4>
-                <p style="margin:0 0 4px 0; font-weight:700; font-size:0.8rem;">${c.name}</p>
-                <p style="margin:0 0 2px 0; font-size:0.75rem; color:#475569;"><strong>Reported Depth:</strong> ${c.reported_depth_m} m</p>
-                <p style="margin:0 0 2px 0; font-size:0.75rem; color:#475569;"><strong>GNN Predicted:</strong> ${c.predicted_depth_m} m</p>
-                <p style="margin:0 0 2px 0; font-size:0.75rem; color:#475569;"><strong>Source:</strong> ${c.source}</p>
-                <p style="margin:0; font-size:0.75rem; color:${c.is_correctly_flagged ? '#059669' : '#d97706'}; font-weight:700;"><strong>Status:</strong> ${c.is_correctly_flagged ? 'Verified True Positive' : 'Moderate Detection'}</p>
-              </div>
-            `);
-            historicalMarkers.push(marker);
-          });
-        }
-      } catch (err) {
-        console.error('Validation error:', err);
-        validationModeBtn.innerText = 'Ground Truth (Oct 2024)';
-      }
-    });
-  }
-
-  // Tabs Switching Handler
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const tabContents = document.querySelectorAll('.tab-content');
-
-  tabBtns.forEach(btn => {
+  // =========================================================================
+  // HISTORICAL EVENT REPLAY PRESETS
+  // =========================================================================
+  document.querySelectorAll('.preset-card-btn[data-preset]').forEach(btn => {
     btn.addEventListener('click', () => {
-      tabBtns.forEach(b => b.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      const tabId = btn.getAttribute('data-tab');
-      document.getElementById(tabId).classList.add('active');
-      if (tabId === 'tab-benchmark' && benchmarkChart) {
-        benchmarkChart.resize();
+      const preset = btn.getAttribute('data-preset');
+      if (preset === 'bengaluru_oct19') {
+        regionSelect.value = 'hsr';
+        rainSlider.value = 105;
+        durationSlider.value = 90;
+        rainReadout.innerText = '105 mm/hr';
+        durationReadout.innerText = '90 min';
+        loadGraphData('hsr').then(() => {
+          toggleIncidentsDisplay(true);
+        });
+      } else if (preset === 'typhoon_saola') {
+        regionSelect.value = 'hongkong';
+        rainSlider.value = 140;
+        durationSlider.value = 60;
+        rainReadout.innerText = '140 mm/hr';
+        durationReadout.innerText = '60 min';
+        toggleIncidentsDisplay(false);
+        loadGraphData('hongkong');
+      } else if (preset === 'tokyo_cloudburst') {
+        regionSelect.value = 'tokyo';
+        rainSlider.value = 100;
+        durationSlider.value = 60;
+        rainReadout.innerText = '100 mm/hr';
+        durationReadout.innerText = '60 min';
+        toggleIncidentsDisplay(false);
+        loadGraphData('tokyo');
       }
     });
   });
 
-  function initCharts() {
-    const el1 = document.getElementById('benchmarkChart');
-    if (el1) {
-      benchmarkChart = new Chart(el1.getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: ['PINN-GNN', 'EPA SWMM', '3D CFD'],
-          datasets: [{
-            label: 'Runtime (ms)',
-            data: [8.4, 12500, 450000],
-            backgroundColor: ['#059669', '#0284C7', '#DC2626'],
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { type: 'logarithmic', grid: { color: '#E2E8F0' }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono' } } },
-            x: { grid: { display: false }, ticks: { color: '#64748B' } }
-          },
-          plugins: { legend: { display: false } }
-        }
-      });
+  // =========================================================================
+  // DYNAMIC RESIZE SPLITTERS (SMOOTH SIDE PANEL RESIZING)
+  // =========================================================================
+  const workspace = document.querySelector('.command-workspace');
+  let leftWidth = 340;
+  let rightWidth = 380;
+
+  function updateWorkspaceGrid() {
+    if (workspace) {
+      workspace.style.gridTemplateColumns = `${leftWidth}px 6px 1fr 6px ${rightWidth}px`;
+      resizeCanvas();
     }
   }
 
-  function updateBenchmarkChart(gnnMs, swmmMs) {
-    if (benchmarkChart) {
-      benchmarkChart.data.datasets[0].data = [gnnMs, swmmMs, 450000];
-      benchmarkChart.update();
-    }
+  function setupSplitter(splitterEl, isLeft) {
+    if (!splitterEl) return;
+    let isDragging = false;
+
+    splitterEl.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      splitterEl.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      if (isLeft) {
+        leftWidth = Math.max(220, Math.min(500, e.clientX));
+      } else {
+        rightWidth = Math.max(260, Math.min(550, window.innerWidth - e.clientX));
+      }
+      updateWorkspaceGrid();
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        splitterEl.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        resizeCanvas();
+      }
+    });
   }
 
+  setupSplitter(leftSplitter, true);
+  setupSplitter(rightSplitter, false);
+
+  // =========================================================================
+  // INITIALIZE FIRST LOAD (HSR LAYOUT)
+  // =========================================================================
   loadGraphData('hsr');
-  setTimeout(resizeCanvas, 300);
+  setTimeout(resizeCanvas, 250);
 });

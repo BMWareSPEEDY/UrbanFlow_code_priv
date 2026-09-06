@@ -3,20 +3,22 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import os
 from torch_geometric.data import Batch
 from torch_geometric.nn import GATv2Conv
+from torch_geometric.loader import DataLoader
 
 sys.stdout.reconfigure(line_buffering=True)
 
 
 class PerfectAccuracyGNN(nn.Module):
     """
-    Ultra-High Precision Deep Graph Neural Network Architecture (12 Dynamic Features).
+    Ultra-High Precision Deep Graph Neural Network Architecture (24 Dynamic Features).
     Uses unconstrained linear output with Target Standard Scaling for 100% gradient flow,
     fusing 4-layer multi-head GATv2 attention representations with local hydraulic sag indices
     and dynamic meteorological forcing (rainfall intensity & duration).
     """
-    def __init__(self, in_channels=14, hidden_channels=256, out_channels=1):
+    def __init__(self, in_channels=24, hidden_channels=256, out_channels=1):
         super(PerfectAccuracyGNN, self).__init__()
         
         self.conv1 = GATv2Conv(in_channels, hidden_channels, heads=4, concat=True, edge_dim=2)
@@ -56,26 +58,31 @@ class PerfectAccuracyGNN(nn.Module):
 
 
 def train_perfect_accuracy():
-    print("=================================================================", flush=True)
-    print("  URBANFLOW GENERALIZED MULTI-SCENARIO PINN ENGINE (12 FEATURES)", flush=True)
-    print("=================================================================\n", flush=True)
+    print("================================================================", flush=True)
+    print("  URBANFLOW GENERALIZED MULTI-SCENARIO PINN ENGINE", flush=True)
+    print("================================================================\n", flush=True)
     
     dataset_path = "multi_scenario_pyg_dataset.pt"
-    try:
-        scenario_list = torch.load(dataset_path, weights_only=False)
-        if isinstance(scenario_list, Batch):
-            # Convert back to list if single batch
-            scenario_list = scenario_list.to_data_list()
-    except Exception as e:
-        print(f"Loading '{dataset_path}' failed, falling back to 'bengaluru_pyg_dataset.pt'...")
-        scenario_list = [torch.load("bengaluru_pyg_dataset.pt", weights_only=False)]
+    if not os.path.exists(dataset_path):
+        dataset_path = "bengaluru_pyg_dataset.pt"
+        
+    scenario_list = torch.load(dataset_path, weights_only=False)
+    if not isinstance(scenario_list, list):
+        scenario_list = [scenario_list]
 
     print(f"Loaded dataset with {len(scenario_list)} scenario graph batches.", flush=True)
 
-    # Hold out 50.0 mm/hr and 100.0 mm/hr storms for Out-of-Distribution (OOD) validation
-    HOLDOUT_INTENSITIES = [50.0, 100.0]
-    train_graphs = [g for g in scenario_list if getattr(g, 'rain_intensity', 50.0) not in HOLDOUT_INTENSITIES]
-    val_graphs = [g for g in scenario_list if getattr(g, 'rain_intensity', 50.0) in HOLDOUT_INTENSITIES]
+    HOLDOUT_INTENSITIES = {50.0}
+    
+    train_graphs = []
+    val_graphs = []
+
+    for g in scenario_list:
+        intensity = getattr(g, 'rain_intensity', None)
+        if intensity in HOLDOUT_INTENSITIES:
+            val_graphs.append(g)
+        else:
+            train_graphs.append(g)
 
     if len(val_graphs) == 0:
         print("Warning: No matching holdout scenarios found! Splitting 80/20 randomly...", flush=True)
@@ -83,72 +90,94 @@ def train_perfect_accuracy():
         train_graphs = scenario_list[:split_idx]
         val_graphs = scenario_list[split_idx:]
 
-    print(f"Training Scenarios ({len(train_graphs)}): {[getattr(g, 'rain_intensity', 'N/A') for g in train_graphs]} mm/hr", flush=True)
-    print(f"Holdout Validation Scenarios ({len(val_graphs)}): {[getattr(g, 'rain_intensity', 'N/A') for g in val_graphs]} mm/hr\n", flush=True)
+    print(f"Training Scenarios ({len(train_graphs)}): {[getattr(g, 'rain_intensity', 'N/A') for g in train_graphs[:10]]}... mm/hr", flush=True)
+    print(f"Holdout Validation Scenarios ({len(val_graphs)}): {[getattr(g, 'rain_intensity', 'N/A') for g in val_graphs[:10]]}... mm/hr\n", flush=True)
 
-    train_batch = Batch.from_data_list(train_graphs)
-    val_batch = Batch.from_data_list(val_graphs)
+    # Calculate normalization stats from training set
+    all_x = torch.cat([g.x for g in train_graphs], dim=0)
+    all_edge_attr = torch.cat([g.edge_attr for g in train_graphs], dim=0)
+    all_y = torch.cat([g.y for g in train_graphs], dim=0)
 
-    # Standardize features based on Training Set statistics
-    x_mean, x_std = train_batch.x.mean(dim=0), train_batch.x.std(dim=0) + 1e-6
-    edge_attr_mean, edge_attr_std = train_batch.edge_attr.mean(dim=0), train_batch.edge_attr.std(dim=0) + 1e-6
-    y_mean, y_std = train_batch.y.mean(), train_batch.y.std() + 1e-6
-
-    # Apply standardization
-    train_batch.x = (train_batch.x - x_mean) / x_std
-    train_batch.edge_attr = (train_batch.edge_attr - edge_attr_mean) / edge_attr_std
-    train_y_norm = (train_batch.y - y_mean) / y_std
-
-    val_batch.x = (val_batch.x - x_mean) / x_std
-    val_batch.edge_attr = (val_batch.edge_attr - edge_attr_mean) / edge_attr_std
-    val_y_norm = (val_batch.y - y_mean) / y_std
+    x_mean, x_std = all_x.mean(dim=0), all_x.std(dim=0) + 1e-6
+    edge_attr_mean, edge_attr_std = all_edge_attr.mean(dim=0), all_edge_attr.std(dim=0) + 1e-6
+    y_mean, y_std = all_y.mean(), all_y.std() + 1e-6
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Compute Hardware Device: {device}", flush=True)
 
-    model = PerfectAccuracyGNN(in_channels=14, hidden_channels=256, out_channels=1).to(device)
+    in_feat_dim = int(train_graphs[0].x.shape[1])
+    model = PerfectAccuracyGNN(in_channels=in_feat_dim, hidden_channels=256, out_channels=1).to(device)
 
-    train_batch = train_batch.to(device)
-    train_y_norm = train_y_norm.to(device)
-    val_batch = val_batch.to(device)
-    val_y_norm = val_y_norm.to(device)
+    train_loader = DataLoader(train_graphs, batch_size=2, shuffle=True)
+    val_loader = DataLoader(val_graphs, batch_size=2, shuffle=False)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=1e-5)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=1200, eta_min=1e-5)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=300, eta_min=1e-5)
 
-    print("\nExecuting 12-Feature Multi-Scenario Deep GNN Training (1,200 Epochs)...", flush=True)
+    print("\nExecuting Mini-Batch Deep PINN Training (300 Epochs)...", flush=True)
     best_val_mae = float('inf')
 
-    for epoch in range(1, 1201):
+    for epoch in range(1, 301):
         model.train()
-        optimizer.zero_grad()
-        out_norm = model(train_batch.x, train_batch.edge_index, train_batch.edge_attr)
-        
-        mse_loss = F.mse_loss(out_norm, train_y_norm)
-        huber_loss = F.huber_loss(out_norm, train_y_norm, delta=0.1)
-        
-        pred_meters = torch.clamp(out_norm * y_std + y_mean, min=0.0)
-        depth_weights = 1.0 + torch.clamp(train_batch.y * 5.0, max=10.0)
-        focal_l1 = torch.mean(depth_weights * torch.abs(pred_meters - train_batch.y))
-        
-        total_loss = mse_loss + huber_loss + (0.5 * focal_l1)
-        total_loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-        optimizer.step()
-        scheduler.step()
+        train_l1_total = 0.0
+        node_count = 0
 
-        # Validation loop
-        if epoch % 10 == 0 or epoch == 1 or epoch == 1200:
+        for batch in train_loader:
+            batch = batch.to(device)
+            x_norm = (batch.x - x_mean.to(device)) / x_std.to(device)
+            edge_norm = (batch.edge_attr - edge_attr_mean.to(device)) / edge_attr_std.to(device)
+            y_norm = (batch.y.to(device) - y_mean.to(device)) / y_std.to(device)
+
+            optimizer.zero_grad()
+            out_norm = model(x_norm, batch.edge_index, edge_norm).squeeze()
+            target_y = batch.y.to(device).squeeze()
+            pred_meters = torch.clamp(out_norm * y_std.to(device) + y_mean.to(device), min=0.0)
+            depth_diff = pred_meters - target_y
+
+            # Normalized Smooth L1 Loss with Asymmetric Weighting on Under-predictions
+            y_norm_sq = y_norm.squeeze()
+            norm_huber = F.smooth_l1_loss(out_norm, y_norm_sq, beta=0.1, reduction='none')
+
+            underpredict_mask = (depth_diff < 0.0) & (target_y >= 0.20)
+            weights = torch.ones_like(y_norm_sq)
+            weights[underpredict_mask] = 2.5 + (target_y[underpredict_mask] * 1.5)
+
+            total_loss = torch.mean(weights * norm_huber)
+
+
+            total_loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
+
+
+
+            train_l1_total += float(torch.sum(torch.abs(depth_diff)).detach().cpu().numpy())
+            node_count += int(batch.y.shape[0])
+
+        scheduler.step()
+        train_mae = train_l1_total / max(1, node_count)
+
+        if epoch % 10 == 0 or epoch == 1 or epoch == 300:
             model.eval()
+            val_l1_total = 0.0
+            val_nodes = 0
             with torch.no_grad():
-                val_out_norm = model(val_batch.x, val_batch.edge_index, val_batch.edge_attr)
-                val_pred_meters = torch.clamp(val_out_norm * y_std + y_mean, min=0.0)
-                val_mae = float(F.l1_loss(val_pred_meters, val_batch.y).cpu().numpy())
-                train_mae = float(F.l1_loss(pred_meters, train_batch.y).cpu().numpy())
+                for vbatch in val_loader:
+                    vbatch = vbatch.to(device)
+                    vx_norm = (vbatch.x - x_mean.to(device)) / x_std.to(device)
+                    vedge_norm = (vbatch.edge_attr - edge_attr_mean.to(device)) / edge_attr_std.to(device)
+                    vout_norm = model(vx_norm, vbatch.edge_index, vedge_norm)
+                    vpred_meters = torch.clamp(vout_norm * y_std.to(device) + y_mean.to(device), min=0.0)
+                    val_l1_total += float(torch.sum(torch.abs(vpred_meters - vbatch.y.to(device))).cpu().numpy())
+                    val_nodes += int(vbatch.y.shape[0])
+
+            val_mae = val_l1_total / max(1, val_nodes)
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
 
             if val_mae < best_val_mae:
                 best_val_mae = val_mae
-                # Save model along with dataset stats
                 checkpoint = {
                     'model_state_dict': model.state_dict(),
                     'x_mean': x_mean.cpu(),
@@ -161,12 +190,10 @@ def train_perfect_accuracy():
                 torch.save(checkpoint, "pinn_gnn_checkpoint.pt")
                 torch.save(model.state_dict(), "pinn_gnn_model.pth")
 
-            if epoch % 100 == 0 or epoch == 1:
+            if epoch % 20 == 0 or epoch == 1:
                 print(f"Epoch {epoch:04d} | Train MAE: {train_mae:.4f}m ({train_mae*100:.2f}cm) | OOD Val MAE: {val_mae:.4f}m ({val_mae*100:.2f}cm) | Best Val MAE: {best_val_mae*100:.2f}cm", flush=True)
-
 
     print(f"\nOptimization Complete! Best Out-of-Distribution Validation MAE: {best_val_mae:.4f}m ({best_val_mae*100:.2f}cm). Model saved to 'pinn_gnn_model.pth'.", flush=True)
 
 if __name__ == "__main__":
     train_perfect_accuracy()
-

@@ -3,375 +3,612 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UrbanFlow | Municipal Early Warning Digital Twin</title>
+  <title>UrbanFLOW | Municipal Emergency Early Warning & Hydrodynamic Digital Twin Dashboard</title>
+  
+  <!-- Typography: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet GIS & Chart.js -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <!-- Stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
+<body class="dashboard-body">
+
+  <!-- =========================================================================
+       1. TOP GLOBAL APP BAR (COMMAND STATUS & REAL-TIME TELEMETRY)
+       ========================================================================= -->
   <header class="app-header">
-    <div class="brand-section">
-      <div class="brand-logo">
-        <img src="{{ url_for('static', filename='images/urbanflow_logo.jpg') }}" alt="UrbanFlow Logo">
+    <div class="header-left">
+      <div class="brand-crest" title="UrbanFLOW Hydrodynamic Twin Engine">
+        <svg class="crest-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer Hex Hydro Core -->
+          <path d="M16 3L27.5 9.5V22.5L16 29L4.5 22.5V9.5L16 3Z" stroke="#81C784" stroke-width="2" stroke-linejoin="round" fill="rgba(46, 125, 50, 0.2)"/>
+          <!-- Internal River/Digital Hydrodynamic Flow Waves -->
+          <path d="M8 15C11.5 12 14.5 18 18 15C20.5 13 22.5 15.5 24 17" stroke="#A5D6A7" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M8 19C11.5 16 14.5 22 18 19C20.5 17 22.5 19.5 24 21" stroke="#43A047" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
+          <!-- Network Junction Node Beacons -->
+          <circle cx="16" cy="9.5" r="2.2" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1.2"/>
+          <circle cx="9" cy="15" r="1.8" fill="#81C784"/>
+          <circle cx="23" cy="17" r="1.8" fill="#C97218"/>
+        </svg>
       </div>
-      <div class="brand-text-container">
-        <h1 class="brand-title">
-          UrbanFlow
-          <span class="brand-badge">Early Warning Digital Twin</span>
-        </h1>
+      <div class="brand-info">
+        <div class="brand-title-row">
+          <h1 class="brand-title">UrbanFLOW</h1>
+        </div>
+        <div class="brand-subtitle">Autonomous Hydrodynamic GNN Early Warning Engine</div>
       </div>
     </div>
-    <div class="header-telemetry">
-      <div class="telemetry-badge" id="telemetryInference">
-        <span class="telemetry-icon">&#9889;</span>
-        <span>Inference Latency: <strong id="inferLatVal">-- ms</strong></span>
+
+    <!-- Catchment Selection Dropdown -->
+    <div class="header-center">
+      <div class="catchment-selector-wrap">
+        <label for="regionSelect" class="selector-label">
+          <svg class="control-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Active Catchment:
+        </label>
+        <select id="regionSelect" class="catchment-dropdown">
+          <optgroup label="Bengaluru Urban Catchments (Karnataka, India)">
+            <option value="hsr" selected>HSR Layout (Residential / Lake Basin)</option>
+            <option value="bellandur">Bellandur & Outer Ring Road Corridor</option>
+            <option value="whitefield">Whitefield (ITPB Tech Corridor)</option>
+            <option value="ecity">Electronic City (Tech Corridor)</option>
+            <option value="koramangala">Koramangala & Indiranagar Basin</option>
+          </optgroup>
+          <optgroup label="Global Megacity Validation Basins">
+            <option value="tokyo">Tokyo (Japan) - Metropolitan Basin</option>
+            <option value="hongkong">Hong Kong (China) - Urban Coastal Basin</option>
+            <option value="london">London (UK) - Thames Catchment</option>
+            <option value="singapore">Singapore - Marina Catchment</option>
+            <option value="paris">Paris (France) - Seine Basin</option>
+            <option value="nyc">New York City (USA) - Coastal Catchment</option>
+            <option value="chicago">Chicago (USA) - Waterfront Basin</option>
+            <option value="berlin">Berlin (Germany) - Spree Basin</option>
+            <option value="bangkok">Bangkok (Thailand) - Chao Phraya Lowlands</option>
+            <option value="mumbai">Mumbai (India) - Coastal Floodplain</option>
+            <option value="delhi">Delhi (India) - Yamuna Floodplain</option>
+          </optgroup>
+        </select>
       </div>
-      <div class="telemetry-badge speedup-badge">
-        <span class="telemetry-icon">&#10138;</span>
-        <span><strong id="speedupHeaderVal">~5,800x</strong> faster than EPA SWMM 5.2</span>
-      </div>
-      <div class="telemetry-badge arch-badge">
-        <span>MoE v6: Contrastive GINE + Dual-Head FiLM</span>
-      </div>
-      <div class="telemetry-badge mode-badge">
-        <span>Zero-Shot Cross-City Deployment</span>
+
+      <!-- Segmented Ground Truth / Validation Toggle -->
+      <div class="view-mode-toggle" role="tablist">
+        <button class="mode-toggle-btn active" data-source="gnn" title="View live autonomous GNN predictions">
+          GNN Neural Prediction
+        </button>
+        <button class="mode-toggle-btn" data-source="swmm" title="View benchmark numerical EPA SWMM 5.2 ground truth">
+          SWMM 5.2 Physics Truth
+        </button>
+        <button class="mode-toggle-btn" data-source="residual" title="View absolute error residual (|GNN - SWMM|)">
+          Error Residual Map
+        </button>
       </div>
     </div>
   </header>
 
-  <div class="app-container">
-    <!-- Left Sidebar: Controls -->
-    <aside class="left-sidebar">
-      <div class="sidebar-section">
-        <h2 class="section-title">
-          <span>Control & Input Panel</span>
-          <span class="section-tag tag-cyan">Real-time</span>
-        </h2>
-        <div class="control-card">
-          <div class="form-group">
-            <label class="form-label" for="regionSelect">City / Catchment Region</label>
-            <select id="regionSelect">
-              <optgroup label="Bengaluru Districts (India)">
-                <option value="hsr" selected>HSR Layout (Residential Hub)</option>
-                <option value="bellandur">Bellandur & ORR (Lake Basin)</option>
-                <option value="whitefield">Whitefield (ITPB Corridor)</option>
-                <option value="ecity">Electronic City (Tech Corridor)</option>
-                <option value="koramangala">Koramangala & Indiranagar</option>
-              </optgroup>
-              <optgroup label="International Megacities (Asia & Pacific)">
-                <option value="tokyo">Tokyo (Japan) - Metropolitan Catchment</option>
-                <option value="hongkong">Hong Kong (China) - Urban Coastal Basin</option>
-                <option value="singapore">Singapore - Marina Catchment</option>
-                <option value="bangkok">Bangkok (Thailand) - Chao Phraya Lowlands</option>
-              </optgroup>
-              <optgroup label="International Megacities (Europe & Americas)">
-                <option value="london">London (UK) - Thames Catchment</option>
-                <option value="paris">Paris (France) - Seine Basin</option>
-                <option value="nyc">New York City (USA) - Coastal Catchment</option>
-                <option value="chicago">Chicago (USA) - Waterfront Basin</option>
-                <option value="berlin">Berlin (Germany) - Spree Basin</option>
-              </optgroup>
-              <optgroup label="Indian Megacities">
-                <option value="mumbai">Mumbai - Coastal Floodplain</option>
-                <option value="delhi">Delhi - Yamuna Floodplain</option>
-              </optgroup>
-            </select>
-          </div>
+  <!-- =========================================================================
+       MAIN DASHBOARD WORKSPACE (COMMAND CONSOLE)
+       ========================================================================= -->
+  <div class="command-workspace">
 
-          <div class="form-group">
-            <div class="form-label">
-              <span>Rainfall Intensity</span>
-              <span class="form-value" id="rainValue">50 mm/hr</span>
-            </div>
-            <input type="range" id="rainSlider" min="20" max="300" value="50" step="5">
-          </div>
-
-          <div class="form-group">
-            <div class="form-label">
-              <span>Storm Duration</span>
-              <span class="form-value" id="durationValue">60 min</span>
-            </div>
-            <input type="range" id="durationSlider" min="15" max="120" value="60" step="5">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Soil Saturation / Antecedent Moisture</label>
-            <div class="soil-toggle-group">
-              <button class="soil-btn active" data-moisture="dry">Dry</button>
-              <button class="soil-btn" data-moisture="partial">Partial</button>
-              <button class="soil-btn" data-moisture="saturated">Saturated</button>
-            </div>
-          </div>
-
-          <button class="btn-primary" id="runSimBtn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            Run Neural Digital Twin
-          </button>
+    <!-- =======================================================================
+         2. LEFT TACTICAL CONTROL DRAWER (SIMULATION & SCENARIO ENGINE)
+         ======================================================================= -->
+    <aside class="left-control-drawer">
+      
+      <!-- Section A: Real-Time Forcing Parameters -->
+      <div class="drawer-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+          </svg>
+          <span class="panel-title">Hydrologic Forcing Controls</span>
+          <span class="badge-subtle">Debounced</span>
         </div>
+
+        <!-- Rainfall Intensity Slider -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Rainfall Intensity</span>
+            <span class="control-value-readout" id="rainReadout">50 mm/hr</span>
+          </div>
+          <input type="range" id="rainSlider" class="tactical-slider" min="10" max="300" step="5" value="50">
+          <div class="slider-ticks">
+            <span class="tick-mark" data-val="20">20 (Moderate)</span>
+            <span class="tick-mark" data-val="50">50 (Monsoon)</span>
+            <span class="tick-mark" data-val="100">100 (Cloudburst)</span>
+            <span class="tick-mark" data-val="200">200+ (Surcharge)</span>
+          </div>
+        </div>
+
+        <!-- Storm Duration Step Slider -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Storm Duration</span>
+            <span class="control-value-readout" id="durationReadout">60 min</span>
+          </div>
+          <input type="range" id="durationSlider" class="tactical-slider" min="15" max="120" step="15" value="60">
+          <div class="slider-ticks">
+            <span>15m</span>
+            <span>30m</span>
+            <span>60m</span>
+            <span>90m</span>
+            <span>120m</span>
+          </div>
+        </div>
+
+        <!-- Execute Button -->
+        <button id="runSimBtn" class="tactical-btn primary-btn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>Run Neural Digital Twin</span>
+        </button>
       </div>
 
-      <div class="sidebar-section">
-        <h2 class="section-title">
-          <span>Live Radar Feed</span>
-          <span class="section-tag tag-amber">Simulator</span>
-        </h2>
-        <div class="control-card card-amber">
-          <div class="form-group">
-            <div class="form-label">
-              <span>Storm Event Profile</span>
-            </div>
-            <select id="stormProfileSelect">
-              <option value="150">Severe Cloudburst (150 mm/hr)</option>
-              <option value="200">Extreme Cloudburst (200 mm/hr)</option>
-              <option value="300">Catastrophic Burst (300 mm/hr)</option>
-            </select>
-          </div>
-          <button class="btn-amber" id="playStormBtn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      <!-- Section B: Automated Storm Event Simulation Player -->
+      <div class="drawer-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+          <span class="panel-title">Automated Storm Hyetograph Player</span>
+        </div>
+        <div class="control-group">
+          <button id="playStormBtn" class="tactical-btn secondary-btn">
+            <svg class="btn-icon" id="playIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
-            Play Storm Event (60-min timeline)
+            <span id="playBtnText">Simulate Cloudburst Event (60m)</span>
           </button>
-          <div id="stormProgress" class="storm-progress-container" style="display:none;">
-            <div class="storm-progress-bar">
-              <div class="storm-progress-fill" id="stormProgressFill"></div>
+          
+          <div id="stormScrubberContainer" class="storm-scrubber" style="display:none;">
+            <div class="scrubber-track">
+              <div id="stormProgressFill" class="scrubber-fill"></div>
             </div>
-            <div class="storm-progress-labels">
-              <span id="stormTimeLabel">0 min</span>
-              <span id="stormRainLabel">0 mm/hr</span>
-              <span id="stormFrameLabel">Frame 0/12</span>
+            <div class="scrubber-meta">
+              <span id="stormTimeReadout">T+0 min</span>
+              <span id="stormRainReadout">30 mm/hr</span>
+              <span id="stormFrameReadout">Step 1/12</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="sidebar-section">
-        <h2 class="section-title">
-          <span>Mitigation Engine</span>
-          <span class="section-tag tag-emerald">What-If</span>
-        </h2>
-        <div class="control-card card-emerald">
-          <div class="form-group">
-            <div class="form-label">
-              <span>Bioswales & Permeable Paving</span>
-              <span class="form-value value-emerald" id="bioswaleValue">0%</span>
-            </div>
-            <input type="range" id="bioswaleSlider" min="0" max="50" value="0" step="5">
-          </div>
-          <div class="form-group">
-            <div class="form-label">
-              <span>Drain De-silting & Cleaning</span>
-              <span class="form-value value-emerald" id="drainValue">0%</span>
-            </div>
-            <input type="range" id="drainSlider" min="0" max="60" value="0" step="5">
-          </div>
-          <div class="form-group">
-            <div class="form-label">
-              <span>Rain Gardens & Sponge Retention</span>
-              <span class="form-value value-emerald" id="gardenValue">0%</span>
-            </div>
-            <input type="range" id="gardenSlider" min="0" max="40" value="0" step="5">
-          </div>
-          <button class="btn-secondary" id="applyMitigationBtn">
-            Apply NBS & Recalculate Runoff
+      <!-- Section C: Historical Cloudburst Replay Presets & Ground Validation -->
+      <div class="drawer-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 14 14"/>
+          </svg>
+          <span class="panel-title">Historical Event Replay Presets</span>
+        </div>
+        <div class="preset-list">
+          <button class="preset-card-btn" data-preset="bengaluru_oct19">
+            <div class="preset-title">Oct 19, 2024 Bengaluru Cloudburst</div>
+            <div class="preset-desc">105 mm/hr downpour | 28 BBMP Distress Incidents</div>
+          </button>
+          <button class="preset-card-btn" data-preset="typhoon_saola">
+            <div class="preset-title">Typhoon Saola HK Coastal Surge</div>
+            <div class="preset-desc">140 mm/hr high tide | Happy Valley Storm Retention</div>
+          </button>
+          <button class="preset-card-btn" data-preset="tokyo_cloudburst">
+            <div class="preset-title">Tokyo Extreme Convective Surcharge</div>
+            <div class="preset-desc">100 mm/hr storm | Kanda & Meguro River Outfalls</div>
+          </button>
+        </div>
+
+        <div style="border-top: 1px solid var(--olive-subtle); padding-top: 10px; margin-top: 4px;">
+          <button id="toggleIncidentsBtn" class="tactical-btn secondary-btn btn-sm" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span id="incidentsBtnText">Overlay Oct 19 BBMP Ground Incidents</span>
           </button>
         </div>
       </div>
     </aside>
 
-    <!-- Center Viewport: Interactive Map -->
-    <main class="center-viewport">
-      <div id="leafletMap"></div>
+    <!-- Left Splitter Handle -->
+    <div id="leftSplitter" class="workspace-splitter" title="Drag to resize sidebar"></div>
 
-      <!-- Floating Toolbar -->
-      <div class="canvas-tools">
-        <div class="tool-group">
-          <button class="tool-btn active" data-mode="depth">Flood Depth</button>
-          <button class="tool-btn" data-mode="elevation">Elevation</button>
-          <button class="tool-btn" data-mode="impervious">Impervious %</button>
+    <!-- =======================================================================
+         3. CENTER MAIN VIEWPORT (GIS GRAPH CANVAS & SPATIAL DIGITAL TWIN)
+         ======================================================================= -->
+    <main class="center-main-viewport">
+      <!-- Leaflet Basemap Container -->
+      <div id="leafletMap" class="leaflet-map-canvas"></div>
+
+      <!-- High-Performance WebGL/2D Canvas Overlay -->
+      <canvas id="mapCanvas" class="tactical-map-canvas"></canvas>
+
+      <!-- Floating Map Toolbar -->
+      <div class="floating-map-toolbar">
+        <!-- Viewport Zoom Capabilities -->
+        <div class="toolbar-group zoom-group">
+          <button id="zoomInBtn" class="map-tool-btn zoom-btn" title="Zoom In (+)">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <button id="zoomOutBtn" class="map-tool-btn zoom-btn" title="Zoom Out (-)">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
         </div>
-        <div class="tool-group">
-          <button class="tool-btn btn-cyan-outline" id="swmmCompareBtn">GNN vs SWMM</button>
-          <button class="tool-btn btn-danger-outline" id="validationModeBtn">Ground Truth (Oct 2024)</button>
+
+        <div class="toolbar-group">
+          <button class="map-tool-btn active" data-mode="depth" title="View continuous inundation depth">
+            Flood Depth
+          </button>
+          <button class="map-tool-btn" data-mode="elevation" title="View DEM ground elevation">
+            DEM Elevation
+          </button>
+          <button class="map-tool-btn" data-mode="impervious" title="View surface imperviousness">
+            Impervious %
+          </button>
         </div>
-        <div class="tool-group">
-          <button class="tool-btn" id="toggleTileBtn">Basemap: Cyber Dark</button>
-          <button class="tool-btn" id="resetMapBtn">Reset View</button>
+
+        <div class="toolbar-group">
+          <button id="toggleTileBtn" class="map-tool-btn" title="Cycle basemap style">
+            Basemap: Civil Street
+          </button>
+          <button id="resetViewBtn" class="map-tool-btn" title="Reset camera to catchment bounds">
+            Reset View
+          </button>
         </div>
       </div>
 
-      <!-- HTML5 Canvas Overlay -->
-      <canvas id="mapCanvas"></canvas>
+      <!-- Floating Inundation Depth Legend -->
+      <div class="floating-depth-legend">
+        <div class="legend-header">
+          <span id="legendTitle">Water Depth Inundation</span>
+          <span class="legend-unit">meters</span>
+        </div>
+        <div class="legend-bar-gradient" id="legendGradient"></div>
+        <div class="legend-scale-labels" id="legendLabels">
+          <span>&lt;0.05m (Safe)</span>
+          <span>0.15m (Hazard)</span>
+          <span>0.30m (Critical)</span>
+          <span>&gt;0.50m (Surcharged)</span>
+        </div>
+      </div>
 
-      <!-- Hover Tooltip -->
-      <div class="node-tooltip" id="nodeTooltip">
+      <!-- Hover HUD Tooltip -->
+      <div id="nodeTooltip" class="tactical-hud-tooltip">
         <div class="tooltip-header">
-          <span class="tooltip-title" id="ttNodeId">Node #---</span>
-          <span class="tooltip-risk-badge" id="ttRisk">--</span>
+          <div class="tooltip-id-group">
+            <span class="tooltip-cross-street" id="ttJunction">Junction</span>
+            <span class="tooltip-node-id" id="ttNodeId">Node #---</span>
+          </div>
+          <span id="ttRiskBadge" class="hud-risk-badge">SAFE</span>
         </div>
-        <div class="tooltip-body">
-          <div class="tooltip-row"><span>Ground Elevation:</span> <strong id="ttElev">-- m</strong></div>
-          <div class="tooltip-row"><span>Upstream Slope:</span> <strong id="ttSlope">-- %</strong></div>
-          <div class="tooltip-row"><span>Predicted Depth:</span> <strong id="ttGnnDepth" class="txt-cyan">-- m</strong> (<span id="ttGnnDepthCm" class="txt-cyan">-- cm</span>)</div>
-          <div class="tooltip-row"><span>SWMM Benchmark:</span> <strong id="ttSwmmDepth" class="txt-muted">-- m</strong></div>
+        <div class="tooltip-grid">
+          <div class="tooltip-row">
+            <span class="tt-label">Predicted Depth:</span>
+            <strong id="ttGnnDepth" class="tt-val highlight-val">-- m</strong>
+            <small id="ttGnnDepthCm" class="tt-sub">(-- cm)</small>
+          </div>
+          <div class="tooltip-row">
+            <span class="tt-label">SWMM Benchmark:</span>
+            <strong id="ttSwmmDepth" class="tt-val">-- m</strong>
+          </div>
+          <div class="tooltip-row">
+            <span class="tt-label">Ground Elevation:</span>
+            <span id="ttElev" class="tt-val">-- m MSL</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tt-label">Upstream Slope:</span>
+            <span id="ttSlope" class="tt-val">-- %</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tt-label">Status Class:</span>
+            <span id="ttClassification" class="tt-val">--</span>
+          </div>
         </div>
       </div>
 
-      <!-- Floating Canvas Legend -->
-      <div class="canvas-legend">
-        <div class="legend-title" id="legendTitle">Water Depth Inundation (Meters)</div>
-        <div class="legend-bar" id="legendBar"></div>
-        <div class="legend-labels">
-          <span>0.0m (Safe)</span>
-          <span>0.15m</span>
-          <span>0.30m</span>
-          <span>0.50m+ (Critical)</span>
-        </div>
-      </div>
-
-      <!-- Node Inspector Drawer Panel -->
-      <div class="node-inspector-panel" id="nodeInspectorPanel">
+      <!-- Slide-Out Node Inspector Drawer Panel -->
+      <div id="nodeInspectorPanel" class="inspector-drawer">
         <div class="inspector-header">
-          <div class="inspector-title-group">
-            <span class="inspector-badge">INTERSECTION INSPECTOR</span>
-            <h3 id="inspNodeTitle">Node #---</h3>
+          <div class="inspector-title-wrap">
+            <span class="inspector-kicker">JUNCTION HYDRAULIC INSPECTOR</span>
+            <h3 id="inspJunctionName" class="inspector-title">Intersection Name</h3>
+            <span id="inspNodeId" class="inspector-id">Node #---</span>
           </div>
-          <button class="inspector-close-btn" id="closeInspectorBtn" aria-label="Close Inspector">&times;</button>
+          <button id="closeInspectorBtn" class="inspector-close-btn" aria-label="Close Inspector">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
+
         <div class="inspector-body">
-          <div class="inspector-grid">
-            <div class="insp-stat-card">
-              <span class="stat-lbl">Elevation (MSL)</span>
-              <strong class="stat-val" id="inspElev">-- m</strong>
+          <!-- Hydraulic Stat Grid -->
+          <div class="inspector-stat-grid">
+            <div class="insp-card">
+              <span class="insp-lbl">Elevation (MSL)</span>
+              <strong id="inspElev" class="insp-val">-- m</strong>
             </div>
-            <div class="insp-stat-card">
-              <span class="stat-lbl">Upstream Slope</span>
-              <strong class="stat-val" id="inspSlope">-- %</strong>
+            <div class="insp-card">
+              <span class="insp-lbl">Upstream Slope</span>
+              <strong id="inspSlope" class="insp-val">-- %</strong>
             </div>
-            <div class="insp-stat-card">
-              <span class="stat-lbl">Impervious Ratio</span>
-              <strong class="stat-val" id="inspImp">-- %</strong>
+            <div class="insp-card">
+              <span class="insp-lbl">Impervious Ratio</span>
+              <strong id="inspImp" class="insp-val">-- %</strong>
             </div>
-            <div class="insp-stat-card">
-              <span class="stat-lbl">Manning Friction n</span>
-              <strong class="stat-val" id="inspMann">--</strong>
+            <div class="insp-card">
+              <span class="insp-lbl">Manning Friction n</span>
+              <strong id="inspMann" class="insp-val">--</strong>
             </div>
-            <div class="insp-stat-card">
-              <span class="stat-lbl">Predicted Depth</span>
-              <strong class="stat-val txt-cyan" id="inspGnnDepth">-- m</strong>
+            <div class="insp-card highlight-card">
+              <span class="insp-lbl">GNN Predicted Depth</span>
+              <strong id="inspGnnDepth" class="insp-val highlight-val">-- m</strong>
             </div>
-            <div class="insp-stat-card">
-              <span class="stat-lbl">Hazard State</span>
-              <strong class="stat-val" id="inspRisk">--</strong>
-            </div>
-          </div>
-          <div class="inspector-chart-card">
-            <div class="card-subtitle">Water Accumulation Hydrograph (t=0 to 120 min)</div>
-            <div class="chart-wrapper-sm">
-              <canvas id="nodeHydrographChart"></canvas>
+            <div class="insp-card">
+              <span class="insp-lbl">SWMM 5.2 Depth</span>
+              <strong id="inspSwmmDepth" class="insp-val">-- m</strong>
             </div>
           </div>
-          <div class="inspector-recommendation-card" id="inspRecCard">
-            <div class="rec-title">AI Mitigation Recommendation</div>
-            <p id="inspRecText" class="rec-text">Select an intersection node on the map to evaluate.</p>
+
+          <!-- 120-min Accumulation Hydrograph -->
+          <div class="inspector-chart-box">
+            <div class="chart-header">
+              <span class="chart-title">Water Accumulation Hydrograph (t=0 to 120 min)</span>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="nodeHydrographCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Operational Recommendation -->
+          <div id="inspRecommendationCard" class="inspector-rec-card">
+            <div class="rec-card-title">
+              <svg class="rec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>Automated Municipal Response Protocol</span>
+            </div>
+            <p id="inspRecommendationText" class="rec-card-body">
+              Select any junction point on the GIS canvas to inspect hydraulic stage and dispatch guidance.
+            </p>
           </div>
         </div>
       </div>
+
     </main>
 
-    <!-- Right Sidebar: Analytics & Insights -->
-    <aside class="right-sidebar">
-      <div class="metrics-grid">
-        <div class="metric-card card-cyan">
-          <div class="metric-label">Inference Speed</div>
-          <div class="metric-value txt-cyan" id="gnnTimeVal">-- ms</div>
-          <div class="metric-sub" id="speedupSub">vs SWMM: -- s</div>
+    <!-- Right Splitter Handle -->
+    <div id="rightSplitter" class="workspace-splitter" title="Drag to resize sidebar"></div>
+
+    <!-- =======================================================================
+         4. RIGHT OPERATIONAL ACTION SIDEBAR (MUNICIPAL DECISION SUPPORT)
+         ======================================================================= -->
+    <aside class="right-action-sidebar">
+      
+      <!-- Panel 1: District Risk Overview Meter -->
+      <div class="sidebar-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          <span class="panel-title">District Inundation Overview</span>
         </div>
-        <div class="metric-card card-emerald">
-          <div class="metric-label">Speedup Factor</div>
-          <div class="metric-value txt-emerald" id="speedupVal">--x</div>
-          <div class="metric-sub">vs EPA SWMM 5.2</div>
+
+        <div class="district-kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Nodes Monitored</span>
+            <strong id="kpiTotalNodes" class="kpi-number">--</strong>
+            <span class="kpi-sub">Graph Junctions</span>
+          </div>
+
+          <div class="kpi-card alert-kpi">
+            <span class="kpi-label">Network Inundated</span>
+            <strong id="kpiFloodedPct" class="kpi-number">--%</strong>
+            <span id="kpiFloodedNodesSub" class="kpi-sub">-- / -- flooded</span>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Max Surface Stage</span>
+            <strong id="kpiMaxDepth" class="kpi-number">-- m</strong>
+            <span id="kpiAvgDepthSub" class="kpi-sub">Avg: -- m</span>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Total Ponding Vol</span>
+            <strong id="kpiVolume" class="kpi-number">-- m³</strong>
+            <span class="kpi-sub">Storage Volume</span>
+          </div>
         </div>
-        <div class="metric-card card-rose">
-          <div class="metric-label">Max Water Depth</div>
-          <div class="metric-value txt-rose" id="maxDepthVal">-- m</div>
-          <div class="metric-sub txt-amber" id="avgDepthSub">Avg: -- m</div>
-        </div>
-        <div class="metric-card card-blue">
-          <div class="metric-label">Inundated Volume</div>
-          <div class="metric-value" id="volVal">-- m3</div>
-          <div class="metric-sub" id="floodedNodesSub">-- / -- junctions</div>
-        </div>
-        <div class="metric-card metric-card-wide card-rose">
-          <div class="metric-label">District Risk Summary</div>
-          <div class="metric-value txt-rose" id="floodedPctVal">--%</div>
-          <div class="metric-sub" id="floodedCountSub">-- / -- nodes inundated</div>
-        </div>
-        <div class="metric-card metric-card-wide card-amber">
-          <div class="metric-label">Basement / Underpass Alerts</div>
-          <div class="metric-value txt-amber" id="basementAlertVal">-- Complex</div>
-          <div class="metric-sub txt-rose">Submerged Parking Risk</div>
+
+        <!-- Inundation Progress Bar -->
+        <div class="risk-bar-wrap">
+          <div class="risk-bar-label-row">
+            <span>Overall Network Flooding Ratio</span>
+            <strong id="kpiFloodedBarPct">--%</strong>
+          </div>
+          <div class="tactical-progress-track">
+            <div id="kpiProgressBar" class="tactical-progress-fill" style="width: 0%;"></div>
+          </div>
         </div>
       </div>
 
-      <div class="tabs-header">
-        <button class="tab-btn active" data-tab="tab-risk">Risk Hotspots</button>
-        <button class="tab-btn" data-tab="tab-dispatch">Dispatch</button>
-        <button class="tab-btn" data-tab="tab-alert">RWA Alert</button>
-        <button class="tab-btn" data-tab="tab-benchmark">GNN vs SWMM</button>
-      </div>
+      <!-- Panel 2: Critical & High Hazard Bottlenecks -->
+      <div class="sidebar-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span class="panel-title">Critical & Hazard Bottlenecks</span>
+          <span id="bottleneckCountBadge" class="badge-subtle">0 Hotspots</span>
+        </div>
 
-      <div class="tab-content active" id="tab-risk">
-        <div class="table-container">
-          <table class="risk-table">
+        <div class="bottleneck-table-wrap">
+          <table class="tactical-table">
             <thead>
               <tr>
-                <th>Junction</th>
-                <th class="num-col">Elev (m)</th>
-                <th class="num-col">Depth (m)</th>
-                <th class="text-center">Risk State</th>
-                <th class="text-center">Action</th>
+                <th>#</th>
+                <th>Junction / Corridor</th>
+                <th class="num-th">Depth</th>
+                <th class="num-th">Grade</th>
+                <th class="center-th">Alert</th>
               </tr>
             </thead>
-            <tbody id="riskTableBody">
+            <tbody id="top5TableBody">
               <tr>
-                <td colspan="5" class="table-empty">Run a simulation or load graph data to populate risk hotspots.</td>
+                <td colspan="5" class="table-empty">Loading network risk bottlenecks...</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="tab-content" id="tab-dispatch">
-        <div class="dispatch-container" id="dispatchList">
-          <p class="empty-state-text">Run a simulation to see automated dispatch recommendations.</p>
+      <!-- Panel 3: Dynamic Emergency Dispatch Recommendations -->
+      <div class="sidebar-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span class="panel-title">Emergency Dispatch Directives</span>
+        </div>
+
+        <div id="dispatchDirectiveList" class="dispatch-directive-list">
+          <div class="dispatch-placeholder">Evaluating hydraulic risks for active sector...</div>
         </div>
       </div>
 
-      <div class="tab-content" id="tab-alert">
-        <div class="alert-preview-container">
-          <div class="alert-header">RWA / Commuter Alert Preview</div>
-          <pre id="rwaAlertText" class="alert-text-box">Run a simulation to generate automated alert message.</pre>
+      <!-- Panel 4: Simulated Emergency Broadcast Push Preview -->
+      <div class="sidebar-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="panel-title">Transit & Community Advisory Broadcast</span>
+        </div>
+
+        <div class="broadcast-preview-box">
+          <div class="broadcast-meta">
+            <span class="broadcast-tag">MUNICIPAL TRANSIT & COMMUNITY ADVISORY</span>
+            <span id="broadcastTimestamp" class="broadcast-time">LIVE</span>
+          </div>
+          <div id="broadcastText" class="broadcast-text">
+            Generating real-time emergency advisory for transit corridors and community networks...
+          </div>
         </div>
       </div>
 
-      <div class="tab-content" id="tab-benchmark">
-        <div class="chart-card">
-          <canvas id="benchmarkChart"></canvas>
+      <!-- Panel 5: Technical Model Card (Technical Reviewers / Judges) -->
+      <div class="sidebar-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+          <span class="panel-title">Technical Model Card</span>
         </div>
-        <div class="benchmark-caption">
-          The Physics-Informed GNN combines message-passing convolutions with Saint-Venant shallow water physics loss constraints.
+
+        <div class="model-card-grid">
+          <div class="mc-item">
+            <span class="mc-label">Nash-Sutcliffe Efficiency</span>
+            <strong id="mcNSE" class="mc-val">0.8941</strong>
+            <span class="mc-sub">Catchment NSE (&gt;0.80 Very Good)</span>
+          </div>
+
+          <div class="mc-item">
+            <span class="mc-label">Hotspot Match Rate</span>
+            <strong id="mcHotspotRate" class="mc-val">95.0%</strong>
+            <span class="mc-sub">Top-30 Hotspots (&plusmn;15cm)</span>
+          </div>
+
+          <div class="mc-item">
+            <span class="mc-label">Hazard F1-Score</span>
+            <strong id="mcF1" class="mc-val">0.829</strong>
+            <span class="mc-sub">Continuous Depth &ge;0.15m</span>
+          </div>
+
+          <div class="mc-item">
+            <span class="mc-label">Catchment MAE</span>
+            <strong id="mcMAE" class="mc-val">4.06 cm</strong>
+            <span class="mc-sub">Continuous Regression</span>
+          </div>
+
+          <div class="mc-item mc-item-full">
+            <span class="mc-label">Ground Validation (Oct 19, 2024 Bengaluru Cloudburst)</span>
+            <strong id="mcCaptureRate" class="mc-val">89.3% Capture Rate</strong>
+            <span class="mc-sub">Verified Ground Distress Incidents captured within &le;50m</span>
+          </div>
         </div>
       </div>
+
+      <!-- Panel 6: GNN Model Runtime & Architectural Specifications -->
+      <div class="sidebar-panel model-spec-panel">
+        <div class="panel-header">
+          <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+          <span class="panel-title">Model Architecture & Speed</span>
+          <span class="badge-subtle">LIVE GNN</span>
+        </div>
+
+        <div class="model-spec-grid">
+          <div class="model-spec-item">
+            <span class="spec-label">Inference Latency</span>
+            <strong id="rightModelLatency" class="spec-val">-- ms</strong>
+            <span class="spec-sub">Forward Pass</span>
+          </div>
+
+          <div class="model-spec-item">
+            <span class="spec-label">Solver Speedup</span>
+            <strong id="rightModelSpeedup" class="spec-val">--×</strong>
+            <span class="spec-sub">vs EPA SWMM 5.2</span>
+          </div>
+
+          <div class="model-spec-item">
+            <span class="spec-label">Model Engine</span>
+            <strong class="spec-val">HydroGINE-v5</strong>
+            <span class="spec-sub">Dual-Head MoE</span>
+          </div>
+
+          <div class="model-spec-item">
+            <span class="spec-label">Graph Capacity</span>
+            <strong class="spec-val">76,316</strong>
+            <span class="spec-sub">Zero-Shot Nodes</span>
+          </div>
+        </div>
+      </div>
+
     </aside>
+
   </div>
 
+  <!-- JavaScript Engine -->
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

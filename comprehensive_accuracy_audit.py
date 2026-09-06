@@ -19,20 +19,17 @@ def audit():
     print("   URBANFLOW COMPREHENSIVE GNN vs SWMM ACCURACY AUDIT (12-FEAT)")
     print("=================================================================\n")
     
-    dataset_path = "bengaluru_pyg_dataset.pt"
+    dataset_path = "multi_scenario_pyg_dataset.pt"
+
         
     data_or_list = torch.load(dataset_path, weights_only=False)
-    if isinstance(data_or_list, list):
-        data = Batch.from_data_list(data_or_list)
-    else:
-        data = data_or_list
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    model = PerfectAccuracyGNN(in_channels=14, hidden_channels=256, out_channels=1)
-    
+
     if os.path.exists("pinn_gnn_checkpoint.pt"):
         ckpt = torch.load("pinn_gnn_checkpoint.pt", map_location=device)
+        in_feat_dim = int(ckpt['x_mean'].shape[0])
+        model = PerfectAccuracyGNN(in_channels=in_feat_dim, hidden_channels=256, out_channels=1)
         model.load_state_dict(ckpt['model_state_dict'])
         x_mean = ckpt['x_mean'].to(device)
         x_std = ckpt['x_std'].to(device)
@@ -41,6 +38,11 @@ def audit():
         y_mean = float(ckpt['y_mean'])
         y_std = float(ckpt['y_std'])
     else:
+        in_feat_dim = int(data.x.shape[1])
+        model = PerfectAccuracyGNN(in_channels=in_feat_dim, hidden_channels=256, out_channels=1)
+        model.load_state_dict(torch.load("pinn_gnn_model.pth", map_location=device))
+        x_mean = data.x.mean(dim=0).to(device)
+
         model.load_state_dict(torch.load("pinn_gnn_model.pth", map_location=device))
         x_mean = data.x.mean(dim=0).to(device)
         x_std = (data.x.std(dim=0) + 1e-6).to(device)
@@ -51,16 +53,28 @@ def audit():
 
     model.eval()
     model.to(device)
-    data = data.to(device)
 
-    x_norm = (data.x - x_mean) / x_std
-    edge_norm = (data.edge_attr - edge_attr_mean) / edge_attr_std
+    from torch_geometric.loader import DataLoader
+    eval_loader = DataLoader(data_or_list if isinstance(data_or_list, list) else [data_or_list], batch_size=8, shuffle=False)
+
+
+    all_preds = []
+    all_targets = []
 
     with torch.no_grad():
-        out_norm = model(x_norm, data.edge_index, edge_norm).squeeze()
-        preds = torch.clamp(out_norm * y_std + y_mean, min=0.0).cpu().numpy()
-        
-    targets = data.y.squeeze().cpu().numpy()
+        for batch in eval_loader:
+            batch = batch.to(device)
+            x_norm = (batch.x - x_mean) / x_std
+            edge_norm = (batch.edge_attr - edge_attr_mean) / edge_attr_std
+            out_norm = model(x_norm, batch.edge_index, edge_norm).squeeze()
+            preds_batch = torch.clamp(out_norm * y_std + y_mean, min=0.0).cpu().numpy()
+            targets_batch = batch.y.squeeze().cpu().numpy()
+            all_preds.append(preds_batch)
+            all_targets.append(targets_batch)
+
+    preds = np.concatenate(all_preds, axis=0)
+    targets = np.concatenate(all_targets, axis=0)
+
 
     diffs = np.abs(preds - targets)
     overall_mae = np.mean(diffs)
