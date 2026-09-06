@@ -28,8 +28,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Training HydroGINE-v5.0 on device: {device}")
 
 DATASET_PATH = "expanded_master_physics_dataset.pt"
-OUT_MODEL_PATH = "hydro_gine_v5_8_model.pt"
-WARM_START_PATH = "hydro_gine_v5_6_model.pt"
+OUT_MODEL_PATH = "hydro_gine_v5_9_model.pt"
+WARM_START_PATH = "hydro_gine_v5_8_model.pt"
 
 EPOCHS = 300
 LR = 3e-4
@@ -54,10 +54,16 @@ DEEP_W_RANGE = 2.5       # ramp width (m) to saturation
 DEEP_W_POWER = 2.0       # power-law exponent on (dep_d - thresh)
 MATCH_BAND_M = 0.12      # linear meters within which no flood-gated hinge penalty
 MATCH_HINGE_STRENGTH = 0.0  # multiplier on flooded-gated match-hinge residuals (v5.5 test)
-# Select checkpoints by the POST-RAIL val live match rate (the exact production
-# leaderboard quantity), rather than the raw pre-rail expm1 depth. Rails change
-# raw ~47% into deploy-time ~83%, so raw selection may favor checkpoints whose
-# rails are suboptimal.
+# Deep-Tail Recovery Weights (v5.9): the diagnostic shows the model under-predicts
+# the deep pool tail (UNDER deep-pools: swmm p50=0.71 vs pred 0.42; sag~0, dep~2m)
+# while over-predicting extreme dry bowls (OVER: sag~0.17, dep~4.6m). The loss
+# must (a) push the model DEEP on true deep floods and (b) not punish keeping the
+# extreme dry bowls low. Overweight true-deep flooded targets (y>=0.5m) so the
+# model commits to big values there; these are the recoverable UNDERs.
+DEEP_TARGET_W = 3.0      # extra weight on y_true >= 0.50m cells (recover the UNDER deep tail)
+DEEP_TARGET_W_MID = 1.4  # extra weight on y_true in [0.30, 0.50) (deep-adjacent advisers)
+# Equal-weight region selection (v5.8) maximizes precision (OVER 977) at the cost
+# of the deep tail (UNDER 875->1539). Rebalance: overweight deep-true targets above.
 SELECT_RAIL_MATCH = True
 # Equal-weight per-region aggregation for checkpoint selection (v5.8). The
 # node-weighted aggregate is dominated by london+nyc (largest graphs), so
@@ -408,6 +414,10 @@ def train():
                 w = torch.where(y_true >= 0.30, 3.0, w)
                 w = torch.where((y_true >= 0.15) & (y_true < 0.30), 2.0, w)
                 w = torch.where(is_dry_pavement, 3.0, w)
+                # v5.9 deep-tail recovery: overweight true deep-flooded targets so
+                # the model commits to deep values there (not 0.42m on 0.71m pools).
+                w = torch.where(y_true >= 0.50, w * DEEP_TARGET_W, w)
+                w = torch.where((y_true >= 0.30) & (y_true < 0.50), w * DEEP_TARGET_W_MID, w)
                 deep_w = 1.0 + DEEP_W_STRENGTH * torch.clamp(
                     (dep_d - DEEP_W_THRESH) / DEEP_W_RANGE, min=0.0, max=1.0
                 ) ** DEEP_W_POWER
