@@ -28,22 +28,25 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Training HydroGINE-v5.0 on device: {device}")
 
 DATASET_PATH = "expanded_master_physics_dataset.pt"
-OUT_MODEL_PATH = "hydro_gine_v5_6_model.pt"
-WARM_START_PATH = "hydro_gine_v5_2_model.pt"
+OUT_MODEL_PATH = "hydro_gine_v5_8_model.pt"
+WARM_START_PATH = "hydro_gine_v5_6_model.pt"
 
 EPOCHS = 300
 LR = 3e-4
 WEIGHT_DECAY = 1e-4
 HIDDEN_DIM = 128
 N_LAYERS = 6
-N_CHUNK = 25000  # Safe CUDA memory chunk
+N_CHUNK = 20000  # Safe CUDA memory chunk (was 25000; reduced after RTX 4060 TDR/cublas fault on backward)
 
 # Deep-Valley Tail-Aware Regression Loss (Item #8):
 # log(1+y) targets amplify small log-domain errors into meter-scale spikes on
 # deep basins after expm1 inversion. Scenario-conditional asymmetry:
-# over-prediction penalized harder on DRY cells (roads/pavement false alarms),
-# under-prediction penalized harder on FLOODED cells (deep-valley misses).
+# over-prediction penalized harder on DRY + SHALLOW-FLOODED cells (v5.6's
+# OVER cluster sits at swmm 0.25-0.50 with pred 0.5-0.8, outside the 0.15
+# over-gate, so it escaped the asy penalty), under-prediction penalized harder
+# on genuinely FLOODED cells (deep-valley misses).
 LOSS_ASSYM_UP = 1.5      # extra multiplier on positive (over-prediction) residuals on DRY/shallow cells
+LOSS_ASSYM_UP_SHALLOW = 1.5  # extra multiplier on over-prediction in the advisory band (0.15 < y <= 0.50)
 LOSS_ASSYM_UNDER = 2.0   # extra multiplier on negative (under-prediction) residuals on FLOODED cells
 DEEP_W_STRENGTH = 3.0    # max power-law boost at the deepest basins
 DEEP_W_THRESH = 1.5      # dep_d (m) above which the ramp engages
@@ -56,6 +59,12 @@ MATCH_HINGE_STRENGTH = 0.0  # multiplier on flooded-gated match-hinge residuals 
 # raw ~47% into deploy-time ~83%, so raw selection may favor checkpoints whose
 # rails are suboptimal.
 SELECT_RAIL_MATCH = True
+# Equal-weight per-region aggregation for checkpoint selection (v5.8). The
+# node-weighted aggregate is dominated by london+nyc (largest graphs), so
+# selection silently traded away Bengaluru districts (v5.6: hsr 84.7->76.8,
+# bellandur 75.2->68.6). Averaging each val region's rail-match equally makes
+# hsr/bellandur as influential as london/nyc in choosing the checkpoint.
+EQUAL_WEIGHT_REGIONS = True
 
 class GravityGINEConv(nn.Module):
     def __init__(self, in_c, out_c, edge_c=2):
@@ -361,17 +370,26 @@ def train():
                 # Scenario-conditional asymmetry:
                 #  - Over-prediction on DRY/shallow cells (y <= 0.15): penalized harder
                 #    (the road/pavement false-alarms that killed old match rate).
+                #  - Over-prediction in the SHALLOW-FLOODED advisory band
+                #    (0.15 < y <= 0.50): penalized harder too. This is v5.6's OVER
+                #    cluster (swmm 0.25-0.50, pred 0.5-0.8) which sat outside the
+                #    dry-only over-gate and escaped the asy penalty entirely.
                 #  - Under-prediction on genuinely FLOODED cells (y > 0.15): penalized
                 #    harder (the deep-valley misses: pred 0.55 vs swmm 1.0m).
                 #  - Everywhere else: symmetric. This stops the blanket 1.5x over-penalty
                 #    from pressing ALL deep predictions down toward the shallow mean.
+                over_mask = (diff > 0.0) & (y_true > 0.15) & (y_true <= 0.50)
                 asym = torch.where(
                     (diff > 0.0) & (y_true <= 0.15),
                     LOSS_ASSYM_UP,
                     torch.where(
-                        (diff < 0.0) & (y_true > 0.15),
-                        LOSS_ASSYM_UNDER,
-                        1.0
+                        over_mask,
+                        LOSS_ASSYM_UP_SHALLOW,
+                        torch.where(
+                            (diff < 0.0) & (y_true > 0.15),
+                            LOSS_ASSYM_UNDER,
+                            1.0
+                        )
                     )
                 )
                 huber = huber * asym
@@ -438,8 +456,10 @@ def train():
             val_rail_match = 0
             
             with torch.no_grad():
+                per_region = {}
                 for g in val_graphs:
                     gb = g.to(device)
+                    rkey = getattr(g, 'region', 'unknown') or 'unknown'
                     gx = (gb.x - x_mean) / x_std
                     gea = (gb.edge_attr - e_mean) / e_std
                     
@@ -472,6 +492,10 @@ def train():
                     val_rail_risk += int(np.sum(rail_risk))
                     val_rail_match += int(np.sum(np.abs(rail_diff) < 0.15))
                     
+                    pr = per_region.setdefault(rkey, {'risk': 0, 'match': 0})
+                    pr['risk'] += int(np.sum(rail_risk))
+                    pr['match'] += int(np.sum(np.abs(rail_diff) < 0.15))
+                    
             prec = val_tp / max(1, val_tp + val_fp)
             rec = val_tp / max(1, val_tp + val_fn)
             f1 = 2 * prec * rec / max(1e-6, prec + rec)
@@ -480,6 +504,9 @@ def train():
             pct_30 = np.mean(all_e <= 0.30) * 100.0
             val_match_rate = (val_match / max(1, val_risk)) * 100.0
             val_rail_rate = (val_rail_match / max(1, val_rail_risk)) * 100.0
+            if EQUAL_WEIGHT_REGIONS:
+                region_rates = [(pr['match'] / max(1, pr['risk'])) * 100.0 for pr in per_region.values()]
+                val_rail_rate = float(np.mean(region_rates))
             
             elapsed = (time.time() - start_time) / 60.0
             print(f"Epoch {epoch:3d}/{EPOCHS} [{elapsed:4.1f}m] | Loss: {total_loss_accum/max(1,n_batches):.4f} | Val F1: {f1:.4f} (P={prec*100:.1f}%, R={rec*100:.1f}%) | Val Match: {val_match_rate:.1f}% | Val Rail-Match: {val_rail_rate:.1f}% | MAE: {mae_cm:.2f}cm | <=30cm: {pct_30:.1f}%")

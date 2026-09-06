@@ -1,0 +1,437 @@
+[
+  {
+    "name": "v5.8 (equal-weight)",
+    "path": "hydro_gine_v5_8_model.pt",
+    "match_rate": 84.82142857142857,
+    "global_mae_cm": 2.815985206576971,
+    "haz_mae_cm": 10.765098489313798,
+    "nse": 0.8779261393982576,
+    "avg_city_latency_ms": 8.112793759210035,
+    "total_latency_ms": 131.099299993366,
+    "swmm_speedup": 6471.260278298024,
+    "risk_nodes": 16576,
+    "matches": 14060,
+    "over": 977,
+    "under": 1539,
+    "city_rates": [
+      {
+        "key": "hsr",
+        "nodes": 189,
+        "match": 148,
+        "over": 14,
+        "under": 27,
+        "rate": 78.31
+      },
+      {
+        "key": "bellandur",
+        "nodes": 358,
+        "match": 252,
+        "over": 34,
+        "under": 72,
+        "rate": 70.39
+      },
+      {
+        "key": "whitefield",
+        "nodes": 420,
+        "match": 352,
+        "over": 17,
+        "under": 51,
+        "rate": 83.81
+      },
+      {
+        "key": "ecity",
+        "nodes": 831,
+        "match": 681,
+        "over": 36,
+        "under": 114,
+        "rate": 81.95
+      },
+      {
+        "key": "koramangala",
+        "nodes": 921,
+        "match": 688,
+        "over": 53,
+        "under": 180,
+        "rate": 74.7
+      },
+      {
+        "key": "tokyo",
+        "nodes": 2814,
+        "match": 2600,
+        "over": 86,
+        "under": 128,
+        "rate": 92.4
+      },
+      {
+        "key": "hongkong",
+        "nodes": 860,
+        "match": 726,
+        "over": 78,
+        "under": 56,
+        "rate": 84.42
+      },
+      {
+        "key": "singapore",
+        "nodes": 570,
+        "match": 522,
+        "over": 25,
+        "under": 23,
+        "rate": 91.58
+      },
+      {
+        "key": "london",
+        "nodes": 2649,
+        "match": 1974,
+        "over": 345,
+        "under": 330,
+        "rate": 74.52
+      },
+      {
+        "key": "paris",
+        "nodes": 1403,
+        "match": 1249,
+        "over": 93,
+        "under": 61,
+        "rate": 89.02
+      },
+      {
+        "key": "nyc",
+        "nodes": 665,
+        "match": 594,
+        "over": 40,
+        "under": 31,
+        "rate": 89.32
+      },
+      {
+        "key": "chicago",
+        "nodes": 430,
+        "match": 381,
+        "over": 16,
+        "under": 33,
+        "rate": 88.6
+      },
+      {
+        "key": "berlin",
+        "nodes": 576,
+        "match": 541,
+        "over": 8,
+        "under": 27,
+        "rate": 93.92
+      },
+      {
+        "key": "bangkok",
+        "nodes": 2814,
+        "match": 2528,
+        "over": 73,
+        "under": 213,
+        "rate": 89.84
+      },
+      {
+        "key": "mumbai",
+        "nodes": 523,
+        "match": 402,
+        "over": 28,
+        "under": 93,
+        "rate": 76.86
+      },
+      {
+        "key": "delhi",
+        "nodes": 553,
+        "match": 422,
+        "over": 31,
+        "under": 100,
+        "rate": 76.31
+      }
+    ]
+  },
+  {
+    "name": "v5.6 (champion)",
+    "path": "hydro_gine_v5_6_model.pt",
+    "match_rate": 84.53760508975233,
+    "global_mae_cm": 2.800432848985326,
+    "haz_mae_cm": 10.297088995165396,
+    "nse": 0.8814492696915677,
+    "avg_city_latency_ms": 11.608893692027777,
+    "total_latency_ms": 187.77159973978996,
+    "swmm_speedup": 4522.394759808468,
+    "risk_nodes": 17604,
+    "matches": 14882,
+    "over": 1847,
+    "under": 875,
+    "city_rates": [
+      {
+        "key": "hsr",
+        "nodes": 237,
+        "match": 182,
+        "over": 41,
+        "under": 14,
+        "rate": 76.79
+      },
+      {
+        "key": "bellandur",
+        "nodes": 376,
+        "match": 258,
+        "over": 69,
+        "under": 49,
+        "rate": 68.62
+      },
+      {
+        "key": "whitefield",
+        "nodes": 442,
+        "match": 369,
+        "over": 45,
+        "under": 28,
+        "rate": 83.48
+      },
+      {
+        "key": "ecity",
+        "nodes": 855,
+        "match": 712,
+        "over": 88,
+        "under": 55,
+        "rate": 83.27
+      },
+      {
+        "key": "koramangala",
+        "nodes": 989,
+        "match": 725,
+        "over": 179,
+        "under": 85,
+        "rate": 73.31
+      },
+      {
+        "key": "tokyo",
+        "nodes": 2902,
+        "match": 2677,
+        "over": 151,
+        "under": 74,
+        "rate": 92.25
+      },
+      {
+        "key": "hongkong",
+        "nodes": 905,
+        "match": 773,
+        "over": 110,
+        "under": 22,
+        "rate": 85.41
+      },
+      {
+        "key": "singapore",
+        "nodes": 596,
+        "match": 542,
+        "over": 48,
+        "under": 6,
+        "rate": 90.94
+      },
+      {
+        "key": "london",
+        "nodes": 2801,
+        "match": 2045,
+        "over": 495,
+        "under": 261,
+        "rate": 73.01
+      },
+      {
+        "key": "paris",
+        "nodes": 1466,
+        "match": 1300,
+        "over": 126,
+        "under": 40,
+        "rate": 88.68
+      },
+      {
+        "key": "nyc",
+        "nodes": 728,
+        "match": 655,
+        "over": 56,
+        "under": 17,
+        "rate": 89.97
+      },
+      {
+        "key": "chicago",
+        "nodes": 505,
+        "match": 447,
+        "over": 37,
+        "under": 21,
+        "rate": 88.51
+      },
+      {
+        "key": "berlin",
+        "nodes": 611,
+        "match": 562,
+        "over": 33,
+        "under": 16,
+        "rate": 91.98
+      },
+      {
+        "key": "bangkok",
+        "nodes": 2997,
+        "match": 2714,
+        "over": 198,
+        "under": 85,
+        "rate": 90.56
+      },
+      {
+        "key": "mumbai",
+        "nodes": 587,
+        "match": 465,
+        "over": 81,
+        "under": 41,
+        "rate": 79.22
+      },
+      {
+        "key": "delhi",
+        "nodes": 607,
+        "match": 456,
+        "over": 90,
+        "under": 61,
+        "rate": 75.12
+      }
+    ]
+  },
+  {
+    "name": "V5 Bottleneck Opt (orig)",
+    "path": "hydro_gine_v5_bottleneck_opt.pt",
+    "match_rate": 77.15466092383421,
+    "global_mae_cm": 5.145288983697678,
+    "haz_mae_cm": 12.699459780837664,
+    "nse": 0.8284225782815943,
+    "avg_city_latency_ms": 10.784168756799772,
+    "total_latency_ms": 174.67210022732615,
+    "swmm_speedup": 4868.24725984532,
+    "risk_nodes": 22753,
+    "matches": 17555,
+    "over": 3141,
+    "under": 2057,
+    "city_rates": [
+      {
+        "key": "hsr",
+        "nodes": 321,
+        "match": 272,
+        "over": 24,
+        "under": 25,
+        "rate": 84.74
+      },
+      {
+        "key": "bellandur",
+        "nodes": 508,
+        "match": 382,
+        "over": 72,
+        "under": 54,
+        "rate": 75.2
+      },
+      {
+        "key": "whitefield",
+        "nodes": 596,
+        "match": 488,
+        "over": 56,
+        "under": 52,
+        "rate": 81.88
+      },
+      {
+        "key": "ecity",
+        "nodes": 1112,
+        "match": 906,
+        "over": 109,
+        "under": 97,
+        "rate": 81.47
+      },
+      {
+        "key": "koramangala",
+        "nodes": 1495,
+        "match": 1065,
+        "over": 255,
+        "under": 175,
+        "rate": 71.24
+      },
+      {
+        "key": "tokyo",
+        "nodes": 3381,
+        "match": 2793,
+        "over": 320,
+        "under": 268,
+        "rate": 82.61
+      },
+      {
+        "key": "hongkong",
+        "nodes": 1229,
+        "match": 797,
+        "over": 272,
+        "under": 160,
+        "rate": 64.85
+      },
+      {
+        "key": "singapore",
+        "nodes": 741,
+        "match": 593,
+        "over": 101,
+        "under": 47,
+        "rate": 80.03
+      },
+      {
+        "key": "london",
+        "nodes": 3626,
+        "match": 2568,
+        "over": 620,
+        "under": 438,
+        "rate": 70.82
+      },
+      {
+        "key": "paris",
+        "nodes": 2065,
+        "match": 1395,
+        "over": 436,
+        "under": 234,
+        "rate": 67.55
+      },
+      {
+        "key": "nyc",
+        "nodes": 987,
+        "match": 788,
+        "over": 127,
+        "under": 72,
+        "rate": 79.84
+      },
+      {
+        "key": "chicago",
+        "nodes": 633,
+        "match": 534,
+        "over": 68,
+        "under": 31,
+        "rate": 84.36
+      },
+      {
+        "key": "berlin",
+        "nodes": 782,
+        "match": 627,
+        "over": 106,
+        "under": 49,
+        "rate": 80.18
+      },
+      {
+        "key": "bangkok",
+        "nodes": 3571,
+        "match": 3049,
+        "over": 352,
+        "under": 170,
+        "rate": 85.38
+      },
+      {
+        "key": "mumbai",
+        "nodes": 815,
+        "match": 626,
+        "over": 100,
+        "under": 89,
+        "rate": 76.81
+      },
+      {
+        "key": "delhi",
+        "nodes": 891,
+        "match": 672,
+        "over": 123,
+        "under": 96,
+        "rate": 75.42
+      }
+    ]
+  }
+]
