@@ -69,6 +69,30 @@ def build():
         acc_area, acc_imperv_area, dist_frac = compute_flow_accumulation(
             G, nodes_list, node_to_idx, in_deg_map, out_deg_map)
 
+        # Real conduit capacity by downstream road class (identical to
+        # create_full_dataset.py / app.py): inlet_cap = max capacity of outgoing
+        # conduits; surcharge_ratio_base couples upstream area to that capacity.
+        highway_to_cap = {
+            'motorway': 0.50, 'trunk': 0.50, 'primary': 0.35,
+            'secondary': 0.25, 'tertiary': 0.18, 'unclassified': 0.15,
+            'residential': 0.12, 'service': 0.06, 'living_street': 0.04,
+            'pedestrian': 0.03, 'track': 0.02, 'path': 0.01
+        }
+        default_cap = 0.12
+        node_inlet_cap = {}
+        surcharge_ratio_base = {}
+        for nid in nodes_list:
+            max_cap = 0.0
+            for u, v, k, d in G.out_edges(nid, keys=True, data=True):
+                hw = d.get('highway', 'residential')
+                if isinstance(hw, list):
+                    hw = hw[0]
+                cap = highway_to_cap.get(hw, default_cap)
+                max_cap = max(max_cap, cap)
+            cap = max_cap if max_cap > 0 else default_cap
+            node_inlet_cap[nid] = cap
+            surcharge_ratio_base[nid] = float(acc_area[nid] / max(cap, 1e-4))
+
         elev_map = {nid: float(G.nodes[nid].get('elevation', 880.0)) for nid in nodes_list}
         und_adj = {nid: set() for nid in nodes_list}
         for u, v, k, data in G.edges(keys=True, data=True):
@@ -129,6 +153,7 @@ def build():
             'acc_area': acc_area, 'acc_imperv_area': acc_imperv_area, 'dist_frac': dist_frac,
             'elev_std2': elev_std2, 'dep_depth': dep_depth, 'surcharge': surcharge,
             'path_cap': path_cap, 'path_hops': path_hops,
+            'node_inlet_cap': node_inlet_cap, 'surcharge_ratio_base': surcharge_ratio_base,
         }
 
     scenarios = sorted(set(df['intensity_mmhr']))
@@ -158,6 +183,8 @@ def build():
 
             node_features = []
             node_targets = []
+            node_inlet_caps = []
+            node_sur_ratio_bases = []
 
             for node_id in nodes_list:
                 d = G.nodes[node_id]
@@ -196,6 +223,8 @@ def build():
                     st['surcharge'].get(node_id, 0.0),
                     st['path_cap'].get(node_id, 0.0), st['path_hops'].get(node_id, 0.0),
                 ])
+                node_inlet_caps.append(float(st['node_inlet_cap'].get(node_id, 0.12)))
+                node_sur_ratio_bases.append(float(st['surcharge_ratio_base'].get(node_id, 0.0)))
 
                 nid_str = str(node_id)
                 depth = target_lookup.get(
@@ -220,6 +249,8 @@ def build():
             edge_attr = torch.tensor(edge_features, dtype=torch.float)
 
             pyg_data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y)
+            pyg_data.inlet_cap = torch.tensor(node_inlet_caps, dtype=torch.float32)
+            pyg_data.surcharge_ratio_base = torch.tensor(node_sur_ratio_bases, dtype=torch.float32)
             pyg_data.rain_intensity = intensity
             pyg_data.rain_duration = duration
             pyg_data.region = reg

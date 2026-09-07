@@ -82,8 +82,14 @@ def build_expanded_dataset():
             elev_above_outlet = np.maximum(0.0, rel_drop * 10.0)
             slope_outlet_ratio = np.maximum(0.0, max_in_grade / (0.3 + elev_above_outlet))
             sink_depth = np.where((rel_drop >= 0.50) & (dep_depth >= 0.05), dep_depth, 0.0)
-            inlet_cap = np.full(num_n, 0.12, dtype=np.float32)
-            surcharge_ratio = 100.0 * intensity
+            if hasattr(g, 'inlet_cap') and hasattr(g, 'surcharge_ratio_base'):
+                inlet_cap = g.inlet_cap.numpy().astype(np.float32)
+                surcharge_ratio = np.clip(
+                    g.surcharge_ratio_base.numpy() * intensity, 20.0, 320833.0
+                ).astype(np.float32)
+            else:
+                inlet_cap = np.full(num_n, 0.12, dtype=np.float32)
+                surcharge_ratio = 100.0 * intensity
             deg_diff = in_deg - out_deg
             total_rain_mm = intensity * (duration / 60.0)
             dyn_sat = imp * (1.0 + 0.5 * np.log1p(intensity * duration / 1000.0))

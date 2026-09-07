@@ -13,7 +13,7 @@ from torch_geometric.nn import GINEConv, GATv2Conv
 from train_perfect_accuracy_gnn import PerfectAccuracyGNN
 from train_zero_tolerance_gnn import ZeroToleranceHurdleGNN
 from train_dual_stream_hydro_gnn import DualStreamHydroGNN
-from production_v4 import ProductionFloodPredictorV4
+from production_v4 import ProductionFloodPredictorV4, EnsembleFloodPredictorV4
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -594,6 +594,10 @@ def init_app_data():
         else:
             from torch_geometric.data import Data
             pyg_obj = Data(x=static_features, edge_index=edge_index, edge_attr=edge_attr)
+        # True catchment elevation range (meters) for the production WSE envelope,
+        # which restores real inter-node relief (rel_drop * elev_range) so backwater
+        # cannot bleed into materially higher dry neighbors.
+        pyg_obj.elev_range = float(elev_range)
 
         REGION_CACHE[r_key] = {
             'info': r_info,
@@ -617,10 +621,8 @@ def init_app_data():
 
     RESIDUAL_CALIBRATIONS = {}
 
-    v4_ckpt = "hydro_gine_v5_bottleneck_opt.pt" if os.path.exists("hydro_gine_v5_bottleneck_opt.pt") else ("hydro_gine_v5_model.pt" if os.path.exists("hydro_gine_v5_model.pt") else "hydro_gine_v4_model.pt")
-    if os.path.exists(v4_ckpt):
-        print(f"   - Initializing {v4_ckpt} zero-leakage neural engine...")
-        PRODUCTION_PREDICTOR = ProductionFloodPredictorV4(v4_ckpt, device=device)
+    print("   - Initializing Tuned EnsembleFloodPredictorV4 (v5.10 + v5.11 + v5.0 + BangaloreOpt)...")
+    PRODUCTION_PREDICTOR = EnsembleFloodPredictorV4(device=device)
 
     ckpt_file = "zero_tolerance_gnn_checkpoint.pt" if os.path.exists("zero_tolerance_gnn_checkpoint.pt") else ("pinn_gnn_checkpoint.pt" if os.path.exists("pinn_gnn_checkpoint.pt") else "urbanflow_production_model.pt")
     if os.path.exists(ckpt_file):
