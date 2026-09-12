@@ -18,7 +18,13 @@ temp_test_*
 # System files
 .DS_Store
 Thumbs.db
+.idea/
 
 # Large generated dataset caches (>400MB)
 expanded_master_physics_dataset.pt
 multi_scenario_physics_pyg_dataset.pt
+
+# Regenerable experiment artifacts (deleted in cleanup; keep out of fresh clones)
+swmm_temporal/
+st_gnn/
+cache/
