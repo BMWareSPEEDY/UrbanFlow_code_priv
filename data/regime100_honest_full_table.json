@@ -1,0 +1,74 @@
+{
+ "hsr": {
+  "nodes": 1379,
+  "swmm_gt15": 277,
+  "swmm_gt30": 209,
+  "model_gt15": 212,
+  "mae_cm": 8.9,
+  "rmse_cm": 29.55,
+  "f1_h": 0.818,
+  "rec_c": 0.3206,
+  "prec_c": 0.9853,
+  "pct15": 86.4
+ },
+ "bellandur": {
+  "nodes": 1507,
+  "swmm_gt15": 510,
+  "swmm_gt30": 421,
+  "model_gt15": 347,
+  "mae_cm": 19.17,
+  "rmse_cm": 47.44,
+  "f1_h": 0.7981,
+  "rec_c": 0.4727,
+  "prec_c": 0.966,
+  "pct15": 76.4
+ },
+ "whitefield": {
+  "nodes": 1797,
+  "swmm_gt15": 587,
+  "swmm_gt30": 471,
+  "model_gt15": 429,
+  "mae_cm": 16.29,
+  "rmse_cm": 42.02,
+  "f1_h": 0.8189,
+  "rec_c": 0.4862,
+  "prec_c": 0.9424,
+  "pct15": 77.1
+ },
+ "ecity": {
+  "nodes": 3337,
+  "swmm_gt15": 1125,
+  "swmm_gt30": 929,
+  "model_gt15": 783,
+  "mae_cm": 18.87,
+  "rmse_cm": 47.46,
+  "f1_h": 0.8124,
+  "rec_c": 0.5145,
+  "prec_c": 0.9618,
+  "pct15": 75.4
+ },
+ "koramangala": {
+  "nodes": 4416,
+  "swmm_gt15": 1255,
+  "swmm_gt30": 1064,
+  "model_gt15": 767,
+  "mae_cm": 18.41,
+  "rmse_cm": 48.38,
+  "f1_h": 0.7418,
+  "rec_c": 0.3412,
+  "prec_c": 0.9732,
+  "pct15": 77.3
+ },
+ "_pooled_5regions": {
+  "nodes": 12436,
+  "swmm_gt15": 3754,
+  "swmm_gt30": 3094,
+  "model_gt15": 2538,
+  "mae_cm": 17.27,
+  "rmse_cm": 45.39,
+  "f1_h": 0.7893,
+  "rec_c": 0.4318,
+  "prec_c": 0.9632,
+  "pct15": 77.7
+ }
+}

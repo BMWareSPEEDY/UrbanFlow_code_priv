@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="wls_stations" id="wls_stations">
+	<SimpleField name="OBJECTID" type="float"></SimpleField>
+	<SimpleField name="KGISWLS_StationID" type="float"></SimpleField>
+	<SimpleField name="DepartmentCode" type="string"></SimpleField>
+	<SimpleField name="KGISVillageid" type="float"></SimpleField>
+	<SimpleField name="KGISWardid" type="float"></SimpleField>
+	<SimpleField name="KGISCode" type="string"></SimpleField>
+	<SimpleField name="WLS_StationName" type="string"></SimpleField>
+</Schema>
+<Folder><name>wls_stations</name>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">1</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100007</SimpleData>
+		<SimpleData name="DepartmentCode">100007</SimpleData>
+		<SimpleData name="KGISVillageid">15378</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0003</SimpleData>
+		<SimpleData name="WLS_StationName">EWS WORKING COLONY, 3RD STAGE, CHIIKKABOMMASANDRA</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5822979794307,13.0926293789359</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">2</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100008</SimpleData>
+		<SimpleData name="DepartmentCode">100008</SimpleData>
+		<SimpleData name="KGISVillageid">15116</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0004</SimpleData>
+		<SimpleData name="WLS_StationName">MAGADI ROAD METRO STATION</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5548957185947,12.9762147218081</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">3</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100009</SimpleData>
+		<SimpleData name="DepartmentCode">100009</SimpleData>
+		<SimpleData name="KGISVillageid">15084</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0005</SimpleData>
+		<SimpleData name="WLS_StationName">GALI ANJENEYA TEMPLE</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5414042213661,12.9531838781408</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">4</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100010</SimpleData>
+		<SimpleData name="DepartmentCode">100010</SimpleData>
+		<SimpleData name="KGISVillageid">15500</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0006</SimpleData>
+		<SimpleData name="WLS_StationName">SHANTINAGAR BMTC</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5974344448823,12.9519026728773</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">5</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100011</SimpleData>
+		<SimpleData name="DepartmentCode">100011</SimpleData>
+		<SimpleData name="KGISVillageid">15471</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0007</SimpleData>
+		<SimpleData name="WLS_StationName">BYRAVESHWARA INDUSTRIAL  ESTATE, SHUSHRUTI NAGAR</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.495397826773,13.0045347108735</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">6</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100012</SimpleData>
+		<SimpleData name="DepartmentCode">100012</SimpleData>
+		<SimpleData name="KGISVillageid">15143</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0008</SimpleData>
+		<SimpleData name="WLS_StationName">MATTIKERE</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5594034119171,13.0378876732571</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">7</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100014</SimpleData>
+		<SimpleData name="DepartmentCode">100014</SimpleData>
+		<SimpleData name="KGISVillageid">15114</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0010</SimpleData>
+		<SimpleData name="WLS_StationName">ALONG THE WATER PIPELINE, HORAMAVU(ASHWATHNAGARA)</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.6333715629813,13.0403538570741</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">8</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100013</SimpleData>
+		<SimpleData name="DepartmentCode">100013</SimpleData>
+		<SimpleData name="KGISVillageid">15079</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0009</SimpleData>
+		<SimpleData name="WLS_StationName">VASANTHNAGAR</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.6011967797106,12.9875658781853</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">9</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100015</SimpleData>
+		<SimpleData name="DepartmentCode">100015</SimpleData>
+		<SimpleData name="KGISVillageid">30092</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0011</SimpleData>
+		<SimpleData name="WLS_StationName">SHIVAJINAGARA</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.6085621335574,12.9861373101709</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">10</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100016</SimpleData>
+		<SimpleData name="DepartmentCode">100016</SimpleData>
+		<SimpleData name="KGISVillageid">21387</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0012</SimpleData>
+		<SimpleData name="WLS_StationName">PAI LAYOUT</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.6684455862818,12.9906262842145</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">11</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100017</SimpleData>
+		<SimpleData name="DepartmentCode">100017</SimpleData>
+		<SimpleData name="KGISVillageid">21429</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0013</SimpleData>
+		<SimpleData name="WLS_StationName">CHIKKABASAVANAPURA (MAHADEVPURA)</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.7061352170998,13.0128666034291</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">12</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100018</SimpleData>
+		<SimpleData name="DepartmentCode">100018</SimpleData>
+		<SimpleData name="KGISVillageid">15086</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0014</SimpleData>
+		<SimpleData name="WLS_StationName">KANAKANAGAR</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.6020297014096,13.0349227061678</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">13</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100019</SimpleData>
+		<SimpleData name="DepartmentCode">100019</SimpleData>
+		<SimpleData name="KGISVillageid">15536</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0015</SimpleData>
+		<SimpleData name="WLS_StationName">SILK BOARD SIGNAL (HSR LAYOUT)</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.6220213871023,12.9179810059829</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">14</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100020</SimpleData>
+		<SimpleData name="DepartmentCode">100020</SimpleData>
+		<SimpleData name="KGISVillageid">21393</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0016</SimpleData>
+		<SimpleData name="WLS_StationName">KALAPPA LAYOUT ( NEAR HAL AIRPORT)</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.6898600217241,12.967658542635</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">15</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100021</SimpleData>
+		<SimpleData name="DepartmentCode">100021</SimpleData>
+		<SimpleData name="KGISVillageid">15494</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0017</SimpleData>
+		<SimpleData name="WLS_StationName">KULLEGOWDA INDUSTRIAL LAYOUT -KOTTIGEPALYA</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5227355142766,12.9926392502748</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">16</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100022</SimpleData>
+		<SimpleData name="DepartmentCode">100022</SimpleData>
+		<SimpleData name="KGISVillageid">15486</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0018</SimpleData>
+		<SimpleData name="WLS_StationName">MALLATHALLI -NGEF LAYOUT ROAD, GNANAJYOTHINAGAR</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.4920194761942,12.9592614850252</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">17</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100023</SimpleData>
+		<SimpleData name="DepartmentCode">100023</SimpleData>
+		<SimpleData name="KGISVillageid">15688</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0019</SimpleData>
+		<SimpleData name="WLS_StationName">SRINIVAS NAGARA ( BANASHANKARI )</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5476951097872,12.9340249471781</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">18</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100024</SimpleData>
+		<SimpleData name="DepartmentCode">100024</SimpleData>
+		<SimpleData name="KGISVillageid">15461</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0020</SimpleData>
+		<SimpleData name="WLS_StationName">DODDABIDRAKALLU</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.4832882507416,13.0371974299967</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">19</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100025</SimpleData>
+		<SimpleData name="DepartmentCode">100025</SimpleData>
+		<SimpleData name="KGISVillageid">15110</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0021</SimpleData>
+		<SimpleData name="WLS_StationName">V.V.GIRI NAGARA (OKLIPURAM)</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5696400004033,12.9856400914133</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">20</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100026</SimpleData>
+		<SimpleData name="DepartmentCode">100026</SimpleData>
+		<SimpleData name="KGISVillageid">15086</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0022</SimpleData>
+		<SimpleData name="WLS_StationName">HMT LAYOUT (ANANDANAGARA)</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5933436867046,13.0298111231878</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">21</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100027</SimpleData>
+		<SimpleData name="DepartmentCode">100027</SimpleData>
+		<SimpleData name="KGISVillageid">15483</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0023</SimpleData>
+		<SimpleData name="WLS_StationName">LAGGERE (SUMMANAHALLI BRIDGE)</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5237548449898,13.0028238161293</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">22</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100028</SimpleData>
+		<SimpleData name="DepartmentCode">100028</SimpleData>
+		<SimpleData name="KGISVillageid">15545</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0024</SimpleData>
+		<SimpleData name="WLS_StationName">KRISHNAPPA GARDEN, TAVAREKERE</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.602225154668,12.9201114390084</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">23</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100029</SimpleData>
+		<SimpleData name="DepartmentCode">100029</SimpleData>
+		<SimpleData name="KGISVillageid">15093</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0025</SimpleData>
+		<SimpleData name="WLS_StationName">DOMMALUR FLYOVER, ISRO COLONY</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.6401060561193,12.9529200637375</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">24</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100003</SimpleData>
+		<SimpleData name="DepartmentCode">100003</SimpleData>
+		<SimpleData name="KGISVillageid">15685</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0002</SimpleData>
+		<SimpleData name="WLS_StationName">NOBO NAGAR, HULIMAVU INLET</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5984789916916,12.8673414539986</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">25</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100034</SimpleData>
+		<SimpleData name="DepartmentCode">100034</SimpleData>
+		<SimpleData name="KGISVillageid">15578</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0027</SimpleData>
+		<SimpleData name="WLS_StationName">NAYANDAHALLI JUNCTION</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5278970576139,12.9443845587146</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#wls_stations">
+		<SimpleData name="OBJECTID">26</SimpleData>
+		<SimpleData name="KGISWLS_StationID">100030</SimpleData>
+		<SimpleData name="DepartmentCode">100030</SimpleData>
+		<SimpleData name="KGISVillageid">15711</SimpleData>
+		<SimpleData name="KGISCode">29572055428031620000IRWRDUNOCRWQM0026</SimpleData>
+		<SimpleData name="WLS_StationName">ROSE GARDEN JP NAGAR</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>77.5749594539848,12.9084430447286</coordinates></Point>
+  </Placemark>
+</Folder>
+</Document></kml>

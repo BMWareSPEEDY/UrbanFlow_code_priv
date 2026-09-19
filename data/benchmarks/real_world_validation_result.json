@@ -1,0 +1,243 @@
+{
+  "dataset": "data/real_bengaluru_oct2024_incidents.json",
+  "storm_intensity_mmhr": 250.0,
+  "duration_min": 60.0,
+  "capture_threshold_m": 0.15,
+  "capture_radius_m": 50.0,
+  "total_incidents": 13,
+  "captured_incidents": 5,
+  "capture_rate_pct": 38.5,
+  "incidents": [
+    {
+      "id": "REAL-KOR-01-SILK-BOARD",
+      "region": "koramangala",
+      "event_id": [
+        "bengaluru_oct15_2024",
+        "bengaluru_oct20_2024"
+      ],
+      "location": "Silk Board Junction and Hosur Road",
+      "lat": 12.91582,
+      "lon": 77.62404,
+      "coordinate_note": "Geocoded via Nominatim (Silk Board Junction Bengaluru)",
+      "description": "Traffic-police advisories and reports name Silk Board Junction among the worst-hit points on the Hosur Road corridor during the Oct 15 waterlogging; on the morning of Oct 20 traffic police and riders described the junction as flooded and resembling a pool.",
+      "sources": [
+        "https://www.thehindu.com/news/cities/bangalore/bengaluru-weather-heavy-rains-lead-to-waterlogging-and-traffic-chaos-commuters-struggle-to-navigate-inundated-roads/article68755266.ece",
+        "https://www.thehindu.com/news/cities/bangalore/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece"
+      ],
+      "min_dist_m": 33.7,
+      "captured": true
+    },
+    {
+      "id": "REAL-KOR-02-MADIWALA",
+      "region": "koramangala",
+      "event_id": [
+        "bengaluru_oct15_2024"
+      ],
+      "location": "Madiwala junction (Hosur Road)",
+      "lat": 12.92189,
+      "lon": 77.61773,
+      "coordinate_note": "Geocoded via Nominatim (Madiwala Bengaluru)",
+      "description": "Bengaluru Traffic Police advisory dated Oct 16 lists Madiwala among areas experiencing waterlogged roads and slow traffic.",
+      "sources": [
+        "https://www.newindianexpress.com/cities/bengaluru/2024/Oct/16/traffic-goes-haywire-on-major-roads"
+      ],
+      "min_dist_m": 10.2,
+      "captured": true
+    },
+    {
+      "id": "REAL-HSR-01-ROOPENA-AGRAHARA",
+      "region": "hsr",
+      "event_id": [
+        "bengaluru_oct20_2024"
+      ],
+      "location": "Hosur Road at Roopena Agrahara",
+      "lat": 12.91199,
+      "lon": 77.62604,
+      "coordinate_note": "Geocoded via Nominatim (Roopena Agrahara Hosur Road Bengaluru)",
+      "description": "TOI reported traffic crawling on Hosur Road at Roopena Agrahara due to waterlogging during the Oct 19-20 overnight rain; New Indian Express reported Roopena Agrahara and Silk Board Junction flooded.",
+      "sources": [
+        "https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-deluged-heavy-rain-causes-traffic-chaos-and-waterlogging-across-city/articleshow/114404508.cms",
+        "https://www.newindianexpress.com/states/karnataka/2024/Oct/21/rain-woes-continue-to-haunt-bengaluru"
+      ],
+      "min_dist_m": 140.1,
+      "captured": false
+    },
+    {
+      "id": "REAL-HSR-02-HSR-LAYOUT",
+      "region": "hsr",
+      "event_id": [
+        "bengaluru_oct22_2024"
+      ],
+      "location": "HSR Layout (Sector 2 / 27th Main)",
+      "lat": 12.91534,
+      "lon": 77.65171,
+      "coordinate_note": "Geocoded via Nominatim (HSR Layout 27th Main Bengaluru)",
+      "description": "New Indian Express reported that 'roads turned into rivers' in HSR Layout during the Oct 21-22 record rainfall.",
+      "sources": [
+        "https://www.newindianexpress.com/states/karnataka/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst"
+      ],
+      "min_dist_m": 112.0,
+      "captured": false
+    },
+    {
+      "id": "REAL-HSR-03-SARJAPUR-ROAD",
+      "region": "hsr",
+      "event_id": [
+        "bengaluru_oct15_2024",
+        "bengaluru_oct22_2024"
+      ],
+      "location": "Sarjapur Road (junction near Wipro / RGA Tech Park)",
+      "lat": 12.92449,
+      "lon": 77.64514,
+      "coordinate_note": "Geocoded via Nominatim (Sarjapur Road Bengaluru); represents the Sarjapur Road corridor named in advisories.",
+      "description": "Moneycontrol reported flooding near the Wipro Gate and RGA Tech Park junctions on Sarjapur Road on Oct 15; Indian Express reported stretches along Sarjapur Road were inundated on Oct 22.",
+      "sources": [
+        "https://www.moneycontrol.com/news/india/manyata-tech-park-in-bengaluru-flooded-techies-demand-wfh-govt-announces-holiday-for-schools-12842550.html",
+        "https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/"
+      ],
+      "min_dist_m": 223.3,
+      "captured": false
+    },
+    {
+      "id": "REAL-HSR-04-BOMMANAHALLI",
+      "region": "hsr",
+      "event_id": [
+        "bengaluru_oct15_2024",
+        "bengaluru_oct20_2024"
+      ],
+      "location": "Bommanahalli junction (Hosur Road)",
+      "lat": 12.90961,
+      "lon": 77.62725,
+      "coordinate_note": "Geocoded via Nominatim (Bommanahalli Hosur Road Bengaluru)",
+      "description": "Bengaluru Traffic Police advisory (Oct 16) names Bommanahalli junction for waterlogged roads; a traffic police officer told The Hindu Hosur Road connecting Bommanahalli and Electronic City was severely flooded on Oct 20.",
+      "sources": [
+        "https://www.newindianexpress.com/cities/bengaluru/2024/Oct/16/traffic-goes-haywire-on-major-roads",
+        "https://www.thehindu.com/news/cities/bangalore/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece"
+      ],
+      "min_dist_m": 156.6,
+      "captured": false
+    },
+    {
+      "id": "REAL-BEL-01-ORR-IBLUR",
+      "region": "bellandur",
+      "event_id": [
+        "bengaluru_oct22_2024"
+      ],
+      "location": "Outer Ring Road service road between Iblur and Marathahalli",
+      "lat": 12.92066,
+      "lon": 77.6652,
+      "coordinate_note": "Geocoded via Nominatim (Iblur Junction Bengaluru); represents the documented Iblur-Marathahalli ORR service-road flooding.",
+      "description": "Indian Express reported the Bellandur traffic police alerting that flooding of the ORR service roads between the Iblur and Marathahalli junctions brought traffic to a crawl and 'completely congested' the stretch on Oct 22.",
+      "sources": [
+        "https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/"
+      ],
+      "min_dist_m": 12.0,
+      "captured": true
+    },
+    {
+      "id": "REAL-BEL-02-ECOSPACE",
+      "region": "bellandur",
+      "event_id": [
+        "bengaluru_oct22_2024"
+      ],
+      "location": "Ecospace junction (ORR)",
+      "lat": 12.92834,
+      "lon": 77.68116,
+      "coordinate_note": "Geocoded via Nominatim (EcoSpace Bengaluru)",
+      "description": "Indian Express reported a Bellandur traffic-police alert citing waterlogging with slow-moving traffic near Ecospace junction on Oct 22.",
+      "sources": [
+        "https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/"
+      ],
+      "min_dist_m": 27.8,
+      "captured": true
+    },
+    {
+      "id": "REAL-BEL-03-DEVARABEESANAHALLI",
+      "region": "bellandur",
+      "event_id": [
+        "bengaluru_oct22_2024"
+      ],
+      "location": "Devarabeesanahalli (ORR)",
+      "lat": 12.93015,
+      "lon": 77.68532,
+      "coordinate_note": "Geocoded via Nominatim (Devarabeesanahalli flyover Bengaluru)",
+      "description": "New Indian Express reported 'roads turned into rivers' in Devarabeesanahalli during the Oct 21-22 record rainfall.",
+      "sources": [
+        "https://www.newindianexpress.com/states/karnataka/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst"
+      ],
+      "min_dist_m": 26.8,
+      "captured": true
+    },
+    {
+      "id": "REAL-BEL-04-BELLANDUR-LAKE",
+      "region": "bellandur",
+      "event_id": [
+        "bengaluru_oct22_2024"
+      ],
+      "location": "Bellandur Lake overflow / ORR service roads",
+      "lat": 12.92783,
+      "lon": 77.67653,
+      "coordinate_note": "Geocoded via Nominatim (Bellandur Main Road Bengaluru); represents the Bellandur Lake-adjacent ORR corridor.",
+      "description": "Indian Express reported Bellandur Lake overflowing and flooding the ORR service roads between the Marathahalli and Iblur junctions; New Indian Express reported roads turned into rivers in Bellandur.",
+      "sources": [
+        "https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/",
+        "https://www.newindianexpress.com/states/karnataka/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst"
+      ],
+      "min_dist_m": 61.6,
+      "captured": false
+    },
+    {
+      "id": "REAL-WHI-01-ITPL-ROAD",
+      "region": "whitefield",
+      "event_id": [
+        "bengaluru_oct20_2024"
+      ],
+      "location": "ITPL Road / International Tech Park Bengaluru",
+      "lat": 12.98772,
+      "lon": 77.73692,
+      "coordinate_note": "Geocoded via Nominatim (ITPL Whitefield Bengaluru)",
+      "description": "TOI reported traffic crawling on ITPL Road due to waterlogging during the Oct 19-20 overnight rain.",
+      "sources": [
+        "https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-deluged-heavy-rain-causes-traffic-chaos-and-waterlogging-across-city/articleshow/114404508.cms"
+      ],
+      "min_dist_m": 197.6,
+      "captured": false
+    },
+    {
+      "id": "REAL-WHI-02-HOPEFARM",
+      "region": "whitefield",
+      "event_id": [
+        "bengaluru_oct20_2024"
+      ],
+      "location": "Hope Farm junction (Whitefield)",
+      "lat": 12.9873,
+      "lon": 77.75388,
+      "coordinate_note": "Geocoded via Nominatim (Hopefarm Whitefield Bengaluru)",
+      "description": "TOI reported waterlogging on the Whitefield IT corridor roads (Varthur-Gunjur Road, Kadugodi Bridge, ITPL Road) on Oct 20; Hope Farm is the principal Whitefield junction on that corridor.",
+      "sources": [
+        "https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-deluged-heavy-rain-causes-traffic-chaos-and-waterlogging-across-city/articleshow/114404508.cms"
+      ],
+      "min_dist_m": 92.8,
+      "captured": false
+    },
+    {
+      "id": "REAL-ECI-01-ELECTRONIC-CITY",
+      "region": "ecity",
+      "event_id": [
+        "bengaluru_oct15_2024",
+        "bengaluru_oct20_2024"
+      ],
+      "location": "Electronic City Phase 1 (Hosur Road)",
+      "lat": 12.84968,
+      "lon": 77.66497,
+      "coordinate_note": "Geocoded via Nominatim (Electronic City Phase 1 Bengaluru)",
+      "description": "Moneycontrol reported parts of Electronics City experienced flooding on Oct 15; The Hindu reported Hosur Road connecting Electronic City experienced severe flooding on Oct 20.",
+      "sources": [
+        "https://www.moneycontrol.com/news/india/manyata-tech-park-in-bengaluru-flooded-techies-demand-wfh-govt-announces-holiday-for-schools-12842550.html",
+        "https://www.thehindu.com/news/cities/bangalore/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece"
+      ],
+      "min_dist_m": 198.8,
+      "captured": false
+    }
+  ]
+}

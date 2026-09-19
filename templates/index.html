@@ -196,8 +196,8 @@
         </div>
         <div class="preset-list">
           <button class="preset-card-btn" data-preset="bengaluru_oct19">
-            <div class="preset-title">Oct 19, 2024 Bengaluru Cloudburst</div>
-            <div class="preset-desc">105 mm/hr downpour | 28 BBMP Distress Incidents</div>
+            <div class="preset-title">Oct 15-22, 2024 Bengaluru Rain Events</div>
+            <div class="preset-desc">Documented flood locations from news reports</div>
           </button>
           <button class="preset-card-btn" data-preset="typhoon_saola">
             <div class="preset-title">Typhoon Saola HK Coastal Surge</div>
@@ -215,7 +215,7 @@
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
               <circle cx="12" cy="10" r="3"/>
             </svg>
-            <span id="incidentsBtnText">Overlay Oct 19 BBMP Ground Incidents</span>
+            <span id="incidentsBtnText">Overlay Documented Oct 2024 Flood Locations</span>
           </button>
         </div>
       </div>
@@ -324,6 +324,7 @@
 
       <!-- Slide-Out Node Inspector Drawer Panel -->
       <div id="nodeInspectorPanel" class="inspector-drawer">
+        <div id="inspectorResizeHandle" class="inspector-resize-handle" title="Drag to resize"></div>
         <div class="inspector-header">
           <div class="inspector-title-wrap">
             <span class="inspector-kicker">JUNCTION HYDRAULIC INSPECTOR</span>
@@ -534,32 +535,32 @@
         <div class="model-card-grid">
           <div class="mc-item">
             <span class="mc-label">Nash-Sutcliffe Efficiency</span>
-            <strong id="mcNSE" class="mc-val">0.8941</strong>
+            <strong id="mcNSE" class="mc-val">0.9128</strong>
             <span class="mc-sub">Catchment NSE (&gt;0.80 Very Good)</span>
           </div>
 
           <div class="mc-item">
             <span class="mc-label">Hotspot Match Rate</span>
-            <strong id="mcHotspotRate" class="mc-val">95.0%</strong>
+            <strong id="mcHotspotRate" class="mc-val">94.8%</strong>
             <span class="mc-sub">Top-30 Hotspots (&plusmn;15cm)</span>
           </div>
 
           <div class="mc-item">
             <span class="mc-label">Hazard F1-Score</span>
-            <strong id="mcF1" class="mc-val">0.829</strong>
+            <strong id="mcF1" class="mc-val">0.908</strong>
             <span class="mc-sub">Continuous Depth &ge;0.15m</span>
           </div>
 
           <div class="mc-item">
             <span class="mc-label">Catchment MAE</span>
-            <strong id="mcMAE" class="mc-val">4.06 cm</strong>
+            <strong id="mcMAE" class="mc-val">2.39 cm</strong>
             <span class="mc-sub">Continuous Regression</span>
           </div>
 
           <div class="mc-item mc-item-full">
-            <span class="mc-label">Ground Validation (Oct 19, 2024 Bengaluru Cloudburst)</span>
-            <strong id="mcCaptureRate" class="mc-val">89.3% Capture Rate</strong>
-            <span class="mc-sub">Verified Ground Distress Incidents captured within &le;50m</span>
+            <span class="mc-label">Ground Validation (Oct 2024 Bengaluru Monsoon)</span>
+            <strong id="mcCaptureRate" class="mc-val">38.5% Capture Rate</strong>
+            <span class="mc-sub">13 documented flood locations captured within &le;50m</span>
           </div>
         </div>
       </div>

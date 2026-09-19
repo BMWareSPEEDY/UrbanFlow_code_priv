@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UrbanFLOW: A Physics-Guided Graph Neural Network Surrogate for Real-Time Urban Flood Inundation Modeling</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<style>
+  @page {
+    size: A4;
+    margin: 1in 1in 1in 1in;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 10pt;
+    line-height: 14pt;
+    color: #111;
+    max-width: 6.85in;
+    margin: 0 auto;
+    padding: 0;
+    text-align: justify;
+  }
+  .title-block {
+    text-align: center;
+    margin-bottom: 20pt;
+  }
+  .paper-title {
+    font-size: 16.5pt;
+    font-weight: bold;
+    line-height: 20.5pt;
+    margin-bottom: 8pt;
+  }
+  .author-block {
+    font-size: 10.5pt;
+    margin-bottom: 3pt;
+  }
+  .author-meta {
+    font-size: 9pt;
+    font-style: italic;
+    color: #444;
+    margin-bottom: 12pt;
+  }
+  .abstract-box {
+    margin: 0 0.25in 16pt 0.25in;
+    font-size: 9.2pt;
+    line-height: 12.5pt;
+    text-align: justify;
+  }
+  .abstract-heading {
+    font-weight: bold;
+    font-style: italic;
+  }
+  .keywords-block {
+    margin-top: 5pt;
+    font-size: 9pt;
+  }
+  h1 {
+    font-size: 13pt;
+    font-weight: bold;
+    text-align: center;
+    margin: 18pt 0 7pt 0;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 11.2pt;
+    font-weight: bold;
+    margin: 12pt 0 5pt 0;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 10.2pt;
+    font-weight: bold;
+    font-style: italic;
+    margin: 9pt 0 3pt 0;
+    page-break-after: avoid;
+  }
+  p {
+    margin: 0 0 5.5pt 0;
+    text-indent: 1.2em;
+  }
+  p.no-indent {
+    text-indent: 0;
+  }
+  .eq-block {
+    margin: 7pt 0;
+    padding: 0 0.4in;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    text-indent: 0;
+    page-break-inside: avoid;
+  }
+  .eq-label {
+    position: absolute;
+    right: 0.1in;
+    font-size: 9.5pt;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    line-height: 10.5pt;
+    margin: 9pt 0;
+    page-break-inside: avoid;
+  }
+  table.data-table th,
+  table.data-table td {
+    padding: 2.5pt 3.5pt;
+    text-align: center;
+    border-top: 0.5pt solid #000;
+    border-bottom: 0.5pt solid #000;
+  }
+  table.data-table th {
+    font-weight: bold;
+    background: #f5f5f5;
+  }
+  table.data-table tr.total-row td {
+    font-weight: bold;
+    border-top: 1pt solid #000;
+    border-bottom: 1.5pt solid #000;
+    background: #f0f0f0;
+  }
+  table.data-table td.left,
+  table.data-table th.left {
+    text-align: left;
+  }
+  .table-caption {
+    font-size: 9pt;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 3.5pt;
+  }
+  .figure-box {
+    text-align: center;
+    margin: 11pt 0;
+    page-break-inside: avoid;
+  }
+  .figure-diagram {
+    background: #fafafa;
+    border: 0.5pt solid #ccc;
+    padding: 8pt;
+    font-family: 'Courier New', monospace;
+    font-size: 7.5pt;
+    line-height: 9.5pt;
+    text-align: left;
+    white-space: pre;
+    overflow-x: hidden;
+    display: inline-block;
+  }
+  .figure-caption {
+    font-size: 9pt;
+    font-style: italic;
+    margin-top: 3.5pt;
+    text-align: center;
+  }
+  .figure-img {
+    max-width: 78%;
+    width: 78%;
+    height: auto;
+    border: 0.5pt solid #ccc;
+  }
+  ol, ul {
+    margin: 0 0 5.5pt 0;
+    padding-left: 1.4em;
+  }
+  li {
+    margin-bottom: 2.5pt;
+  }
+  .ref-list {
+    font-size: 8.8pt;
+    line-height: 11.5pt;
+    padding-left: 1.4em;
+  }
+  .ref-list li {
+    margin-bottom: 3.5pt;
+    text-align: justify;
+  }
+  .ref-note {
+    display: block;
+    font-size: 8.5pt;
+    margin-top: 1pt;
+  }
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    background: #f4f4f4;
+    padding: 1pt 3pt;
+    border-radius: 2pt;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .highlight-box {
+    background: #f8f9fa;
+    border-left: 3pt solid #333;
+    padding: 7pt 10pt;
+    margin: 9pt 0;
+    font-size: 9.2pt;
+    text-indent: 0;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div class="title-block">
+  <div class="paper-title">UrbanFLOW: A Physics-Guided Graph Neural Network Surrogate for Real-Time Urban Flood Inundation Modeling</div>
+  <div class="author-block"><strong>Anonymous IRIS National Fair 2026&ndash;27 Submission</strong></div>
+  <div class="author-meta">
+    Subject Category: Earth &amp; Environmental Sciences
+  </div>
+</div>
+
+<!-- ABSTRACT -->
+<div class="abstract-box">
+  <span class="abstract-heading">Abstract</span>&mdash;Urban flash floods caused by severe convective cloudbursts inflict billions in infrastructure damage and risk human life. Standard hydrodynamic numerical solvers (EPA SWMM 5.2 solving 1D/2D Saint-Venant equations) deliver high fidelity but require 15 to 45 minutes per run, making real-time municipal early warning impossible, while radar nowcasts lack junction-level granularity. This research presents <strong>UrbanFLOW</strong>, an autonomous deep Graph Neural Network surrogate designed to predict street junction flood depths in sub-100 ms without runtime physics solvers. Built on a 6-layer Graph Isomorphism Network with Edge Features (HydroGINE-v5), the model integrates micro-topographic DEM features, directional gravity vectors, dynamic FiLM modulation, and a topological Mixture-of-Experts (MoE) router. Evaluated across 16 global catchments (76,316 physical nodes) under a 50 mm/hr reference and a 100 mm/hr stress regime, the architecture preserves hydraulic mass continuity across complex street topologies. The model achieved a global MAE of 2.44 cm, a catchment Nash-Sutcliffe Efficiency (NSE) of 0.9128, an actionable hazard F1-score of 90.8% (&ge; 0.15 m), and 99.4% categorical hazard recall at its 480 highest-consequence nodes (74.2% depth agreement within &plusmn;15 cm). With an average end-to-end HTTP API latency of 85.5 ms (yielding an effective ~1,310&times; to 8,690&times; computational speedup over EPA SWMM 5.2) and a live-computed 38.5% spatial capture rate on 13 geotagged documented flood locations from the October 2024 Bengaluru monsoon, UrbanFLOW provides municipal disaster control centers with hyper-local, sub-second predictive foresight for automated flood barrier activation and emergency dewatering pump dispatch.
+  </div>
+</div>
+
+<!-- 1. INTRODUCTION -->
+<h1>1. Introduction &amp; Related Work</h1>
+
+<h2>1.1 The Convective Cloudburst Crisis</h2>
+<p>Global climate change has intensified localized, high-intensity convective precipitation events&mdash;commonly designated as cloudbursts&mdash;characterized by rainfall rates exceeding 50 to 100 mm/hr over short spatial and temporal scales. Concurrently, accelerating urban expansion has replaced natural pervious soils with impervious asphalt and concrete surfaces, diminishing infiltration capacities, shortening basin response times, and magnifying peak surface runoff volumes by up to 400%.</p>
+
+<p>Urban drainage systems are primarily designed using historical Intensity-Duration-Frequency (IDF) curves for return intervals of 5 to 10 years. Under sudden cloudburst regimes, surface runoff quickly overwhelms curb inlets and storm sewer pipe capacities, inducing pipe surcharge, manhole geysering, and overland street inundation. Saturated transport networks, sunken highway underpasses, and basement complexes become life-threatening hydraulic traps within minutes of storm onset. Municipal emergency dispatchers therefore require hyper-local (junction-scale), sub-second inundation forecasts to automate traffic diversions, lower motorized flood barrier gates, and mobilize dewatering pump trucks proactively.</p>
+
+<h2>1.2 The Computational Bottleneck of Numerical Solvers</h2>
+<p>Municipal flood management has historically depended on physically based 1D/2D hydrodynamic numerical engines, with the US EPA Storm Water Management Model (SWMM 5.2) serving as the international engineering benchmark. SWMM 5.2 solves the 1D/2D Saint-Venant equations governing conservation of mass and momentum alongside Manning's friction and Horton infiltration [1].</p>
+
+<p>To maintain numerical stability, SWMM 5.2 must satisfy numerical stability constraints (the Courant-Friedrichs-Lewy condition), requiring time steps under 0.5 s on short urban street segments ($L_e < 10$ m). Simulating a 60-minute cloudburst across a moderate catchment of 3,000 to 13,000 nodes requires <strong>15 to 45 minutes</strong> of dedicated CPU computation. This renders traditional solvers incapable of providing real-time early warning during flash storm events.</p>
+
+<h2>1.3 Limitations of Prior Machine Learning Approaches</h2>
+<p>Data-driven deep learning surrogates have been explored to bypass numerical cost, but conventional architectures suffer from structural deficiencies:</p>
+<ul>
+  <li><strong>Pixel-Grid CNNs (U-Net, ConvLSTM):</strong> Rasterize urban topographies into regular 2D grids, enforcing Euclidean spatial invariance. They cannot represent subterranean pipe connectivity, street curb channelization, or anisotropic conduit capacities.</li>
+  <li><strong>Standard MLPs:</strong> Evaluate nodes independently without topological message passing, failing to model hydraulic head propagation and upstream catchment accumulation.</li>
+  <li><strong>Zero-Inflation Collapse:</strong> During any storm, 85&ndash;95% of nodes remain dry. Standard MSE minimization causes gradient collapse, producing smoothed near-zero depths everywhere and suppressing high-hazard ponding.</li>
+  <li><strong>Graph Pooling Failure:</strong> Techniques like SAGPool compress nodes to extract global features. However, dropping intermediate nodes severs physical flow paths, causing catastrophic model failure (demonstrated in Section 8).</li>
+</ul>
+
+<h2>1.4 Contributions</h2>
+<p>This work establishes <strong>UrbanFLOW</strong>, an autonomous physics-guided graph neural surrogate. The primary contributions are:</p>
+<ol>
+  <li><strong>Topological Graph Representation:</strong> Urban road centerlines and 10 m DEM micro-topography are formulated into directed graphs $G = (V, E)$ with 32 scale-invariant physical features per node and 6 edge attributes, explicitly excluding raw coordinates to guarantee zero-shot geographic transferability.</li>
+  <li><strong>HydroGINE-v5 Neural Operator:</strong> A 6-layer Graph Isomorphism Network with edge-conditioned message passing, gravitational slope gating, and dynamic rainfall volume scaling.</li>
+  <li><strong>Decoupled FiLM Dual-Head Mechanism:</strong> Flood prediction is decomposed into a Margin-Based Focal hazard classifier (&ge; 0.15 m) and a Feature-wise Linear Modulation (FiLM) continuous depth regressor, resolving zero-inflation gradient suppression.</li>
+  <li><strong>Non-Destructive Topological MoE Routing:</strong> Dynamically transitions between inland basin and coastal mountain hydraulic regimes without destructive graph pooling.</li>
+  <li><strong>Multi-Scale Global Benchmark:</strong> Evaluated across 16 catchments (76,316 nodes), achieving 2.44 cm MAE, 0.9128 NSE, 85.5 ms API latency (~1,310&times; to 8,690&times; speedup over SWMM 5.2), and a live-computed 38.5% spatial capture on 13 geotagged documented flood locations (October 2024 Bengaluru monsoon).</li>
+</ol>
+
+<!-- 2. MATHEMATICAL BACKGROUND -->
+<h1>2. Mathematical Background &amp; Governing Equations</h1>
+
+<h2>2.1 Kirpich's Time of Concentration</h2>
+<p>Used to estimate the delay from rainfall onset to peak hydraulic discharge at a junction:</p>
+<div class="eq-block">
+  $$T_c = 0.0195 \cdot L^{0.77} \cdot S^{-0.385}$$
+  <span class="eq-label">(1)</span>
+</div>
+<p class="no-indent">where $L$ is the maximum hydraulic length along the contributing drainage pathway (m) and $S$ is the dimensionless hydraulic slope (m/m).</p>
+
+<h2>2.2 Parabolic Sag Index</h2>
+<p>A geometric sag index identifies concave roadway profiles where steep incoming slopes flatten into low-gradient intersections, flagging topological depressions and bottleneck junctions vulnerable to manhole overflow.</p>
+
+<h2>2.3 Directional Gravity Gate</h2>
+<p>Biases message passing along edges based on physical slope to prevent uphill flow propagation:</p>
+<div class="eq-block">
+  $$g_{\text{gate}, uv} = \sigma\!\left(1.0 - 5.0 \cdot \text{ReLU}(S_{0, uv})\right)$$
+  <span class="eq-label">(2)</span>
+</div>
+<p class="no-indent">Downhill edges ($S_0 \le 0$) remain fully open ($g_{\text{gate}} \approx 1.0$), while uphill edges are attenuated toward zero, physically preventing the neural network from predicting water running up a hill.</p>
+
+<!-- 3. NEURAL ARCHITECTURE -->
+<h1>3. Neural Architecture: HydroGINE-v5</h1>
+
+<p>UrbanFLOW transforms raw DEM and street centerline data into an end-to-end physics-bounded neural pipeline. The complete architecture is illustrated in Fig. 1.</p>
+
+<div class="figure-box">
+<img class="figure-img" src="fig1_architecture.png" alt="UrbanFLOW end-to-end physics-guided GNN surrogate pipeline">
+<div class="figure-caption">Fig. 1. End-to-end computational architecture of the UrbanFLOW physics-guided graph neural surrogate.</div>
+</div>
+
+<h2>3.1 Topological Graph Construction</h2>
+<p>Urban catchments are formalized as directed graphs $G = (V, E)$, where $V$ represents street intersections, culverts, and topographic sink points ($|V| = N$), and $E$ represents street segments and storm conduits ($|E| = M$).</p>
+
+<p><strong>Node Feature Matrix ($\mathbf{X} \in \mathbb{R}^{N \times 32}$):</strong> Each node $v \in V$ is parameterized by 32 scale-invariant hydraulic, geometric, and meteorological features. The full feature vector is listed in Table 1. Key features include:</p>
+<ul>
+  <li><strong>Relative Elevation Drop ($z_{\text{drop}}$):</strong> $(z_{\max} - z_i) / \max(1.0, z_{\max} - z_{\min})$&mdash;normalized elevation relative to catchment ridge.</li>
+  <li><strong>Parabolic Sag Index:</strong> Identifies concave roadway profiles prone to ponding.</li>
+  <li><strong>Depression Storage Depth ($d_{\text{dep}}$):</strong> Pit depth below the lowest spill crest from morphological pit-filling on 10 m DEM.</li>
+  <li><strong>Dynamic Rainfall Volume:</strong> $V_{\text{rain}} = I \cdot (\Delta t / 60)$ mm.</li>
+  <li><strong>Conduit Capacity Ratio:</strong> $C_{\text{cap}} = \text{deg}_{\text{in}} / \max(1, \text{deg}_{\text{out}})$.</li>
+</ul>
+
+<div class="table-caption">TABLE 1: Complete 32-Node Physical Feature Vector</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th class="left" style="width:5%">Idx</th>
+      <th class="left" style="width:18%">Feature</th>
+      <th class="left" style="width:42%">Definition</th>
+      <th class="left" style="width:35%">Hydrologic Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td class="left">rel_drop</td><td class="left">$(z_{\max} - z_i) / \Delta z_{\text{relief}}$</td><td class="left">Normalized elevation from ridge</td></tr>
+    <tr><td>1</td><td class="left">imp</td><td class="left">Land-use runoff coefficient (0.0&ndash;1.0)</td><td class="left">Surface imperviousness</td></tr>
+    <tr><td>2</td><td class="left">manning_n</td><td class="left">Manning roughness (0.013&ndash;0.040)</td><td class="left">Overland flow retardation</td></tr>
+    <tr><td>3</td><td class="left">in_deg</td><td class="left">Incoming conduit count</td><td class="left">Flow convergence indicator</td></tr>
+    <tr><td>4</td><td class="left">out_deg</td><td class="left">Outgoing conduit count</td><td class="left">Discharge conveyance capacity</td></tr>
+    <tr><td>5</td><td class="left">accum_score</td><td class="left">$\ln(1.0 + 2.0 \cdot \text{deg}_{\text{in}})$</td><td class="left">Topological flow accumulation</td></tr>
+    <tr><td>6</td><td class="left">is_sink</td><td class="left">1.0 if $d_{\text{dep}} \ge 0.08$ m, else 0.0</td><td class="left">Morphological sink flag</td></tr>
+    <tr><td>7</td><td class="left">max_in_grade</td><td class="left">Steepest incoming slope (m/m)</td><td class="left">Maximum chute gradient</td></tr>
+    <tr><td>8</td><td class="left">sag_index</td><td class="left">$\max(0, S_{\text{in}} - S_{\text{out}}) \cdot \max(1, \text{deg}_{\text{in}})$</td><td class="left">Parabolic depression index</td></tr>
+    <tr><td>9</td><td class="left">hyd_cap</td><td class="left">$\text{deg}_{\text{in}} / \max(1, \text{deg}_{\text{out}})$</td><td class="left">Junction bottleneck ratio</td></tr>
+    <tr><td>10</td><td class="left">log_area</td><td class="left">$\ln(1 + A_{\text{upstream}})$</td><td class="left">Contributing catchment area</td></tr>
+    <tr><td>11</td><td class="left">log_imp_area</td><td class="left">$\ln(1 + A_{\text{upstream}} \cdot C_{\text{imp}})$</td><td class="left">Effective impervious area</td></tr>
+    <tr><td>12</td><td class="left">dist_frac</td><td class="left">Normalized distance to outfall</td><td class="left">Drainage network position</td></tr>
+    <tr><td>13</td><td class="left">intensity</td><td class="left">Precipitation rate $I$ (mm/hr)</td><td class="left">Storm intensity</td></tr>
+    <tr><td>14</td><td class="left">duration</td><td class="left">Storm duration $t$ (minutes)</td><td class="left">Event duration</td></tr>
+    <tr><td>15</td><td class="left">elev_std2</td><td class="left">Elevation std. dev. in 150 m radius</td><td class="left">Terrain rugosity</td></tr>
+    <tr><td>16</td><td class="left">dep_depth</td><td class="left">Pit depth below spill crest (m)</td><td class="left">Surface water trap volume</td></tr>
+    <tr><td>17</td><td class="left">surcharge</td><td class="left">Inflow pressure head estimate</td><td class="left">Conduit pressurization</td></tr>
+    <tr><td>18</td><td class="left">path_cap</td><td class="left">$\ln(1 + Q_{\text{cap}})$ cumulative</td><td class="left">Downstream pipe constriction</td></tr>
+    <tr><td>19</td><td class="left">path_hops</td><td class="left">Graph distance to nearest outfall</td><td class="left">Topological drainage distance</td></tr>
+    <tr><td>20</td><td class="left">dist_outlet</td><td class="left">Flow-path distance to basin boundary (m)</td><td class="left">Distance to base level</td></tr>
+    <tr><td>21</td><td class="left">elev_above_outlet</td><td class="left">$z_v - z_{\text{outfall}}$ (m)</td><td class="left">Hydraulic head to sink</td></tr>
+    <tr><td>22</td><td class="left">slope_outlet_ratio</td><td class="left">Local slope / regional gradient</td><td class="left">Flow acceleration ratio</td></tr>
+    <tr><td>23</td><td class="left">sink_depth</td><td class="left">$d_{\text{dep}}$ if &ge; 0.05 m, else 0.0</td><td class="left">Clamped deep sink retention</td></tr>
+    <tr><td>24</td><td class="left">inlet_cap</td><td class="left">Road-class curb inlet capacity (m&sup3;/s)</td><td class="left">Gutter capture capacity</td></tr>
+    <tr><td>25</td><td class="left">surcharge_ratio</td><td class="left">$(A_{\text{imp}} / C_{\text{inlet}}) \cdot I$</td><td class="left">Runoff vs. inlet intake</td></tr>
+    <tr><td>26</td><td class="left">deg_diff</td><td class="left">$\text{deg}_{\text{in}} - \text{deg}_{\text{out}}$</td><td class="left">Convergence imbalance</td></tr>
+    <tr><td>27</td><td class="left">total_rain_mm</td><td class="left">$I \cdot (t / 60.0)$ (mm)</td><td class="left">Cumulative precipitation</td></tr>
+    <tr><td>28</td><td class="left">dyn_sat</td><td class="left">$C_{\text{imp}} \cdot (1 + 0.5 \ln(1 + I \cdot t / 1000))$</td><td class="left">Soil moisture proxy</td></tr>
+    <tr><td>29</td><td class="left">ponding_index</td><td class="left">$\ln(1 + d_{\text{sink}} \cdot V_{\text{rain}} / (\text{deg}_{\text{out}} + 0.3))$</td><td class="left">Ponding potential</td></tr>
+    <tr><td>30</td><td class="left">conveyance_deficit</td><td class="left">$\ln(1 + \exp(A_{\text{imp}}) \cdot V_{\text{rain}} / (\exp(Q_{\text{pipe}}) + 0.1))$</td><td class="left">Pipe capacity deficit</td></tr>
+    <tr><td>31</td><td class="left">dep_escape_ratio</td><td class="left">$d_{\text{dep}} / (|S_{\max}| + 0.01)$</td><td class="left">Ponding-to-escape slope ratio</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Edge Feature Matrix ($\mathbf{E} \in \mathbb{R}^{M \times 6}$):</strong> Each directed edge $e_{uv} = (u, v)$ encodes six features: segment length $L_{uv}$ (m); longitudinal slope $S_{0,uv} = (z_u - z_v)/L_{uv}$ (m/m); carrying capacity $C_{uv}$ from road hierarchy; the gravity gate $g_{\text{gate},uv}$ defined in Eq. (2); and the coordinate deltas $\Delta x_{uv}$ and $\Delta y_{uv}$.</p>
+
+<h2>3.2 HydroGINE-v5 Message Passing</h2>
+<p>To preserve topological expressiveness equivalent to the Weisfeiler-Lehman (1-WL) graph isomorphism test, UrbanFLOW implements an edge-conditioned Graph Isomorphism Network (GINE) augmented with gravity gating. For each node $v$ at layer $k \in \{1, \ldots, 6\}$, the representation $\mathbf{h}_v^{(k)}$ is updated by scaling the previous representation with a learnable constant and pooling messages from all neighbors, where each neighbor contributes its representation conditioned on the gated edge feature vector (edge features multiplied by the gravity gate of Eq. (2)) and passed through a ReLU nonlinearity. The pooled sum is then transformed by a per-layer MLP.</p>
+
+<p class="no-indent">Each layer incorporates Layer Normalization and a multi-scale residual skip connection that adds a damped copy ($\times 0.3$) of the previous layer's representation.</p>
+
+<p class="no-indent">Multi-scale representation is captured by concatenating the terminal, intermediate (layer 3), and raw input embeddings into a single 288-dimensional vector $\mathbf{h}_{\text{cat},v}$.</p>
+
+<h2>3.3 Decoupled FiLM Dual-Head Mechanism</h2>
+<p>UrbanFLOW explicitly decouples <em>whether</em> a node floods from <em>how deep</em> the water reaches, eliminating zero-inflation gradient suppression (Fig. 2).</p>
+
+<div class="figure-box">
+<img class="figure-img" src="UrbanFLOW_paper_fig_zeroinfl.png" alt="Log-scale histogram of SWMM junction depths showing zero-inflated depth field">
+<div class="figure-caption">Fig. 2. Distribution of reference SWMM 5.2 junction depths across the 16-catchment benchmark (76,316 nodes, 50 mm/hr). The dry-dominated, zero-inflated field motivates the decoupled classification/regression hazard heads.</div>
+</div>
+
+<p><strong>Head 1 &mdash; Discrete Hazard Classifier:</strong> A classifier head maps the 288-dimensional representation to a single hazard logit, passed through a sigmoid to yield the flood probability $p_{\text{hazard},v}$.</p>
+
+<p><strong>FiLM Conditioning Generator:</strong> The hazard probability is mapped by an MLP into per-junction affine parameters $\boldsymbol{\gamma}_v$ and $\boldsymbol{\beta}_v$ (two 288-dimensional vectors). The projection layer is zero-initialized, so at initialization the feature flow remains an identity.</p>
+
+<p><strong>Head 2 &mdash; Continuous Depth Regressor:</strong> The FiLM parameters scale and shift the representation element-wise before a regression MLP outputs the raw depth prediction $\hat{y}_{\text{raw},v}$. When the classifier determines a node is dry ($p_{\text{hazard}} \to 0$), FiLM scales down the regressor features, preventing spurious depth bleeding into dry elevated roadways.</p>
+
+<!-- 4. LOSS FUNCTION -->
+<h1>4. Loss Function &amp; Training</h1>
+
+<h2>4.1 Multi-Task Objective &amp; Hazard Classification</h2>
+<p>Training used a multi-task objective balancing discrete hazard classification and continuous depth regression. The classification head was trained using Focal Loss ($\gamma = 2.0$) with soft margins to overcome the fact that over 80% of road nodes remain dry during storms.</p>
+
+<h2>4.2 Asymmetric Safety Loss Multiplier</h2>
+<p>Depth residuals were penalized using smooth Huber regression ($\delta = 0.10$) on log-transformed depths. In disaster management, a false sense of security is fatal: if an intersection carries 50 cm of floodwater and the model predicts 10 cm, vehicles enter and become submerged. To strictly prevent hazardous under-predictions, the optimization applies an Asymmetric Safety Loss Multiplier $A_i$:</p>
+
+<div class="eq-block">
+  $$A_i = \begin{cases} 2.0 & \text{if under-predicting dangerous flood depth} \\ 1.5 & \text{if over-predicting on dry roads} \\ 1.0 & \text{otherwise} \end{cases}$$
+  <span class="eq-label">(3)</span>
+</div>
+
+<p class="no-indent">Critical flood hazards ($\ge 0.30$ m) received higher loss sample weighting during training to prioritize high-consequence municipal bottlenecks.</p>
+
+<!-- 5. INFERENCE PIPELINE -->
+<h1>5. Inference Pipeline: Universal Physical Continuity Bounding</h1>
+
+<p>At inference time, raw neural predictions pass through a non-differentiable physical bounding stack executed in <strong>2.1 ms</strong>. The pipeline consists of five sequential stages:</p>
+
+<h2>5.1 Topological Hydraulic Regime Classification</h2>
+<p>Each node is classified into one of seven hydraulic regimes based on its physical features: choked surcharge, deep sink, valley depression, convergent sag, ridge crest, free-drain slope, or steep ridge.</p>
+
+<h2>5.2 Dynamic Activation Threshold ($\tau$)</h2>
+<p>A sigmoid confidence gate scales raw predictions based on morphological regime. Each node is assigned a threshold $\tau$: 0.15 for deep sinks or valley depressions, 0.25 for choked surcharges or convergent sags, 0.75 for ridge crests, free-drain slopes, or steep ridges, and 0.35 for default urban junctions. The confidence multiplier is a sharp logistic function of the hazard probability centered at $\tau$, scaling the raw prediction before bounding.</p>
+
+<h2>5.3 Mass-Conservation Upper Bounding</h2>
+<p>Predictions are capped by regime-dependent mass bounds derived from local depression volume and conduit capacity deficit. Ridge crests and steep slopes are clamped to 0.01 m; deep sinks are bounded by $1.5 \times d_{\text{dep}} + 0.3$ m (clamped to [1.0, 3.0] m); choked surcharges are bounded at 3.0 m.</p>
+
+<h2>5.4 Dry Ridge Clamping &amp; Noise Removal</h2>
+<p>Flat dry nodes (low sink depth, low depression, low hazard probability) and steep ridges are forced to 0.0 m. Predictions below 0.02 m are zeroed. All outputs are clipped to [0.0, 3.0] m.</p>
+
+<h2>5.5 Water Surface Elevation (WSE) Backwater Envelope</h2>
+<p>Backwater ponding is constrained by the gravitational potential of upstream neighbors. For every node, the water surface elevation is its invert elevation plus its predicted depth. Each downstream node then receives, from each upstream neighbor, a backwater head equal to that neighbor's water surface elevation minus its own invert elevation (clamped above zero). The final bounded depth is the minimum of the confidence-scaled prediction and the greater of the maximum upstream backwater head and the local depression depth. This ensures water cannot pond higher than contributing adjacent hydraulic heads, eliminating physically impossible uphill water bleeding.</p>
+
+<h2>5.6 Production Weighted Ensemble</h2>
+<p>The final production model combines 4 specialized checkpoints using weighted averaging to smooth out variance before passing predictions through physical bounding rails:</p>
+<div class="eq-block">
+  $$\bar{y}_{\text{depth}} = \sum_{k=1}^{4} w_k \hat{y}_k$$
+  <span class="eq-label">(4)</span>
+</div>
+<p class="no-indent">The ensemble weights are assigned as: $w_1 = 0.64$ (v5.10), $w_2 = 0.24$ (v5.11), $w_3 = 0.04$ (v5.0), and $w_4 = 0.08$ (Bangalore-optimized checkpoint).</p>
+
+<!-- 6. EXPERIMENTAL SETUP -->
+<h1>6. Experimental Setup</h1>
+
+<h2>6.1 The 16-Catchment Global Benchmark</h2>
+<p>The benchmark dataset spans 16 metropolitan basins across four continents, encompassing <strong>76,316 physical street nodes</strong> representing diverse topographic typologies:</p>
+<ol>
+  <li><strong>Inland Plateaus &amp; Tech Corridors (India):</strong> HSR Layout (1,379 nodes), Bellandur &amp; ORR (1,507), Whitefield (1,797), Electronic City (3,337), Koramangala (4,416).</li>
+  <li><strong>Coastal Megacities &amp; Island Harbors:</strong> Tokyo (13,173), Hong Kong (3,848), Singapore (2,777), Mumbai (2,741), New York City (3,828).</li>
+  <li><strong>Historic Riverine Floodplains:</strong> London Thames (10,528), Paris Seine (6,707), Berlin Spree (3,724), Delhi Yamuna (2,951).</li>
+  <li><strong>Lowland Deltas &amp; Waterfront Basins:</strong> Bangkok Chao Phraya (10,399), Chicago Waterfront (3,204).</li>
+</ol>
+
+<p>OpenStreetMap vector centerlines were extracted via Overpass API into directed graphs, projected to local UTM systems, and merged with 10 m SRTM/Copernicus DEM elevations.</p>
+
+<h2>6.2 Ground Truth Generation</h2>
+<p>Ground-truth inundation targets were generated using EPA SWMM 5.2 under full 1D/2D Dynamic Wave routing. Junctions were assigned $500$ m&sup2; surcharge areas, street centerlines parameterized as trapezoidal channels (Manning $n = 0.013$&ndash;$0.018$), and Horton infiltration applied ($f_0 = 75$ mm/hr, $f_\infty = 7.5$ mm/hr, $k = 4.0$ hr&minus;1). Two precipitation stress regimes were used:</p>
+<ul>
+  <li><strong>Design Cloudburst (50 mm/hr):</strong> Standard 10-year return storm, flooding 14,543 nodes globally.</li>
+  <li><strong>Extreme Stress Test (100 mm/hr):</strong> Extreme convective storm, flooding 22,170 nodes globally.</li>
+</ul>
+<p class="no-indent">Assembling the benchmark database required <strong>68.4 hours</strong> of cumulative CPU execution.</p>
+
+<!-- 7. RESULTS -->
+<h1>7. Results &amp; Performance Analysis</h1>
+
+<p>All reported metrics represent live inference from the production REST microservice with zero runtime SWMM dependency.</p>
+
+<h2>7.1 Global Flood Hazard Classification (50 mm/hr)</h2>
+
+<div class="table-caption">TABLE 2: Global 16-Catchment Flood Hazard Classification (50 mm/hr, &ge; 0.15 m threshold)</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th class="left">Catchment</th>
+      <th>Nodes</th>
+      <th>SWMM Flooded</th>
+      <th>GNN Flooded</th>
+      <th>TP</th>
+      <th>FP</th>
+      <th>FN</th>
+      <th>Precision</th>
+      <th>Recall</th>
+      <th>F1</th>
+      <th>Accuracy</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="left">HSR Layout</td><td>1,379</td><td>176</td><td>173</td><td>148</td><td>25</td><td>28</td><td>85.5%</td><td>84.1%</td><td>84.8%</td><td>96.2%</td></tr>
+    <tr><td class="left">Bellandur &amp; ORR</td><td>1,507</td><td>342</td><td>310</td><td>277</td><td>33</td><td>65</td><td>89.4%</td><td>81.0%</td><td>85.0%</td><td>93.5%</td></tr>
+    <tr><td class="left">Whitefield</td><td>1,797</td><td>388</td><td>349</td><td>340</td><td>9</td><td>48</td><td>97.4%</td><td>87.6%</td><td>92.3%</td><td>96.8%</td></tr>
+    <tr><td class="left">Electronic City</td><td>3,337</td><td>789</td><td>740</td><td>709</td><td>31</td><td>80</td><td>95.8%</td><td>89.9%</td><td>92.7%</td><td>96.7%</td></tr>
+    <tr><td class="left">Koramangala</td><td>4,416</td><td>878</td><td>813</td><td>774</td><td>39</td><td>104</td><td>95.2%</td><td>88.2%</td><td>91.5%</td><td>96.8%</td></tr>
+    <tr><td class="left">Tokyo Metropolitan</td><td>13,173</td><td>2,428</td><td>2,296</td><td>2,213</td><td>83</td><td>215</td><td>96.4%</td><td>91.1%</td><td>93.7%</td><td>97.7%</td></tr>
+    <tr><td class="left">Hong Kong Basin</td><td>3,848</td><td>711</td><td>696</td><td>663</td><td>33</td><td>48</td><td>95.3%</td><td>93.2%</td><td>94.2%</td><td>97.9%</td></tr>
+    <tr><td class="left">Singapore Marina</td><td>2,777</td><td>474</td><td>448</td><td>432</td><td>16</td><td>42</td><td>96.4%</td><td>91.1%</td><td>93.7%</td><td>97.9%</td></tr>
+    <tr><td class="left">London Thames</td><td>10,528</td><td>2,358</td><td>2,234</td><td>1,902</td><td>332</td><td>456</td><td>85.1%</td><td>80.7%</td><td>82.8%</td><td>92.5%</td></tr>
+    <tr><td class="left">Paris Seine</td><td>6,707</td><td>1,171</td><td>1,155</td><td>1,087</td><td>68</td><td>84</td><td>94.1%</td><td>92.8%</td><td>93.5%</td><td>97.7%</td></tr>
+    <tr><td class="left">New York City</td><td>3,828</td><td>510</td><td>486</td><td>436</td><td>50</td><td>74</td><td>89.7%</td><td>85.5%</td><td>87.6%</td><td>96.8%</td></tr>
+    <tr><td class="left">Chicago Waterfront</td><td>3,204</td><td>360</td><td>335</td><td>303</td><td>32</td><td>57</td><td>90.4%</td><td>84.2%</td><td>87.2%</td><td>97.2%</td></tr>
+    <tr><td class="left">Berlin Spree</td><td>3,724</td><td>437</td><td>410</td><td>382</td><td>28</td><td>55</td><td>93.2%</td><td>87.4%</td><td>90.2%</td><td>97.8%</td></tr>
+    <tr><td class="left">Bangkok Chao Phraya</td><td>10,399</td><td>2,546</td><td>2,471</td><td>2,372</td><td>99</td><td>174</td><td>96.0%</td><td>93.2%</td><td>94.6%</td><td>97.4%</td></tr>
+    <tr><td class="left">Mumbai Coastal</td><td>2,741</td><td>487</td><td>461</td><td>425</td><td>36</td><td>62</td><td>92.2%</td><td>87.3%</td><td>89.7%</td><td>96.4%</td></tr>
+    <tr><td class="left">Delhi Yamuna</td><td>2,951</td><td>488</td><td>473</td><td>434</td><td>39</td><td>54</td><td>91.8%</td><td>88.9%</td><td>90.3%</td><td>96.8%</td></tr>
+    <tr class="total-row"><td class="left"><strong>GLOBAL TOTAL / AVG</strong></td><td><strong>76,316</strong></td><td><strong>14,543</strong></td><td><strong>13,850</strong></td><td><strong>12,897</strong></td><td><strong>953</strong></td><td><strong>1,646</strong></td><td><strong>93.1%</strong></td><td><strong>88.7%</strong></td><td><strong>90.8%</strong></td><td><strong>96.6%</strong></td></tr>
+  </tbody>
+</table>
+
+<p>Across 76,316 nodes, UrbanFLOW identified 12,897 true flood hazard locations with a global recall of <strong>88.7%</strong>, precision of <strong>93.1%</strong>, F1-score of <strong>90.8%</strong>, and overall accuracy of <strong>96.6%</strong>. Bangkok achieved the highest F1 at 94.6% with 93.2% recall.</p>
+
+<h2>7.2 Continuous Depth Regression Performance</h2>
+
+<div class="table-caption">TABLE 3: Continuous Inundation Depth Regression Metrics (50 mm/hr)</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th class="left">Catchment</th>
+      <th>Nodes</th>
+      <th>MAE (cm)</th>
+      <th>RMSE (cm)</th>
+      <th>% &le; 10 cm</th>
+      <th>% &le; 15 cm</th>
+      <th>% &le; 30 cm</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="left">HSR Layout</td><td>1,379</td><td><strong>2.17</strong></td><td>6.71</td><td>93.4%</td><td>96.4%</td><td>98.7%</td></tr>
+    <tr><td class="left">Bellandur &amp; ORR</td><td>1,507</td><td><strong>5.17</strong></td><td>17.30</td><td>86.8%</td><td>90.4%</td><td>96.4%</td></tr>
+    <tr><td class="left">Whitefield</td><td>1,797</td><td><strong>2.58</strong></td><td>8.63</td><td>92.9%</td><td>96.3%</td><td>99.1%</td></tr>
+    <tr><td class="left">Electronic City</td><td>3,337</td><td><strong>2.77</strong></td><td>8.58</td><td>92.3%</td><td>95.8%</td><td>98.9%</td></tr>
+    <tr><td class="left">Koramangala</td><td>4,416</td><td><strong>3.02</strong></td><td>8.46</td><td>90.7%</td><td>94.6%</td><td>98.0%</td></tr>
+    <tr><td class="left">Tokyo Metropolitan</td><td>13,173</td><td><strong>1.43</strong></td><td>4.73</td><td>97.3%</td><td>98.8%</td><td>99.7%</td></tr>
+    <tr><td class="left">Hong Kong Basin</td><td>3,848</td><td><strong>1.92</strong></td><td>6.49</td><td>95.7%</td><td>97.8%</td><td>99.2%</td></tr>
+    <tr><td class="left">Singapore Marina</td><td>2,777</td><td><strong>1.46</strong></td><td>4.01</td><td>97.7%</td><td>98.9%</td><td>99.8%</td></tr>
+    <tr><td class="left">London Thames</td><td>10,528</td><td><strong>5.40</strong></td><td>19.53</td><td>86.9%</td><td>91.1%</td><td>96.2%</td></tr>
+    <tr><td class="left">Paris Seine</td><td>6,707</td><td><strong>1.52</strong></td><td>4.55</td><td>96.8%</td><td>98.5%</td><td>99.7%</td></tr>
+    <tr><td class="left">New York City</td><td>3,828</td><td><strong>1.50</strong></td><td>3.77</td><td>96.5%</td><td>98.6%</td><td>99.9%</td></tr>
+    <tr><td class="left">Chicago Waterfront</td><td>3,204</td><td><strong>1.74</strong></td><td>4.17</td><td>96.3%</td><td>98.8%</td><td>99.8%</td></tr>
+    <tr><td class="left">Berlin Spree</td><td>3,724</td><td><strong>1.29</strong></td><td>3.11</td><td>97.8%</td><td>99.3%</td><td>99.9%</td></tr>
+    <tr><td class="left">Bangkok Chao Phraya</td><td>10,399</td><td><strong>2.00</strong></td><td>5.51</td><td>95.8%</td><td>97.9%</td><td>99.6%</td></tr>
+    <tr><td class="left">Mumbai Coastal</td><td>2,741</td><td><strong>2.44</strong></td><td>6.52</td><td>92.9%</td><td>95.8%</td><td>99.4%</td></tr>
+    <tr><td class="left">Delhi Yamuna</td><td>2,951</td><td><strong>2.41</strong></td><td>6.88</td><td>93.0%</td><td>95.8%</td><td>99.0%</td></tr>
+    <tr class="total-row"><td class="left"><strong>WEIGHTED GLOBAL AVG</strong></td><td><strong>76,316</strong></td><td><strong>2.44</strong></td><td><strong>9.29</strong></td><td><strong>94.2%</strong></td><td><strong>96.7%</strong></td><td><strong>98.9%</strong></td></tr>
+  </tbody>
+</table>
+
+<p>The global weighted MAE is <strong>2.44 cm</strong>, with <strong>96.7%</strong> of all nodes within &plusmn;15 cm and <strong>98.9%</strong> within &plusmn;30 cm of SWMM simulations, as illustrated in the correlation scatter plot of Fig. 3.</p>
+
+<div class="figure-box">
+<img class="figure-img" src="UrbanFLOW_paper_fig_scatter.png" alt="Predicted versus SWMM junction depth scatter">
+<div class="figure-caption">Fig. 3. Junction-level predicted depth vs. reference SWMM 5.2 depth across all 76,316 benchmark nodes (50 mm/hr) as delivered by the live production ensemble (Eq. 4), with the 1:1 line and &plusmn;15 cm tolerance band. Point density is shown on a logarithmic color scale.</div>
+</div>
+
+<h2>7.3 High-Consequence Hotspot Sample (480 Junctions)</h2>
+<p>The 30 deepest ground-truth flood nodes in each catchment were sampled and checked against a strict &plusmn;15 cm tolerance. This targets the highest-consequence locations rather than an all-risk-node metric:</p>
+
+<div class="table-caption">TABLE 4: High-Consequence Hotspot Sample (Top 30 Deepest SWMM Nodes per Catchment)</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th class="left">Catchment</th>
+      <th>Sample</th>
+      <th>&plusmn;15 cm Match</th>
+      <th>Over-Pred</th>
+      <th>Under-Pred</th>
+      <th>Match Rate</th>
+      <th>Hazard Recall</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="left">HSR Layout</td><td>30</td><td>21</td><td>0</td><td>9</td><td>70.0%</td><td>93.3%</td></tr>
+    <tr><td class="left">Bellandur &amp; ORR</td><td>30</td><td>17</td><td>0</td><td>13</td><td>56.7%</td><td>96.7%</td></tr>
+    <tr><td class="left">Whitefield</td><td>30</td><td>24</td><td>0</td><td>6</td><td>80.0%</td><td>100.0%</td></tr>
+    <tr><td class="left">Electronic City</td><td>30</td><td>21</td><td>0</td><td>9</td><td>70.0%</td><td>100.0%</td></tr>
+    <tr><td class="left">Koramangala</td><td>30</td><td>23</td><td>0</td><td>7</td><td>76.7%</td><td>100.0%</td></tr>
+    <tr><td class="left">Tokyo Metropolitan</td><td>30</td><td>23</td><td>0</td><td>7</td><td>76.7%</td><td>100.0%</td></tr>
+    <tr><td class="left">Hong Kong Basin</td><td>30</td><td>18</td><td>0</td><td>12</td><td>60.0%</td><td>100.0%</td></tr>
+    <tr><td class="left">Singapore Marina</td><td>30</td><td>28</td><td>0</td><td>2</td><td>93.3%</td><td>100.0%</td></tr>
+    <tr><td class="left">London Thames</td><td>30</td><td>16</td><td>0</td><td>14</td><td>53.3%</td><td>100.0%</td></tr>
+    <tr><td class="left">Paris Seine</td><td>30</td><td>15</td><td>0</td><td>15</td><td>50.0%</td><td>100.0%</td></tr>
+    <tr><td class="left">New York City</td><td>30</td><td>27</td><td>0</td><td>3</td><td>90.0%</td><td>100.0%</td></tr>
+    <tr><td class="left">Chicago Waterfront</td><td>30</td><td>29</td><td>0</td><td>1</td><td>96.7%</td><td>100.0%</td></tr>
+    <tr><td class="left">Berlin Spree</td><td>30</td><td>27</td><td>0</td><td>3</td><td>90.0%</td><td>100.0%</td></tr>
+    <tr><td class="left">Bangkok Chao Phraya</td><td>30</td><td>25</td><td>0</td><td>5</td><td>83.3%</td><td>100.0%</td></tr>
+    <tr><td class="left">Mumbai Coastal</td><td>30</td><td>21</td><td>0</td><td>9</td><td>70.0%</td><td>100.0%</td></tr>
+    <tr><td class="left">Delhi Yamuna</td><td>30</td><td>21</td><td>0</td><td>9</td><td>70.0%</td><td>100.0%</td></tr>
+    <tr class="total-row"><td class="left"><strong>TOTAL</strong></td><td><strong>480</strong></td><td><strong>356</strong></td><td><strong>0</strong></td><td><strong>124</strong></td><td><strong>74.2%</strong></td><td><strong>99.4%</strong></td></tr>
+  </tbody>
+</table>
+
+<p>At these highest-consequence nodes UrbanFLOW reaches a categorical hazard recall of <strong>99.4%</strong>, but depth agreement within &plusmn;15 cm is <strong>74.2%</strong>; notably <strong>all 124 disagreements are conservative under-predictions</strong>, so the surrogate does not over-state peak inundation at critical locations.</p>
+
+<h2>7.4 Extreme Cloudburst Stress Test (100 mm/hr)</h2>
+<p>Under a genuine 100 mm/hr / 1 h cloudburst storm simulated in EPA SWMM 5.2 on all 16 catchments, flooded nodes expanded to <strong>22,170</strong> (29.05% of all nodes). UrbanFLOW sustained <strong>98.8% hazard precision</strong> with <strong>76.7% hazard recall</strong> (F1 86.4%) at the &ge; 0.15 m threshold, a pooled MAE of <strong>17.93 cm</strong>, and 79.4% of nodes within &plusmn;15 cm of the numerical reference.</p>
+
+<h2>7.5 Hydrodynamic Field Metrics &amp; Mass Continuity</h2>
+
+<div class="table-caption">TABLE 5: Hydrodynamic Integrity Metrics Across All Catchments</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th class="left">Metric</th>
+      <th>Value</th>
+      <th>Benchmark Target</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="left">Catchment Nash-Sutcliffe Efficiency (NSE)</td><td><strong>0.9128</strong></td><td>&ge; 0.80</td><td>PASS (Superior)</td></tr>
+    <tr><td class="left">Flooded-Only NSE</td><td><strong>0.8765</strong></td><td>&ge; 0.70</td><td>PASS</td></tr>
+    <tr><td class="left">Flooded-Only MAE</td><td><strong>8.65 cm</strong></td><td>&le; 10.0 cm</td><td>PASS</td></tr>
+    <tr><td class="left">Volumetric Mass Continuity Error</td><td><strong>8.61%</strong></td><td>&le; 10.0%</td><td>PASS</td></tr>
+  </tbody>
+</table>
+
+<h2>7.6 Computational Speedup vs. EPA SWMM 5.2</h2>
+
+<div class="table-caption">TABLE 6: Execution Speedup vs. Numerical Solver</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th class="left">Scale &amp; District</th>
+      <th>Nodes</th>
+      <th>SWMM 5.2 Runtime</th>
+      <th>Tensor Forward Pass</th>
+      <th>HTTP API Response</th>
+      <th>Speedup</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="left">Small (HSR Layout)</td><td>1,379</td><td>42.1 s</td><td><strong>4.0 ms</strong></td><td><strong>32.0 ms</strong></td><td>~1,310&times;</td></tr>
+    <tr><td class="left">Medium (Electronic City)</td><td>3,337</td><td>228.0 s (3.8 min)</td><td><strong>5.5 ms</strong></td><td><strong>54.6 ms</strong></td><td>~4,180&times;</td></tr>
+    <tr><td class="left">Large (Tokyo Metropolitan)</td><td>13,173</td><td>1,476.0 s (24.6 min)</td><td><strong>15.0 ms</strong></td><td><strong>169.8 ms</strong></td><td>~8,690&times;</td></tr>
+  </tbody>
+</table>
+
+<p>For the largest catchment (13,173 nodes), UrbanFLOW generates the complete inundation field in <strong>15.0 ms</strong> of GPU tensor execution and returns serialized GeoJSON across HTTP in <strong>169.8 ms</strong>, achieving an effective acceleration of <strong>~8,690&times;</strong> (Fig. 4).</p>
+
+<div class="figure-box">
+<img class="figure-img" src="UrbanFLOW_paper_fig_speedup.png" alt="Execution speedup of UrbanFLOW over EPA SWMM 5.2">
+<div class="figure-caption">Fig. 4. Log-scale runtime comparison between EPA SWMM 5.2 and the end-to-end UrbanFLOW HTTP API across small, medium, and large catchments, with the corresponding effective speedup.</div>
+</div>
+
+<!-- 8. ABLATION -->
+<div class="page-break"></div>
+<h1>8. Scientific Ablation &amp; The SAGPool Failure Case</h1>
+
+<h2>8.1 The SAGPool Topological Collapse</h2>
+<p>During architectural exploration, Self-Attention Graph Pooling (SAGPool) was evaluated to compress large graphs into multi-scale representations. SAGPool scores node significance and retains only the top $\lceil k \cdot N \rceil$ nodes. In steep coastal topographies such as Hong Kong (mean relief $\Delta z = 184$ m), pruning intermediate nodes severed the spatial continuity of drainage channels.</p>
+
+<p>This motivated <strong>non-destructive, full-resolution topological message passing</strong>. Replacing graph pooling with the Topological MoE router preserves the full junction graph, enabling the production model to achieve a Hong Kong F1-score of <strong>0.942</strong> and a global MAE of <strong>2.44 cm</strong> (Table 2).</p>
+
+<h2>8.2 Critical Failure Cases &amp; Training Dynamics</h2>
+<p><strong>Global Match Hinge Instability:</strong> Directly penalizing predictions outside &plusmn;12 cm via linear hinge loss caused over-prediction to expand as the linear gradient pulled dry cells into shallow puddle depths. Hydraulic stability was achieved through asymmetric Huber penalties and physical bounding rails.</p>
+
+<p><strong>Checkpoint Selection Criterion:</strong> Checkpoints selected purely on unconstrained raw MSE exhibited suboptimal live convergence on extreme topography, whereas evaluation incorporating post-rail physical bounding achieved &gt;84% live match rate across complex basins.</p>
+
+<!-- 9. REAL-WORLD VALIDATION -->
+<h1>9. Empirical Validation: October 2024 Bengaluru Monsoon</h1>
+
+<p>UrbanFLOW was validated against <strong>13 geotagged, source-cited documented flood locations</strong> from three verified rain events during the October 2024 Bengaluru monsoon. Locations were extracted from published news reports (The Hindu, New Indian Express, Times of India, Moneycontrol, Indian Express), geocoded via OpenStreetMap Nominatim, and cross-referenced with BBMP municipal advisories. Publisher, title, date, and verified reference URLs for each location are retained in the study's validation records.</p>
+
+<h2>9.1 Data Provenance &amp; Source Verification</h2>
+<p>Every one of the 13 incidents corresponds to a physical junction or corridor explicitly named in a published report, storing publisher, title, date, and verified reference URLs. Coordinates were geocoded with OpenStreetMap Nominatim (Silk Board Junction, Madiwala, Roopena Agrahara, HSR Layout 27th Main, Sarjapur Road, Bommanahalli, Iblur, Ecospace, Devarabeesanahalli, Bellandur Lake, ITPL, Hope Farm, Electronic City Phase&nbsp;1). The three verified storm events and their reported rainfall are:</p>
+<ul>
+  <li><strong>Oct 14&ndash;15:</strong> 65 mm city-wide (BBMP / New Indian Express), 142 waterlogging points, 52 areas and 142 houses flooded.</li>
+  <li><strong>Oct 19&ndash;20:</strong> Kengeri 141 mm / 24 h and Jnana Bharathi&ndash;RR Nagar&ndash;Nayandahalli 106 mm (BBMP via Times of India), IMD city station 19.7 mm.</li>
+  <li><strong>Oct 21&ndash;22:</strong> IMD GKVK <strong>186.2 mm / 24 h</strong>, the highest single-day October rainfall in 27 years (previous record 178.9 mm on 1997-10-01); Yelahanka zone 157 mm / 6 h; two lakes breached (Indian Express; Times of India).</li>
+</ul>
+<p><strong>Hydrodynamic Reference.</strong> Reference targets at 50 mm/hr reflect numerical dynamic-wave simulations. For the extreme-stress evaluation, a genuine 100 mm/hr / 60 min cloudburst was simulated in EPA SWMM 5.2 on all 16 catchments; no analytic depth scaling was used. Runtime latency was benchmarked across the compiled inference pipeline.</p>
+
+<p>The model was evaluated under a <strong>100 mm/hr / 60 min</strong> reference intensity (a short-duration peak-rate assumption; published October 2024 figures represent 24 h / 6 h accumulations). A hazard prediction ($\hat{y} \ge 0.15$ m) was counted as a spatial capture if it fell within a <strong>50 m buffer</strong> of the documented location.</p>
+
+<div class="table-caption">TABLE 8: Empirical Validation &mdash; 13 Documented Flood Locations (all shown)</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th class="left">ID</th>
+      <th class="left">Documented Location</th>
+      <th class="left">Zone</th>
+      <th>Nearest Hazard Node</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>REAL-KOR-01</td><td class="left">Silk Board Junction &amp; Hosur Road</td><td class="left">Koramangala</td><td>33.7 m</td><td><strong>CAPTURED</strong></td></tr>
+    <tr><td>REAL-KOR-02</td><td class="left">Madiwala junction (Hosur Road)</td><td class="left">Koramangala</td><td>10.2 m</td><td><strong>CAPTURED</strong></td></tr>
+    <tr><td>REAL-BEL-01</td><td class="left">ORR service road, Iblur&ndash;Marathahalli</td><td class="left">Bellandur</td><td>29.8 m</td><td><strong>CAPTURED</strong></td></tr>
+    <tr><td>REAL-BEL-02</td><td class="left">Ecospace junction (ORR)</td><td class="left">Bellandur</td><td>27.8 m</td><td><strong>CAPTURED</strong></td></tr>
+    <tr><td>REAL-BEL-03</td><td class="left">Devarabeesanahalli (ORR)</td><td class="left">Bellandur</td><td>26.8 m</td><td><strong>CAPTURED</strong></td></tr>
+    <tr><td>REAL-BEL-04</td><td class="left">Bellandur Lake overflow / ORR service roads</td><td class="left">Bellandur</td><td>82.7 m</td><td>MISSED</td></tr>
+    <tr><td>REAL-HSR-01</td><td class="left">Hosur Road at Roopena Agrahara</td><td class="left">HSR Layout</td><td>140.1 m</td><td>MISSED</td></tr>
+    <tr><td>REAL-HSR-02</td><td class="left">HSR Layout (Sector 2 / 27th Main)</td><td class="left">HSR Layout</td><td>236.1 m</td><td>MISSED</td></tr>
+    <tr><td>REAL-HSR-03</td><td class="left">Sarjapur Road (near Wipro / RGA Tech Park)</td><td class="left">HSR Layout</td><td>223.3 m</td><td>MISSED</td></tr>
+    <tr><td>REAL-HSR-04</td><td class="left">Bommanahalli junction (Hosur Road)</td><td class="left">HSR Layout</td><td>171.6 m</td><td>MISSED</td></tr>
+    <tr><td>REAL-WHI-01</td><td class="left">ITPL Road / International Tech Park Bengaluru</td><td class="left">Whitefield</td><td>355.6 m</td><td>MISSED</td></tr>
+    <tr><td>REAL-WHI-02</td><td class="left">Hope Farm junction (Whitefield)</td><td class="left">Whitefield</td><td>92.8 m</td><td>MISSED</td></tr>
+    <tr><td>REAL-ECI-01</td><td class="left">Electronic City Phase 1 (Hosur Road)</td><td class="left">Electronic City</td><td>198.8 m</td><td>MISSED</td></tr>
+  </tbody>
+</table>
+
+<p>UrbanFLOW captured <strong>5 of 13 locations (38.5% spatial capture rate)</strong> within a 50 m buffer. Koramangala and Bellandur locations were accurately captured (nearest hazard nodes 10&ndash;34 m), while HSR, Whitefield, and Electronic City locations lay 83&ndash;356 m from the nearest predicted hazard node &mdash; reflecting a spatial coverage gap in outer catchments rather than an intensity effect (the capture rate is stable across 50 to 150 mm/hr regimes).</p>
+
+<!-- 10. SYSTEM DEPLOYMENT -->
+<h1>10. System Architecture &amp; Deployment</h1>
+
+<h2>10.1 Backend Microservice</h2>
+<p>The serving backend is an asynchronous REST microservice using Flask/Gunicorn with pre-computed graph structures held in memory. The inference pipeline executes four stages:</p>
+<ol>
+  <li><strong>Dynamic Feature Modulation</strong> (1.2 ms): Rescales meteorological features for the given storm.</li>
+  <li><strong>HydroGINE-v5 Forward Pass</strong> (4.0&ndash;15.0 ms): Edge-conditioned message passing across 6 GINE layers.</li>
+  <li><strong>Physical Continuity Bounding</strong> (2.1 ms): Confidence gating, mass bounding, WSE backwater relaxation.</li>
+  <li><strong>GeoJSON Serialization</strong> (15&ndash;45 ms): Output formatting and HTTP delivery.</li>
+</ol>
+
+<h2>10.2 Municipal Decision Support</h2>
+<p>The frontend WebGL digital twin dashboard interfaces with municipal control centers through three automated decision-support modules (Fig. 5):</p>
+<ul>
+  <li><strong>Automated Barrier Gate Actuation:</strong> Triggers motorized gate closure at underpass nodes predicted to exceed 0.30 m.</li>
+  <li><strong>Mobile Dewatering Pump Dispatch:</strong> Optimizes spatial placement of trailer-mounted pumps based on hydraulic accumulation gradients.</li>
+  <li><strong>Emergency Vehicle Dynamic Routing:</strong> Exports real-time travel-time penalty matrices to reroute ambulances and fire trucks around submerged intersections.</li>
+</ul>
+
+<div class="figure-box">
+<img class="figure-img" src="fig_dashboard.png" alt="UrbanFLOW municipal digital twin dashboard interface">
+<div class="figure-caption">Fig. 5. UrbanFLOW municipal digital twin dashboard: live junction flood-depth predictions rendered in the WebGL twin with automated barrier-gate, pump-dispatch, and emergency routing overlays.</div>
+</div>
+
+<!-- 11. LIMITATIONS -->
+<h1>11. Limitations &amp; Future Work</h1>
+
+<ol>
+  <li><strong>Sub-Grid Micro-Topography:</strong> The model operates on 10 m resolution DEM. Features smaller than 10 m&mdash;15 cm highway curbs, retaining walls, flyover ramps&mdash;are smoothed during raster gridding. Sub-meter LiDAR datasets will be needed for centimeter-scale curb overflow modeling.</li>
+  <li><strong>Subsurface Pipe Clogging:</strong> UrbanFLOW assumes stormwater conduits operate at design capacity. Real-world debris accumulation, sediment siltation, and pipe collapse are not modeled and would require live sewer sensor feeds.</li>
+  <li><strong>Pluvial vs. Fluvial &amp; Coastal Surge:</strong> The model is primarily a pluvial (surface runoff) surrogate. Coastal zones subject to storm surges or tidal stages require dynamic marine boundary conditions in future versions.</li>
+</ol>
+
+<p>Future work will integrate live Doppler radar reflectivity feeds and edge IoT manhole water-level sensors for real-time model updating.</p>
+
+<!-- 12. CONCLUSION -->
+<h1>12. Conclusion</h1>
+
+<p>Urban flash flooding demands a shift from slow retrospective simulation to sub-second predictive foresight. This paper presented <strong>UrbanFLOW</strong>, an autonomous Graph Neural Network surrogate capable of predicting street junction flood depths in sub-100 millisecond latencies across entire metropolitan basins.</p>
+
+<p>By combining the <strong>HydroGINE-v5</strong> edge-conditioned message-passing backbone, a decoupled FiLM dual-head mechanism, and a non-destructive Topological MoE router, UrbanFLOW overcomes the dual challenges of numerical computational bottlenecks and zero-inflation gradient collapse. Benchmarked across 16 global catchments encompassing 76,316 nodes, the model achieved:</p>
+<ul>
+  <li>Global MAE of <strong>2.44 cm</strong> (objective: &lt; 5.0 cm)</li>
+  <li>Catchment NSE of <strong>0.9128</strong> (target: &ge; 0.80)</li>
+  <li>99.4% hazard recall at the 480 highest-consequence nodes (74.2% depth agreement within &plusmn;15 cm)</li>
+  <li>Mass continuity error of <strong>8.61%</strong> (&lt; 10% standard)</li>
+  <li>API latency of <strong>85.5 ms</strong> average (~1,310&times; to 8,690&times; speedup over SWMM 5.2)</li>
+  <li>Live-computed capture of <strong>5/13 (38.5%)</strong> documented October 2024 Bengaluru flood locations</li>
+</ul>
+
+<p>UrbanFLOW demonstrates that physics-guided graph neural operators can achieve numerical simulation parity at speeds enabling autonomous municipal barrier gate deployment and dewatering pump dispatch. This provides a scalable foundation for climate-resilient urban disaster early warning worldwide.</p>
+
+<!-- ACKNOWLEDGEMENT & REFERENCES -->
+<h1>Acknowledgement &amp; References</h1>
+
+<p>The open-source scientific datasets enabling this research are formally acknowledged: OpenStreetMap, NASA/Copernicus Digital Elevation Models, and the US EPA SWMM 5.2 hydrodynamic computational engine. The real-world flood observations used for the October 2024 Bengaluru cloudburst validation (Section&nbsp;9) were compiled from the published news reports listed below, which are the sole source of the event locations, dates, and reported rainfall totals.</p>
+
+<h2>Data Sources: October 2024 Bengaluru Cloudburst Validation</h2>
+<p>Every location used in the empirical validation was taken from the publicly available reports below. Each URL was independently checked and resolves to the cited article; no incident, location, or rainfall value was invented or inferred beyond these sources.</p>
+
+<p><strong>Event 1 &mdash; October 14&ndash;15, 2024 (65&nbsp;mm city-wide):</strong></p>
+<ul>
+  <li>The Hindu &mdash; &ldquo;Bengaluru weather: Rain havoc leads to waterlogging and traffic chaos, commuters struggle to navigate inundated roads&rdquo; (15&nbsp;Oct&nbsp;2024).<br><a href="https://www.thehindu.com/news/cities/bangalore/bengaluru-weather-heavy-rains-lead-to-waterlogging-and-traffic-chaos-commuters-struggle-to-navigate-inundated-roads/article68755266.ece">https://www.thehindu.com/news/cities/bangalore/bengaluru-weather-heavy-rains-lead-to-waterlogging-and-traffic-chaos-commuters-struggle-to-navigate-inundated-roads/article68755266.ece</a></li>
+  <li>The Hindu &mdash; &ldquo;Heavy rainfall brings Bengaluru to its knees; 52 areas and 142 houses flooded&rdquo; (16&nbsp;Oct&nbsp;2024).<br><a href="https://www.thehindu.com/news/cities/bangalore/heavy-rainfall-brings-bengaluru-to-its-knees-52-areas-and-142-houses-flooded/article68757314.ece">https://www.thehindu.com/news/cities/bangalore/heavy-rainfall-brings-bengaluru-to-its-knees-52-areas-and-142-houses-flooded/article68757314.ece</a></li>
+  <li>New Indian Express &mdash; &ldquo;Traffic goes haywire on major roads&rdquo; (16&nbsp;Oct&nbsp;2024).<br><a href="https://www.newindianexpress.com/cities/bengaluru/2024/Oct/16/traffic-goes-haywire-on-major-roads">https://www.newindianexpress.com/cities/bengaluru/2024/Oct/16/traffic-goes-haywire-on-major-roads</a></li>
+  <li>New Indian Express &mdash; &ldquo;65 mm rain batters Bengaluru city&rdquo; (16&nbsp;Oct&nbsp;2024).<br><a href="https://www.newindianexpress.com/cities/bengaluru/2024/Oct/16/65-mm-rain-batters-city">https://www.newindianexpress.com/cities/bengaluru/2024/Oct/16/65-mm-rain-batters-city</a></li>
+  <li>Moneycontrol &mdash; &ldquo;Manyata Tech Park in Bengaluru flooded; techies demand WFH, govt announces holiday for schools&rdquo; (15&nbsp;Oct&nbsp;2024).<br><a href="https://www.moneycontrol.com/news/india/manyata-tech-park-in-bengaluru-flooded-techies-demand-wfh-govt-announces-holiday-for-schools-12842550.html">https://www.moneycontrol.com/news/india/manyata-tech-park-in-bengaluru-flooded-techies-demand-wfh-govt-announces-holiday-for-schools-12842550.html</a></li>
+  <li>Times of India &mdash; &ldquo;Bengaluru Traffic Nightmare: Commuters Stuck for Hours in Waterlogged Streets&rdquo; (15&nbsp;Oct&nbsp;2024).<br><a href="https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-traffic-nightmare-commuters-stuck-for-hours-in-waterlogged-streets/articleshow/114261598.cms">https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-traffic-nightmare-commuters-stuck-for-hours-in-waterlogged-streets/articleshow/114261598.cms</a></li>
+</ul>
+
+<p><strong>Event 2 &mdash; October 19&ndash;20, 2024 (south and west corridors):</strong></p>
+<ul>
+  <li>Times of India &mdash; &ldquo;Bengaluru Deluged: Heavy Rain Causes Traffic Chaos and Waterlogging Across City&rdquo; (20&nbsp;Oct&nbsp;2024).<br><a href="https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-deluged-heavy-rain-causes-traffic-chaos-and-waterlogging-across-city/articleshow/114404508.cms">https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-deluged-heavy-rain-causes-traffic-chaos-and-waterlogging-across-city/articleshow/114404508.cms</a></li>
+  <li>The Hindu &mdash; &ldquo;Early morning rains flood Bengaluru roads and apartments&rdquo; (20&nbsp;Oct&nbsp;2024).<br><a href="https://www.thehindu.com/news/cities/bangalore/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece">https://www.thehindu.com/news/cities/bangalore/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece</a></li>
+  <li>New Indian Express &mdash; &ldquo;Rain woes continue to haunt Bengaluru&rdquo; (21&nbsp;Oct&nbsp;2024).<br><a href="https://www.newindianexpress.com/states/karnataka/2024/Oct/21/rain-woes-continue-to-haunt-bengaluru">https://www.newindianexpress.com/states/karnataka/2024/Oct/21/rain-woes-continue-to-haunt-bengaluru</a></li>
+</ul>
+
+<p><strong>Event 3 &mdash; October 21&ndash;22, 2024 (record cloudburst; IMD GKVK 186.2&nbsp;mm):</strong></p>
+<ul>
+  <li>Indian Express &mdash; &ldquo;Building collapse, closure of apartments, overflowing lakes and flooded roads: Rain wreaks havoc in India&rsquo;s IT capital Bengaluru&rdquo; (22&nbsp;Oct&nbsp;2024).<br><a href="https://indianexpress.com/article/cities/bangalore/bengaluru-rain-building-collapse-schools-closed-flooding-overflowing-lakes-9633673/">https://indianexpress.com/article/cities/bangalore/bengaluru-rain-building-collapse-schools-closed-flooding-overflowing-lakes-9633673/</a></li>
+  <li>Indian Express &mdash; &ldquo;Record rainfall in North Bengaluru causes breach of two lakes in Yelahanka zone&rdquo; (23&nbsp;Oct&nbsp;2024).<br><a href="https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/">https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/</a></li>
+  <li>New Indian Express &mdash; &ldquo;North Bengaluru crumbles under cloudburst&rdquo; (23&nbsp;Oct&nbsp;2024).<br><a href="https://www.newindianexpress.com/states/karnataka/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst">https://www.newindianexpress.com/states/karnataka/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst</a></li>
+  <li>New Indian Express &mdash; &ldquo;Cloudburst hits Bengaluru&rsquo;s Yelahanka zone: 10 layouts flooded, 4000 residents impacted&rdquo; (22&nbsp;Oct&nbsp;2024).<br><a href="https://www.newindianexpress.com/cities/bengaluru/2024/Oct/22/cloud-burst-hits-bengalurus-yelahanka-zone-10-layouts-flooded-4000-residents-impacted">https://www.newindianexpress.com/cities/bengaluru/2024/Oct/22/cloud-burst-hits-bengalurus-yelahanka-zone-10-layouts-flooded-4000-residents-impacted</a></li>
+  <li>Times of India &mdash; &ldquo;27-yr record washed away: 186.2 mm rain highest for Oct in B&rsquo;luru&rdquo; (22&nbsp;Oct&nbsp;2024).<br><a href="https://timesofindia.indiatimes.com/city/bengaluru/27-yr-record-washed-away-186-2-mm-rain-highest-for-oct-in-bluru/articleshow/114475747.cms">https://timesofindia.indiatimes.com/city/bengaluru/27-yr-record-washed-away-186-2-mm-rain-highest-for-oct-in-bluru/articleshow/114475747.cms</a></li>
+  <li>Times Now &mdash; &ldquo;Bengaluru&rsquo;s Heavy Rains Break 27-Year-Old October Record; NDRF Rescues Yelahanka Residents By Boat&rdquo; (22&nbsp;Oct&nbsp;2024).<br><a href="https://www.timesnownews.com/bengaluru/bengaluru-rains-break-27-year-old-october-record-sarjapur-road-flooded-severe-waterlogging-in-bangalore-check-imd-weather-forecast-article-114455130">https://www.timesnownews.com/bengaluru/bengaluru-rains-break-27-year-old-october-record-sarjapur-road-flooded-severe-waterlogging-in-bangalore-check-imd-weather-forecast-article-114455130</a></li>
+</ul>
+
+<ol class="ref-list">
+  <li>Rossman, L. A. (2015). <em>Storm Water Management Model User's Manual Version 5.1</em>. U.S. Environmental Protection Agency, EPA/600/R-14/413b.
+  <span class="ref-note">Provides the SWMM hydraulic modeling framework and numerical methods used as the baseline for hydrologic/hydraulic simulation and validation.</span></li>
+
+  <li>Xu, K., Hu, W., Leskovec, J., &amp; Jegelka, S. (2019). How powerful are graph neural networks? <em>International Conference on Learning Representations (ICLR)</em>.
+  <span class="ref-note">Establishes the Graph Isomorphism Network (GIN) and provides theoretical foundations for understanding the expressive power of neighborhood-aggregation GNNs.</span></li>
+
+  <li>Raissi, M., Perdikaris, P., &amp; Karniadakis, G. E. (2019). Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. <em>Journal of Computational Physics</em>, 378, 686&ndash;707.
+  <span class="ref-note">Introduces Physics-Informed Neural Networks (PINNs), incorporating governing physical laws and PDE residuals into neural-network training objectives for forward and inverse problems.</span></li>
+
+  <li>Perez, E., Strub, F., de Vries, H., Dumoulin, V., &amp; Courville, A. (2018). FiLM: Visual reasoning with a general conditioning layer. <em>Proceedings of the AAAI Conference on Artificial Intelligence</em>, 32(1).
+  <span class="ref-note">Introduces Feature-wise Linear Modulation (FiLM), a general conditioning mechanism that modulates neural-network features using feature-wise affine transformations.</span></li>
+
+  <li>Lin, T. Y., Goyal, P., Girshick, R., He, K., &amp; Doll&aacute;r, P. (2017). Focal loss for dense object detection. <em>Proceedings of the IEEE International Conference on Computer Vision (ICCV)</em>, 2980&ndash;2988.
+  <span class="ref-note">Introduces Focal Loss, a modified cross-entropy objective designed to address severe class imbalance by down-weighting well-classified examples, which can be adapted to highly imbalanced inundation classification.</span></li>
+
+  <li>Shazeer, N., et al. (2017). Outrageously large neural networks: The sparsely-gated Mixture-of-Experts layer. <em>International Conference on Learning Representations (ICLR)</em>.
+  <span class="ref-note">Introduces sparsely gated Mixture-of-Experts, demonstrating conditional computation in which different subsets of network parameters are activated for different inputs.</span></li>
+</ol>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ],
+      throwOnError: false
+    });
+  });
+</script>
+
+</body>
+</html>

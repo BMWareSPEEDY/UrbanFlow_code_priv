@@ -1,0 +1,37 @@
+{
+ "hsr": {
+  "nodes": 1380,
+  "flooded>0.30m": 209,
+  "hazard>0.15m": 277,
+  "max(m)": 3.0,
+  "wall_s": 8.0
+ },
+ "bellandur": {
+  "nodes": 1508,
+  "flooded>0.30m": 421,
+  "hazard>0.15m": 510,
+  "max(m)": 3.0,
+  "wall_s": 8.4
+ },
+ "whitefield": {
+  "nodes": 1798,
+  "flooded>0.30m": 471,
+  "hazard>0.15m": 587,
+  "max(m)": 3.0,
+  "wall_s": 10.8
+ },
+ "ecity": {
+  "nodes": 3338,
+  "flooded>0.30m": 929,
+  "hazard>0.15m": 1125,
+  "max(m)": 3.0,
+  "wall_s": 24.5
+ },
+ "koramangala": {
+  "nodes": 4417,
+  "flooded>0.30m": 1064,
+  "hazard>0.15m": 1255,
+  "max(m)": 3.0,
+  "wall_s": 61.2
+ }
+}

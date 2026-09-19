@@ -1,4 +1,6 @@
 import os
+import sys
+import json
 import time
 import math
 import torch
@@ -10,10 +12,17 @@ import osmnx as ox
 from flask import Flask, jsonify, render_template, request
 from pyproj import Transformer
 from torch_geometric.nn import GINEConv, GATv2Conv
-from train_perfect_accuracy_gnn import PerfectAccuracyGNN
-from train_zero_tolerance_gnn import ZeroToleranceHurdleGNN
-from train_dual_stream_hydro_gnn import DualStreamHydroGNN
-from production_v4 import ProductionFloodPredictorV4, EnsembleFloodPredictorV4
+from core.train_perfect_accuracy_gnn import PerfectAccuracyGNN
+from core.train_zero_tolerance_gnn import ZeroToleranceHurdleGNN
+from core.train_dual_stream_hydro_gnn import DualStreamHydroGNN
+from core.production_v4 import ProductionFloodPredictorV4, EnsembleFloodPredictorV4
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+GRAPHS_DIR = os.path.join(BASE_DIR, "graphs")
+MODELS_DIR = os.path.join(BASE_DIR, "models")
+DATASETS_DIR = os.path.join(BASE_DIR, "datasets")
+DATA_DIR = os.path.join(BASE_DIR, "data")
+BENCH_DIR = os.path.join(DATA_DIR, "benchmarks")
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -325,7 +334,7 @@ def init_app_data():
     global MODEL, REGION_CACHE, FEATURE_MEANS, FEATURE_STDS, EDGE_MEANS, EDGE_STDS, Y_MEAN, Y_STD, PRODUCTION_PREDICTOR
 
     print("1. Loading PyG dataset for statistical normalization...")
-    pyg_data = torch.load("bengaluru_pyg_dataset.pt", weights_only=False)
+    pyg_data = torch.load(os.path.join(DATASETS_DIR, "bengaluru_pyg_dataset.pt"), weights_only=False)
     FEATURE_MEANS = pyg_data.x.mean(dim=0)
     FEATURE_STDS = pyg_data.x.std(dim=0) + 1e-6
     EDGE_MEANS = pyg_data.edge_attr.mean(dim=0)
@@ -333,8 +342,8 @@ def init_app_data():
 
     print("2. Loading SWMM ground truth targets...")
     target_lookup = {}
-    if os.path.exists("swmm_groundtruth_targets.csv"):
-        df_targets = pd.read_csv("swmm_groundtruth_targets.csv")
+    if os.path.exists(os.path.join(DATASETS_DIR, "swmm_groundtruth_targets.csv")):
+        df_targets = pd.read_csv(os.path.join(DATASETS_DIR, "swmm_groundtruth_targets.csv"))
         for _, row in df_targets.iterrows():
             node_str = str(row['swmm_node_id'])
             val = float(row['max_water_depth_m'])
@@ -349,8 +358,8 @@ def init_app_data():
                 target_lookup[node_str] = val
 
     region_graphs_50 = {}
-    if os.path.exists("expanded_master_physics_dataset.pt"):
-        dl_targets = torch.load("expanded_master_physics_dataset.pt", weights_only=False)
+    if os.path.exists(os.path.join(DATASETS_DIR, "expanded_master_physics_dataset.pt")):
+        dl_targets = torch.load(os.path.join(DATASETS_DIR, "expanded_master_physics_dataset.pt"), weights_only=False)
         for g in dl_targets:
             r = getattr(g, 'region', '') or getattr(g, 'city', '')
             if r and abs(g.rain_intensity - 50.0) < 1.0 and r not in region_graphs_50:
@@ -358,7 +367,7 @@ def init_app_data():
 
     print("3. Pre-loading all regional spatial graphs...")
     for r_key, r_info in REGIONS.items():
-        graph_file = r_info['file']
+        graph_file = os.path.join(GRAPHS_DIR, r_info['file'])
         if not os.path.exists(graph_file):
             print(f"   - SKIP region {r_info['name']}: {graph_file} not found")
             continue
@@ -624,7 +633,12 @@ def init_app_data():
     print("   - Initializing Tuned EnsembleFloodPredictorV4 (v5.10 + v5.11 + v5.0 + BangaloreOpt)...")
     PRODUCTION_PREDICTOR = EnsembleFloodPredictorV4(device=device)
 
-    ckpt_file = "zero_tolerance_gnn_checkpoint.pt" if os.path.exists("zero_tolerance_gnn_checkpoint.pt") else ("pinn_gnn_checkpoint.pt" if os.path.exists("pinn_gnn_checkpoint.pt") else "urbanflow_production_model.pt")
+    ckpt_candidates = [
+        os.path.join(MODELS_DIR, "zero_tolerance_gnn_checkpoint.pt"),
+        os.path.join(MODELS_DIR, "pinn_gnn_checkpoint.pt"),
+        os.path.join(MODELS_DIR, "urbanflow_production_model.pt"),
+    ]
+    ckpt_file = next((c for c in ckpt_candidates if os.path.exists(c)), ckpt_candidates[-1])
     if os.path.exists(ckpt_file):
         ckpt = torch.load(ckpt_file, map_location=device, weights_only=False)
         st = ckpt['model_state_dict']
@@ -802,28 +816,19 @@ def get_junction_name(node_id, region_key):
     idx = abs(hash(str(node_id))) % len(names)
     return names[idx]
 
-@app.route('/api/predict', methods=['POST'])
-def predict():
-    req = request.get_json() or {}
-    r_key = req.get('region', 'hsr')
-    if r_key not in REGION_CACHE:
-        r_key = list(REGION_CACHE.keys())[0] if REGION_CACHE else 'hsr'
-    if r_key not in REGION_CACHE:
-        return jsonify({'status': 'error', 'message': 'Region not loaded'}), 400
 
+def run_region_inference(r_key, rain_mmhr, duration_min):
+    """Run the live production GNN for one catchment and return node-aligned depths (metres).
+
+    This is the single inference path used by /api/predict and /api/historical-validation so the
+    validation capture numbers always match what an interactive user sees on the dashboard.
+    """
     r_data = REGION_CACHE[r_key]
+    rain_mmhr = float(max(20.0, min(300.0, rain_mmhr)))
+    duration_min = float(max(15.0, min(120.0, duration_min)))
+    effective_rain = rain_mmhr  # infiltration is baked into the trained GNN/SWMM joint objective
 
-    rain_mmhr = float(req.get('rainfall_mmhr', req.get('rainfall_intensity', 50.0)))
-    rain_mmhr = max(20.0, min(300.0, rain_mmhr))
-    duration_min = float(req.get('duration_min', 60.0))
-    duration_min = max(15.0, min(120.0, duration_min))
-    # Consistent infiltration benchmark aligned with SWMM 5.2 baseline (Horton/Green-Ampt infiltration)
-    soil_factor = 1.0
-    effective_rain = rain_mmhr * soil_factor
-
-    t0 = time.perf_counter()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     num_nodes = len(r_data['node_list'])
     full_x = r_data['static_features'].clone().to(device)
     if FEATURE_MEANS.shape[0] == 14:
@@ -850,21 +855,21 @@ def predict():
             accum_score = r_data['static_features'][:, 7].cpu().numpy()
             in_deg = r_data['static_features'][:, 5].cpu().numpy()
             out_deg = r_data['static_features'][:, 6].cpu().numpy()
-            
+
             true_basin_sink = (out_deg == 0) | ((is_sink == 1) & (out_deg < in_deg))
             deep_sag = (sag_index >= 0.06) & (accum_score >= 1.7)
             neural_high_conf = (p_prob >= 0.70) & (delta_elev < 0.30) & (accum_score >= 1.5)
-            
+
             conveyance_dry = (sag_index < 0.015) & (out_deg >= in_deg) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf)
-            
+
             feasibility = np.ones(len(delta_elev), dtype=np.float32)
             feasibility = np.where(conveyance_dry, 0.0, feasibility)
             feasibility = np.where((delta_elev > 0.45) & (sag_index < 0.03) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf), 0.0, feasibility)
             feasibility = np.where((delta_elev > 0.70) & (~true_basin_sink) & (~deep_sag) & (~neural_high_conf), 0.0, feasibility)
-            
+
             thresh = np.where(true_basin_sink | deep_sag, 0.20, np.where(neural_high_conf, 0.30, np.where(accum_score >= 2.0, 0.45, 0.65)))
             raw_preds = np.where(p_prob >= thresh, p_depth, 0.0) * feasibility
-            
+
             depth_ceiling = np.where(true_basin_sink | deep_sag | neural_high_conf, 3.0, np.where(out_deg >= in_deg, 0.15, 0.25))
             preds = np.minimum(raw_preds, depth_ceiling * (effective_rain / 50.0))
         else:
@@ -873,14 +878,36 @@ def predict():
                 preds = np.clip(np.expm1(out_norm.cpu().numpy() * YL_STD + YL_MEAN), 0, None).ravel()
             else:
                 preds = torch.clamp(out_norm * Y_STD + Y_MEAN, min=0.0).cpu().numpy().ravel()
-        if preds.ndim == 0:
-            preds = np.array([float(preds)])
+    if preds.ndim == 0:
+        preds = np.array([float(preds)])
 
     scaled_preds = np.maximum(0.0, preds)
-
     for idx in range(len(scaled_preds)):
         scaled_preds[idx] = round(float(scaled_preds[idx]), 4)
+    return scaled_preds
 
+
+@app.route('/api/predict', methods=['POST'])
+def predict():
+    req = request.get_json() or {}
+    r_key = req.get('region', 'hsr')
+    if r_key not in REGION_CACHE:
+        r_key = list(REGION_CACHE.keys())[0] if REGION_CACHE else 'hsr'
+    if r_key not in REGION_CACHE:
+        return jsonify({'status': 'error', 'message': 'Region not loaded'}), 400
+
+    r_data = REGION_CACHE[r_key]
+
+    rain_mmhr = float(req.get('rainfall_mmhr', req.get('rainfall_intensity', 50.0)))
+    rain_mmhr = max(20.0, min(300.0, rain_mmhr))
+    duration_min = float(req.get('duration_min', 60.0))
+    duration_min = max(15.0, min(120.0, duration_min))
+    # Consistent infiltration benchmark aligned with SWMM 5.2 baseline (Horton/Green-Ampt infiltration)
+    soil_factor = 1.0
+    effective_rain = rain_mmhr * soil_factor
+
+    t0 = time.perf_counter()
+    scaled_preds = run_region_inference(r_key, rain_mmhr, duration_min)
     t1 = time.perf_counter()
     gnn_inference_time_ms = round((t1 - t0) * 1000, 2)
 
@@ -1310,64 +1337,125 @@ def apply_mitigation():
         'nodes': node_deltas
     })
 
-VERIFIED_BBMP_INCIDENTS = [
-    {"id": "INCIDENT_HSR_01", "name": "14th Main Road & 17th Cross Inundation (50cm water)", "region": "hsr", "lat": 12.9118, "lng": 77.6385, "reported_depth_m": 0.50, "predicted_depth_m": 0.48, "distance_m": 49.2, "source": "Municipal Control Log #1042", "is_captured": True},
-    {"id": "INCIDENT_HSR_02", "name": "Agara Lake Overflow Corridor / 27th Main", "region": "hsr", "lat": 12.9234, "lng": 77.6492, "reported_depth_m": 0.65, "predicted_depth_m": 0.62, "distance_m": 14.8, "source": "Automated Hydro Gauge Alert", "is_captured": True},
-    {"id": "INCIDENT_HSR_03", "name": "5th Main Parangi Palya Low Road Basement Flooding", "region": "hsr", "lat": 12.9082, "lng": 77.6321, "reported_depth_m": 0.55, "predicted_depth_m": 0.52, "distance_m": 4.3, "source": "Citizen Emergency Call #8831", "is_captured": True},
-    {"id": "INCIDENT_HSR_04", "name": "Sector 6 Low-lying Residential Ingress", "region": "hsr", "lat": 12.9142, "lng": 77.6410, "reported_depth_m": 0.42, "predicted_depth_m": 0.45, "distance_m": 17.2, "source": "Transit Corridor Emergency Wire", "is_captured": True},
-    {"id": "INCIDENT_HSR_05", "name": "Sector 7 Storm Drain Choke Point", "region": "hsr", "lat": 12.9190, "lng": 77.6350, "reported_depth_m": 0.45, "predicted_depth_m": 0.41, "distance_m": 45.9, "source": "Traffic Inundation Wire", "is_captured": True},
-    {"id": "INCIDENT_HSR_06", "name": "Silk Board Junction Hosur Road Underpass", "region": "hsr", "lat": 12.9165, "lng": 77.6250, "reported_depth_m": 0.85, "predicted_depth_m": 0.82, "distance_m": 38.5, "source": "Live Transit Surveillance Feed", "is_captured": True},
+REAL_INCIDENTS_FILE = os.path.join(DATA_DIR, 'real_bengaluru_oct2024_incidents.json')
+REAL_VALIDATION_DATASET = {}
+if os.path.exists(REAL_INCIDENTS_FILE):
+    try:
+        with open(REAL_INCIDENTS_FILE, 'r') as f:
+            REAL_VALIDATION_DATASET = json.load(f)
+    except Exception as e:
+        print(f"[app] WARNING: could not load real incident dataset: {e}", file=sys.stderr)
 
-    {"id": "INCIDENT_KOR_01", "name": "Ejipura Canal Outfall Surcharge", "region": "koramangala", "lat": 12.9380, "lng": 77.6310, "reported_depth_m": 0.75, "predicted_depth_m": 0.72, "distance_m": 13.3, "source": "Major Storm Drain Division", "is_captured": True},
-    {"id": "INCIDENT_KOR_02", "name": "Koramangala 1st Block Low Point Dip", "region": "koramangala", "lat": 12.9360, "lng": 77.6150, "reported_depth_m": 0.45, "predicted_depth_m": 0.48, "distance_m": 30.7, "source": "Citizen Geotag Report", "is_captured": True},
-    {"id": "INCIDENT_KOR_03", "name": "National Games Village Drain Backpressure", "region": "koramangala", "lat": 12.9420, "lng": 77.6260, "reported_depth_m": 0.50, "predicted_depth_m": 0.53, "distance_m": 34.5, "source": "Resident Welfare SOS Dispatch", "is_captured": True},
-    {"id": "INCIDENT_KOR_04", "name": "Koramangala 4th Block 80 Feet Road", "region": "koramangala", "lat": 12.9345, "lng": 77.6245, "reported_depth_m": 0.60, "predicted_depth_m": 0.58, "distance_m": 12.9, "source": "Press Ground Report", "is_captured": True},
-    {"id": "INCIDENT_KOR_05", "name": "Sony World Junction Knee-deep Water", "region": "koramangala", "lat": 12.9312, "lng": 77.6189, "reported_depth_m": 0.48, "predicted_depth_m": 0.46, "distance_m": 28.4, "source": "Live Transit Media Feed", "is_captured": True},
-    {"id": "INCIDENT_KOR_06", "name": "ST Bed Layout Ground Floor Inundation", "region": "koramangala", "lat": 12.9280, "lng": 77.6290, "reported_depth_m": 0.70, "predicted_depth_m": 0.68, "distance_m": 31.2, "source": "Municipal Helpline #9042", "is_captured": True},
+REAL_INCIDENTS = REAL_VALIDATION_DATASET.get('incidents', [])
+REAL_EVENTS = REAL_VALIDATION_DATASET.get('events', [])
 
-    {"id": "INCIDENT_BEL_01", "name": "EcoSpace Technology Park Main Gate", "region": "bellandur", "lat": 12.9265, "lng": 77.6762, "reported_depth_m": 0.80, "predicted_depth_m": 0.85, "distance_m": 39.1, "source": "Arterial Ring Road Dispatch", "is_captured": True},
-    {"id": "INCIDENT_BEL_02", "name": "Marathahalli Multiplex Junction Choke", "region": "bellandur", "lat": 12.9450, "lng": 77.6980, "reported_depth_m": 0.55, "predicted_depth_m": 0.51, "distance_m": 41.0, "source": "Traffic Advisory Alert", "is_captured": True},
-    {"id": "INCIDENT_BEL_03", "name": "Central Mall Bellandur Service Road", "region": "bellandur", "lat": 12.9198, "lng": 77.6685, "reported_depth_m": 0.62, "predicted_depth_m": 0.59, "distance_m": 32.4, "source": "Citizen Video Verification", "is_captured": True},
-    {"id": "INCIDENT_BEL_04", "name": "Bellandur Lake Inflow Canal Surcharge", "region": "bellandur", "lat": 12.9230, "lng": 77.6720, "reported_depth_m": 0.90, "predicted_depth_m": 0.92, "distance_m": 22.8, "source": "Lake Inundation Sensor", "is_captured": True},
+CAPTURE_THRESHOLD_M = 0.15
+CAPTURE_RADIUS_M = 50.0
 
-    {"id": "INCIDENT_ECI_01", "name": "Velankani Drive Low-lying Road Ponding", "region": "ecity", "lat": 12.8510, "lng": 77.6710, "reported_depth_m": 0.45, "predicted_depth_m": 0.42, "distance_m": 43.5, "source": "Emergency Response Unit", "is_captured": True},
-    {"id": "INCIDENT_ECI_02", "name": "Phase 1 Tech Park Boundary Drain Overflow", "region": "ecity", "lat": 12.8390, "lng": 77.6580, "reported_depth_m": 0.52, "predicted_depth_m": 0.49, "distance_m": 29.8, "source": "Corridor Maintenance Log", "is_captured": True},
-    {"id": "INCIDENT_ECI_03", "name": "Electronic City Tollgate Service Lane", "region": "ecity", "lat": 12.8452, "lng": 77.6631, "reported_depth_m": 0.65, "predicted_depth_m": 0.61, "distance_m": 31.0, "source": "Highway Authority Alert", "is_captured": True},
-
-    {"id": "INCIDENT_WHI_01", "name": "Hope Farm Junction Intersection Waterlogging", "region": "whitefield", "lat": 12.9834, "lng": 77.7512, "reported_depth_m": 0.58, "predicted_depth_m": 0.55, "distance_m": 24.1, "source": "Citizen Ground Report", "is_captured": True},
-    {"id": "INCIDENT_WHI_02", "name": "ITPB Main Gate Low Road Ponding", "region": "whitefield", "lat": 12.9890, "lng": 77.7380, "reported_depth_m": 0.40, "predicted_depth_m": 0.44, "distance_m": 35.0, "source": "Facilities Emergency Desk", "is_captured": True},
-    {"id": "INCIDENT_WHI_03", "name": "Kundalahalli Gate Underpass Dip", "region": "whitefield", "lat": 12.9760, "lng": 77.7450, "reported_depth_m": 0.70, "predicted_depth_m": 0.66, "distance_m": 28.5, "source": "Underpass Closure Warning", "is_captured": True},
-    {"id": "INCIDENT_WHI_04", "name": "Channasandra Railway Bridge Underpass", "region": "whitefield", "lat": 12.9920, "lng": 77.7590, "reported_depth_m": 0.85, "predicted_depth_m": 0.80, "distance_m": 42.0, "source": "Railway Surcharge Wire", "is_captured": True}
-]
+def haversine_metres(lat1, lon1, lat2, lon2):
+    R = 6371000.0
+    phi1, phi2 = np.radians(lat1), np.radians(lat2)
+    dphi = np.radians(lat2 - lat1)
+    dlambda = np.radians(lon2 - lon1)
+    a = np.sin(dphi / 2.0) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(dlambda / 2.0) ** 2
+    return 2.0 * R * np.arctan2(np.sqrt(a), np.sqrt(1.0 - a))
 
 @app.route('/api/historical-validation', methods=['GET'])
 def get_historical_validation():
     req_region = request.args.get('region', '')
-    if req_region and any(c['region'] == req_region for c in VERIFIED_BBMP_INCIDENTS):
-        complaints = [c for c in VERIFIED_BBMP_INCIDENTS if c['region'] == req_region]
+    if req_region and any(c['region'] == req_region for c in REAL_INCIDENTS):
+        incidents = [c for c in REAL_INCIDENTS if c['region'] == req_region]
     else:
-        complaints = VERIFIED_BBMP_INCIDENTS
+        incidents = REAL_INCIDENTS
 
-    captured = sum(1 for c in complaints if c.get('is_captured', False))
-    total = len(complaints)
+    # The Oct 2024 reports give 24-hour/6-hour accumulations. A short-duration peak-rate
+    # assumption is therefore an explicit modelling choice made where the model is actually
+    # verified (20-300 mm/hr). It is returned to the client so the number is never ambiguous.
+    try:
+        storm_intensity_mmhr = float(request.args.get('rainfall_mmhr', 100.0))
+    except (TypeError, ValueError):
+        storm_intensity_mmhr = 100.0
+    storm_intensity_mmhr = max(20.0, min(300.0, storm_intensity_mmhr))
+    try:
+        duration_min = float(request.args.get('duration_min', 60.0))
+    except (TypeError, ValueError):
+        duration_min = 60.0
+    duration_min = max(15.0, min(120.0, duration_min))
+
+    # Live capture: does a predicted hazard node (depth >= 0.15 m) fall within 50 m of each
+    # documented location? Computed from the same inference path as /api/predict -- never hardcoded.
+    precomputed = {}
+    capture_results = []
+    captured_count = 0
+    for inc in incidents:
+        reg = inc['region']
+        if reg not in REGION_CACHE:
+            continue
+        if reg not in precomputed:
+            preds = run_region_inference(reg, storm_intensity_mmhr, duration_min)
+            node_pos = REGION_CACHE[reg]['node_pos']
+            node_list = REGION_CACHE[reg]['node_list']
+            hazard = [(node_pos[nid]['lat'], node_pos[nid]['lng']) for nid, d in
+                      zip(node_list, preds) if d >= CAPTURE_THRESHOLD_M]
+            precomputed[reg] = hazard
+
+        if not precomputed[reg]:
+            min_dist = 9999.0
+        else:
+            min_dist = min(haversine_metres(inc['lat'], inc['lon'], hlat, hlon)
+                           for hlat, hlon in precomputed[reg])
+        captured = bool(min_dist <= CAPTURE_RADIUS_M)
+        if captured:
+            captured_count += 1
+        capture_results.append({
+            "id": inc.get('id'),
+            "name": inc.get('location'),
+            "region": inc.get('region'),
+            "lat": inc['lat'],
+            "lng": inc['lon'],
+            "reported_depth_m": None,
+            "predicted_depth_m": None,
+            "distance_m": round(min_dist, 1),
+            "source": "; ".join(str(u) for u in inc.get('sources', [])),
+            "is_captured": captured,
+            "description": inc.get('description', ''),
+            "event_ids": inc.get('event_id', [])
+        })
+
+    captured = captured_count
+    total = len(capture_results)
     rate = round((captured / max(1, total)) * 100.0, 1)
 
     clean_res = {
         'event': {
-            'name': 'October 19, 2024 Bengaluru Cloudburst Downpour (>100mm in 3hr)',
-            'date': '2024-10-19',
-            'peak_rainfall_mmhr': 105.0,
-            'duration_min': 90.0,
-            'source': 'Hydro Gauge Network & Municipal Field Logs'
+            'name': 'October 2024 Bengaluru rain events (documented news sources)',
+            'events': [
+                {
+                    'id': e['id'],
+                    'name': e['name'],
+                    'start_date': e['start_date'],
+                    'end_date': e['end_date'],
+                    'observed_rainfall': e.get('observed_rainfall', {}),
+                    'sources': e.get('sources', [])
+                }
+                for e in REAL_EVENTS
+            ]
         },
         'metrics': {
             'total_incidents': total,
             'captured_incidents': captured,
             'spatial_hazard_capture_rate': rate,
-            'f1_score': 0.893,
-            'hazard_threshold_m': 0.15
+            'f1_score': None,
+            'hazard_threshold_m': CAPTURE_THRESHOLD_M,
+            'capture_radius_m': CAPTURE_RADIUS_M,
+            'storm_intensity_assumption_mmhr': storm_intensity_mmhr,
+            'duration_min': duration_min,
+            'note': 'Capture computed live from the running model at the stated short-duration '
+                    'peak-rate assumption. The published Oct 2024 totals are 24-hour/6-hour '
+                    'accumulations, not peak intensities. Depth values are only reported where a '
+                    'measured/calculated source exists; none are fabricated.'
         },
-        'complaints': complaints
+        'complaints': capture_results
     }
     return jsonify({'status': 'success', 'data': clean_res})
 
@@ -1375,21 +1463,24 @@ def get_historical_validation():
 def get_model_card():
     r_key = request.args.get('region', 'hsr')
     try:
-        with open('competition_benchmark_verified.json', 'r') as f:
+        with open(os.path.join(BENCH_DIR, 'competition_benchmark_verified.json'), 'r') as f:
             bench = json.load(f)
         
         g1_row = next((r for r in bench['goal1']['table'] if r['key'] == r_key), None)
         g2_row = next((r for r in bench['goal2']['table'] if r['key'] == r_key), None)
         
-        hotspot_match_rate = g1_row['rate'] if g1_row else 95.0
-        hazard_recall = g1_row['haz_recall'] if g1_row else 99.2
-        f1_score = (g2_row['f1'] / 100.0) if g2_row else 0.829
-        mae_cm = g2_row['mae_cm'] if g2_row else 4.06
+        hotspot_match_rate = g1_row['rate'] if g1_row else 94.79
+        hazard_recall = g1_row['haz_recall'] if g1_row else 99.58
+        f1_score = (g2_row['f1'] / 100.0) if g2_row else 0.9136
+        mae_cm = g2_row['mae_cm'] if g2_row else 2.39
         
         nse = bench['goal3']['nse_catchment']
         nse_flooded = bench['goal3']['nse_flooded']
         mass_error = bench['goal3']['mass_continuity_error_pct']
-        
+
+        g5 = bench.get('goal5', {})
+        incident_capture_rate = g5.get('spatial_capture_rate')
+
         return jsonify({
             'status': 'success',
             'region': r_key,
@@ -1401,25 +1492,31 @@ def get_model_card():
                 'nse': round(nse, 4),
                 'nse_flooded': round(nse_flooded, 4),
                 'mass_continuity_error_pct': round(mass_error, 2),
-                'incident_capture_rate': 89.3,
+                'incident_capture_rate': incident_capture_rate,
+                'capture_audit': g5.get('capture_audit'),
                 'architecture': 'HydroGINE-v5 Dual-Head (Zero-Shot Cross-City Mode)',
                 'training_leakage': '0% (No Coordinates, No Node IDs, Zero Spatial Memorization)'
             }
         })
     except Exception as e:
+        # No benchmark file present yet -- do not fabricate numbers. Report nulls so the UI
+        # can render "not yet measured" instead of inventing provenance.
         return jsonify({
             'status': 'success',
             'region': r_key,
             'metrics': {
-                'hotspot_match_rate': 95.0,
-                'hazard_recall': 99.2,
-                'f1_score': 0.829,
-                'mae_cm': 4.06,
-                'nse': 0.8941,
-                'nse_flooded': 0.8892,
-                'mass_continuity_error_pct': 5.26,
-                'incident_capture_rate': 89.3,
-                'architecture': 'HydroGINE-v5 Dual-Head (Zero-Shot Cross-City Mode)'
+                'hotspot_match_rate': None,
+                'hazard_recall': None,
+                'f1_score': None,
+                'mae_cm': None,
+                'nse': None,
+                'nse_flooded': None,
+                'mass_continuity_error_pct': None,
+                'incident_capture_rate': None,
+                'architecture': 'HydroGINE-v5 Dual-Head (Zero-Shot Cross-City Mode)',
+                'note': 'Benchmark metrics not yet computed from the live model. Run '
+                        'run_competition_master_benchmark.py against the running server to populate '
+                        'competition_benchmark_verified.json.'
             }
         })
 

@@ -1,0 +1,684 @@
+{
+  "goal1": {
+    "global_hotspot_match_rate": 94.79166666666666,
+    "worst_case_district_rate": 86.66666666666667,
+    "categorical_hazard_recall": 99.58333333333333,
+    "table": [
+      {
+        "key": "hsr",
+        "name": "HSR Layout (Bengaluru)",
+        "count": 30,
+        "matches": 28,
+        "over": 1,
+        "under": 1,
+        "rate": 93.33333333333333,
+        "haz_recall": 96.66666666666667
+      },
+      {
+        "key": "bellandur",
+        "name": "Bellandur & ORR (Bengaluru)",
+        "count": 30,
+        "matches": 30,
+        "over": 0,
+        "under": 0,
+        "rate": 100.0,
+        "haz_recall": 96.66666666666667
+      },
+      {
+        "key": "whitefield",
+        "name": "Whitefield (Bengaluru)",
+        "count": 30,
+        "matches": 27,
+        "over": 2,
+        "under": 1,
+        "rate": 90.0,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "ecity",
+        "name": "Electronic City (Bengaluru)",
+        "count": 30,
+        "matches": 28,
+        "over": 1,
+        "under": 1,
+        "rate": 93.33333333333333,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "koramangala",
+        "name": "Koramangala & Indiranagar",
+        "count": 30,
+        "matches": 26,
+        "over": 2,
+        "under": 2,
+        "rate": 86.66666666666667,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "tokyo",
+        "name": "Tokyo Metropolitan Catchment",
+        "count": 30,
+        "matches": 30,
+        "over": 0,
+        "under": 0,
+        "rate": 100.0,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "hongkong",
+        "name": "Hong Kong Urban Basin",
+        "count": 30,
+        "matches": 26,
+        "over": 0,
+        "under": 4,
+        "rate": 86.66666666666667,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "singapore",
+        "name": "Singapore Marina Catchment",
+        "count": 30,
+        "matches": 29,
+        "over": 0,
+        "under": 1,
+        "rate": 96.66666666666667,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "london",
+        "name": "London Thames Catchment",
+        "count": 30,
+        "matches": 30,
+        "over": 0,
+        "under": 0,
+        "rate": 100.0,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "paris",
+        "name": "Paris Seine Basin",
+        "count": 30,
+        "matches": 28,
+        "over": 0,
+        "under": 2,
+        "rate": 93.33333333333333,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "nyc",
+        "name": "New York City Coastal Catchment",
+        "count": 30,
+        "matches": 29,
+        "over": 0,
+        "under": 1,
+        "rate": 96.66666666666667,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "chicago",
+        "name": "Chicago Waterfront Catchment",
+        "count": 30,
+        "matches": 29,
+        "over": 1,
+        "under": 0,
+        "rate": 96.66666666666667,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "berlin",
+        "name": "Berlin Spree Basin",
+        "count": 30,
+        "matches": 28,
+        "over": 0,
+        "under": 2,
+        "rate": 93.33333333333333,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "bangkok",
+        "name": "Bangkok Chao Phraya Lowlands",
+        "count": 30,
+        "matches": 30,
+        "over": 0,
+        "under": 0,
+        "rate": 100.0,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "mumbai",
+        "name": "Mumbai Coastal Floodplain",
+        "count": 30,
+        "matches": 29,
+        "over": 0,
+        "under": 1,
+        "rate": 96.66666666666667,
+        "haz_recall": 100.0
+      },
+      {
+        "key": "delhi",
+        "name": "Delhi Yamuna Floodplain",
+        "count": 30,
+        "matches": 28,
+        "over": 1,
+        "under": 1,
+        "rate": 93.33333333333333,
+        "haz_recall": 100.0
+      }
+    ]
+  },
+  "goal2": {
+    "flooded_node_count": 22170,
+    "flooded_node_pct": 29.050264688924997,
+    "recall": 76.73432566531349,
+    "precision": 98.82653654002556,
+    "f1_score": 0.8639041235019298,
+    "mae_cm": 17.93,
+    "table": [
+      {
+        "key": "hsr",
+        "name": "HSR Layout (Bengaluru)",
+        "nodes": 1379,
+        "swmm_flooded": 277,
+        "gnn_flooded": 212,
+        "tp": 200,
+        "fp": 12,
+        "fn": 77,
+        "recall": 72.2,
+        "precision": 94.3,
+        "f1": 81.8,
+        "mae_cm": 8.9
+      },
+      {
+        "key": "bellandur",
+        "name": "Bellandur & ORR (Bengaluru)",
+        "nodes": 1507,
+        "swmm_flooded": 510,
+        "gnn_flooded": 347,
+        "tp": 342,
+        "fp": 5,
+        "fn": 168,
+        "recall": 67.1,
+        "precision": 98.6,
+        "f1": 79.8,
+        "mae_cm": 19.17
+      },
+      {
+        "key": "whitefield",
+        "name": "Whitefield (Bengaluru)",
+        "nodes": 1797,
+        "swmm_flooded": 587,
+        "gnn_flooded": 429,
+        "tp": 416,
+        "fp": 13,
+        "fn": 171,
+        "recall": 70.9,
+        "precision": 97.0,
+        "f1": 81.9,
+        "mae_cm": 16.29
+      },
+      {
+        "key": "ecity",
+        "name": "Electronic City (Bengaluru)",
+        "nodes": 3337,
+        "swmm_flooded": 1125,
+        "gnn_flooded": 783,
+        "tp": 775,
+        "fp": 8,
+        "fn": 350,
+        "recall": 68.9,
+        "precision": 99.0,
+        "f1": 81.2,
+        "mae_cm": 18.87
+      },
+      {
+        "key": "koramangala",
+        "name": "Koramangala & Indiranagar",
+        "nodes": 4416,
+        "swmm_flooded": 1255,
+        "gnn_flooded": 767,
+        "tp": 750,
+        "fp": 17,
+        "fn": 505,
+        "recall": 59.8,
+        "precision": 97.8,
+        "f1": 74.2,
+        "mae_cm": 18.41
+      },
+      {
+        "key": "tokyo",
+        "name": "Tokyo Metropolitan Catchment",
+        "nodes": 13173,
+        "swmm_flooded": 3524,
+        "gnn_flooded": 3019,
+        "tp": 3005,
+        "fp": 14,
+        "fn": 519,
+        "recall": 85.3,
+        "precision": 99.5,
+        "f1": 91.9,
+        "mae_cm": 18.62
+      },
+      {
+        "key": "hongkong",
+        "name": "Hong Kong Urban Basin",
+        "nodes": 3848,
+        "swmm_flooded": 998,
+        "gnn_flooded": 737,
+        "tp": 730,
+        "fp": 7,
+        "fn": 268,
+        "recall": 73.1,
+        "precision": 99.1,
+        "f1": 84.1,
+        "mae_cm": 24.27
+      },
+      {
+        "key": "singapore",
+        "name": "Singapore Marina Catchment",
+        "nodes": 2777,
+        "swmm_flooded": 756,
+        "gnn_flooded": 647,
+        "tp": 642,
+        "fp": 5,
+        "fn": 114,
+        "recall": 84.9,
+        "precision": 99.2,
+        "f1": 91.5,
+        "mae_cm": 15.33
+      },
+      {
+        "key": "london",
+        "name": "London Thames Catchment",
+        "nodes": 10528,
+        "swmm_flooded": 3553,
+        "gnn_flooded": 2697,
+        "tp": 2663,
+        "fp": 34,
+        "fn": 890,
+        "recall": 75.0,
+        "precision": 98.7,
+        "f1": 85.2,
+        "mae_cm": 22.98
+      },
+      {
+        "key": "paris",
+        "name": "Paris Seine Basin",
+        "nodes": 6707,
+        "swmm_flooded": 1676,
+        "gnn_flooded": 1466,
+        "tp": 1448,
+        "fp": 18,
+        "fn": 228,
+        "recall": 86.4,
+        "precision": 98.8,
+        "f1": 92.2,
+        "mae_cm": 17.79
+      },
+      {
+        "key": "nyc",
+        "name": "New York City Coastal Catchment",
+        "nodes": 3828,
+        "swmm_flooded": 923,
+        "gnn_flooded": 748,
+        "tp": 735,
+        "fp": 13,
+        "fn": 188,
+        "recall": 79.6,
+        "precision": 98.3,
+        "f1": 88.0,
+        "mae_cm": 10.06
+      },
+      {
+        "key": "chicago",
+        "name": "Chicago Waterfront Catchment",
+        "nodes": 3204,
+        "swmm_flooded": 758,
+        "gnn_flooded": 561,
+        "tp": 553,
+        "fp": 8,
+        "fn": 205,
+        "recall": 73.0,
+        "precision": 98.6,
+        "f1": 83.9,
+        "mae_cm": 7.72
+      },
+      {
+        "key": "berlin",
+        "name": "Berlin Spree Basin",
+        "nodes": 3724,
+        "swmm_flooded": 837,
+        "gnn_flooded": 680,
+        "tp": 670,
+        "fp": 10,
+        "fn": 167,
+        "recall": 80.0,
+        "precision": 98.5,
+        "f1": 88.3,
+        "mae_cm": 10.16
+      },
+      {
+        "key": "bangkok",
+        "name": "Bangkok Chao Phraya Lowlands",
+        "nodes": 10399,
+        "swmm_flooded": 3829,
+        "gnn_flooded": 3063,
+        "tp": 3044,
+        "fp": 19,
+        "fn": 785,
+        "recall": 79.5,
+        "precision": 99.4,
+        "f1": 88.3,
+        "mae_cm": 21.16
+      },
+      {
+        "key": "mumbai",
+        "name": "Mumbai Coastal Floodplain",
+        "nodes": 2741,
+        "swmm_flooded": 770,
+        "gnn_flooded": 515,
+        "tp": 506,
+        "fp": 9,
+        "fn": 264,
+        "recall": 65.7,
+        "precision": 98.3,
+        "f1": 78.8,
+        "mae_cm": 15.97
+      },
+      {
+        "key": "delhi",
+        "name": "Delhi Yamuna Floodplain",
+        "nodes": 2951,
+        "swmm_flooded": 792,
+        "gnn_flooded": 543,
+        "tp": 533,
+        "fp": 10,
+        "fn": 259,
+        "recall": 67.3,
+        "precision": 98.2,
+        "f1": 79.9,
+        "mae_cm": 15.65
+      }
+    ]
+  },
+  "goal3": {
+    "nse_catchment": 0.9128072572892362,
+    "nse_flooded": 0.8765304413697728,
+    "mae_hazard_cm": 8.652617394293571,
+    "mass_continuity_error_pct": 8.6107558136875
+  },
+  "goal4": {
+    "speedup_rows": [
+      {
+        "scale": "Small (HSR Layout)",
+        "nodes": 1379,
+        "swmm_time": "42.1 seconds",
+        "gnn_tensor": "4.0 ms",
+        "api_latency": "32.0 ms",
+        "speedup": "~1,310\u00d7"
+      },
+      {
+        "scale": "Medium (Electronic City)",
+        "nodes": 3337,
+        "swmm_time": "3.8 minutes",
+        "gnn_tensor": "5.5 ms",
+        "api_latency": "54.6 ms",
+        "speedup": "~4,180\u00d7"
+      },
+      {
+        "scale": "Large (Tokyo Catchment)",
+        "nodes": 13173,
+        "swmm_time": "24.6 minutes",
+        "gnn_tensor": "15.0 ms",
+        "api_latency": "169.8 ms",
+        "speedup": "~8,690\u00d7"
+      }
+    ]
+  },
+  "goal5": {
+    "spatial_capture_rate": 38.46153846153846,
+    "capture_audit": {
+      "dataset": "data/real_bengaluru_oct2024_incidents.json",
+      "storm_intensity_mmhr": 100.0,
+      "duration_min": 60.0,
+      "capture_threshold_m": 0.15,
+      "capture_radius_m": 50.0,
+      "total_incidents": 13,
+      "captured_incidents": 5,
+      "capture_rate_pct": 38.5,
+      "incidents": [
+        {
+          "id": "REAL-KOR-01-SILK-BOARD",
+          "region": "koramangala",
+          "event_id": [
+            "bengaluru_oct15_2024",
+            "bengaluru_oct20_2024"
+          ],
+          "location": "Silk Board Junction and Hosur Road",
+          "lat": 12.91582,
+          "lon": 77.62404,
+          "coordinate_note": "Geocoded via Nominatim (Silk Board Junction Bengaluru)",
+          "description": "Traffic-police advisories and reports name Silk Board Junction among the worst-hit points on the Hosur Road corridor during the Oct 15 waterlogging; on the morning of Oct 20 traffic police and riders described the junction as flooded and resembling a pool.",
+          "sources": [
+            "https://www.thehindu.com/news/cities/bangalore/bengaluru-weather-heavy-rains-lead-to-waterlogging-and-traffic-chaos-commuters-struggle-to-navigate-inundated-roads/article68755266.ece",
+            "https://www.thehindu.com/news/cities/bangalore/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece"
+          ],
+          "min_dist_m": 33.7,
+          "captured": true
+        },
+        {
+          "id": "REAL-KOR-02-MADIWALA",
+          "region": "koramangala",
+          "event_id": [
+            "bengaluru_oct15_2024"
+          ],
+          "location": "Madiwala junction (Hosur Road)",
+          "lat": 12.92189,
+          "lon": 77.61773,
+          "coordinate_note": "Geocoded via Nominatim (Madiwala Bengaluru)",
+          "description": "Bengaluru Traffic Police advisory dated Oct 16 lists Madiwala among areas experiencing waterlogged roads and slow traffic.",
+          "sources": [
+            "https://www.newindianexpress.com/cities/bengaluru/2024/Oct/16/traffic-goes-haywire-on-major-roads"
+          ],
+          "min_dist_m": 10.2,
+          "captured": true
+        },
+        {
+          "id": "REAL-HSR-01-ROOPENA-AGRAHARA",
+          "region": "hsr",
+          "event_id": [
+            "bengaluru_oct20_2024"
+          ],
+          "location": "Hosur Road at Roopena Agrahara",
+          "lat": 12.91199,
+          "lon": 77.62604,
+          "coordinate_note": "Geocoded via Nominatim (Roopena Agrahara Hosur Road Bengaluru)",
+          "description": "TOI reported traffic crawling on Hosur Road at Roopena Agrahara due to waterlogging during the Oct 19-20 overnight rain; New Indian Express reported Roopena Agrahara and Silk Board Junction flooded.",
+          "sources": [
+            "https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-deluged-heavy-rain-causes-traffic-chaos-and-waterlogging-across-city/articleshow/114404508.cms",
+            "https://www.newindianexpress.com/states/karnataka/2024/Oct/21/rain-woes-continue-to-haunt-bengaluru"
+          ],
+          "min_dist_m": 140.1,
+          "captured": false
+        },
+        {
+          "id": "REAL-HSR-02-HSR-LAYOUT",
+          "region": "hsr",
+          "event_id": [
+            "bengaluru_oct22_2024"
+          ],
+          "location": "HSR Layout (Sector 2 / 27th Main)",
+          "lat": 12.91534,
+          "lon": 77.65171,
+          "coordinate_note": "Geocoded via Nominatim (HSR Layout 27th Main Bengaluru)",
+          "description": "New Indian Express reported that 'roads turned into rivers' in HSR Layout during the Oct 21-22 record rainfall.",
+          "sources": [
+            "https://www.newindianexpress.com/states/karnataka/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst"
+          ],
+          "min_dist_m": 236.1,
+          "captured": false
+        },
+        {
+          "id": "REAL-HSR-03-SARJAPUR-ROAD",
+          "region": "hsr",
+          "event_id": [
+            "bengaluru_oct15_2024",
+            "bengaluru_oct22_2024"
+          ],
+          "location": "Sarjapur Road (junction near Wipro / RGA Tech Park)",
+          "lat": 12.92449,
+          "lon": 77.64514,
+          "coordinate_note": "Geocoded via Nominatim (Sarjapur Road Bengaluru); represents the Sarjapur Road corridor named in advisories.",
+          "description": "Moneycontrol reported flooding near the Wipro Gate and RGA Tech Park junctions on Sarjapur Road on Oct 15; Indian Express reported stretches along Sarjapur Road were inundated on Oct 22.",
+          "sources": [
+            "https://www.moneycontrol.com/news/india/manyata-tech-park-in-bengaluru-flooded-techies-demand-wfh-govt-announces-holiday-for-schools-12842550.html",
+            "https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/"
+          ],
+          "min_dist_m": 223.3,
+          "captured": false
+        },
+        {
+          "id": "REAL-HSR-04-BOMMANAHALLI",
+          "region": "hsr",
+          "event_id": [
+            "bengaluru_oct15_2024",
+            "bengaluru_oct20_2024"
+          ],
+          "location": "Bommanahalli junction (Hosur Road)",
+          "lat": 12.90961,
+          "lon": 77.62725,
+          "coordinate_note": "Geocoded via Nominatim (Bommanahalli Hosur Road Bengaluru)",
+          "description": "Bengaluru Traffic Police advisory (Oct 16) names Bommanahalli junction for waterlogged roads; a traffic police officer told The Hindu Hosur Road connecting Bommanahalli and Electronic City was severely flooded on Oct 20.",
+          "sources": [
+            "https://www.newindianexpress.com/cities/bengaluru/2024/Oct/16/traffic-goes-haywire-on-major-roads",
+            "https://www.thehindu.com/news/cities/bangalore/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece"
+          ],
+          "min_dist_m": 171.6,
+          "captured": false
+        },
+        {
+          "id": "REAL-BEL-01-ORR-IBLUR",
+          "region": "bellandur",
+          "event_id": [
+            "bengaluru_oct22_2024"
+          ],
+          "location": "Outer Ring Road service road between Iblur and Marathahalli",
+          "lat": 12.92066,
+          "lon": 77.6652,
+          "coordinate_note": "Geocoded via Nominatim (Iblur Junction Bengaluru); represents the documented Iblur-Marathahalli ORR service-road flooding.",
+          "description": "Indian Express reported the Bellandur traffic police alerting that flooding of the ORR service roads between the Iblur and Marathahalli junctions brought traffic to a crawl and 'completely congested' the stretch on Oct 22.",
+          "sources": [
+            "https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/"
+          ],
+          "min_dist_m": 29.8,
+          "captured": true
+        },
+        {
+          "id": "REAL-BEL-02-ECOSPACE",
+          "region": "bellandur",
+          "event_id": [
+            "bengaluru_oct22_2024"
+          ],
+          "location": "Ecospace junction (ORR)",
+          "lat": 12.92834,
+          "lon": 77.68116,
+          "coordinate_note": "Geocoded via Nominatim (EcoSpace Bengaluru)",
+          "description": "Indian Express reported a Bellandur traffic-police alert citing waterlogging with slow-moving traffic near Ecospace junction on Oct 22.",
+          "sources": [
+            "https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/"
+          ],
+          "min_dist_m": 27.8,
+          "captured": true
+        },
+        {
+          "id": "REAL-BEL-03-DEVARABEESANAHALLI",
+          "region": "bellandur",
+          "event_id": [
+            "bengaluru_oct22_2024"
+          ],
+          "location": "Devarabeesanahalli (ORR)",
+          "lat": 12.93015,
+          "lon": 77.68532,
+          "coordinate_note": "Geocoded via Nominatim (Devarabeesanahalli flyover Bengaluru)",
+          "description": "New Indian Express reported 'roads turned into rivers' in Devarabeesanahalli during the Oct 21-22 record rainfall.",
+          "sources": [
+            "https://www.newindianexpress.com/states/karnataka/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst"
+          ],
+          "min_dist_m": 26.8,
+          "captured": true
+        },
+        {
+          "id": "REAL-BEL-04-BELLANDUR-LAKE",
+          "region": "bellandur",
+          "event_id": [
+            "bengaluru_oct22_2024"
+          ],
+          "location": "Bellandur Lake overflow / ORR service roads",
+          "lat": 12.92783,
+          "lon": 77.67653,
+          "coordinate_note": "Geocoded via Nominatim (Bellandur Main Road Bengaluru); represents the Bellandur Lake-adjacent ORR corridor.",
+          "description": "Indian Express reported Bellandur Lake overflowing and flooding the ORR service roads between the Marathahalli and Iblur junctions; New Indian Express reported roads turned into rivers in Bellandur.",
+          "sources": [
+            "https://indianexpress.com/article/cities/bangalore/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/",
+            "https://www.newindianexpress.com/states/karnataka/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst"
+          ],
+          "min_dist_m": 82.7,
+          "captured": false
+        },
+        {
+          "id": "REAL-WHI-01-ITPL-ROAD",
+          "region": "whitefield",
+          "event_id": [
+            "bengaluru_oct20_2024"
+          ],
+          "location": "ITPL Road / International Tech Park Bengaluru",
+          "lat": 12.98772,
+          "lon": 77.73692,
+          "coordinate_note": "Geocoded via Nominatim (ITPL Whitefield Bengaluru)",
+          "description": "TOI reported traffic crawling on ITPL Road due to waterlogging during the Oct 19-20 overnight rain.",
+          "sources": [
+            "https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-deluged-heavy-rain-causes-traffic-chaos-and-waterlogging-across-city/articleshow/114404508.cms"
+          ],
+          "min_dist_m": 355.6,
+          "captured": false
+        },
+        {
+          "id": "REAL-WHI-02-HOPEFARM",
+          "region": "whitefield",
+          "event_id": [
+            "bengaluru_oct20_2024"
+          ],
+          "location": "Hope Farm junction (Whitefield)",
+          "lat": 12.9873,
+          "lon": 77.75388,
+          "coordinate_note": "Geocoded via Nominatim (Hopefarm Whitefield Bengaluru)",
+          "description": "TOI reported waterlogging on the Whitefield IT corridor roads (Varthur-Gunjur Road, Kadugodi Bridge, ITPL Road) on Oct 20; Hope Farm is the principal Whitefield junction on that corridor.",
+          "sources": [
+            "https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-deluged-heavy-rain-causes-traffic-chaos-and-waterlogging-across-city/articleshow/114404508.cms"
+          ],
+          "min_dist_m": 92.8,
+          "captured": false
+        },
+        {
+          "id": "REAL-ECI-01-ELECTRONIC-CITY",
+          "region": "ecity",
+          "event_id": [
+            "bengaluru_oct15_2024",
+            "bengaluru_oct20_2024"
+          ],
+          "location": "Electronic City Phase 1 (Hosur Road)",
+          "lat": 12.84968,
+          "lon": 77.66497,
+          "coordinate_note": "Geocoded via Nominatim (Electronic City Phase 1 Bengaluru)",
+          "description": "Moneycontrol reported parts of Electronics City experienced flooding on Oct 15; The Hindu reported Hosur Road connecting Electronic City experienced severe flooding on Oct 20.",
+          "sources": [
+            "https://www.moneycontrol.com/news/india/manyata-tech-park-in-bengaluru-flooded-techies-demand-wfh-govt-announces-holiday-for-schools-12842550.html",
+            "https://www.thehindu.com/news/cities/bangalore/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece"
+          ],
+          "min_dist_m": 198.8,
+          "captured": false
+        }
+      ]
+    },
+    "event": "October 2024 documented Bengaluru flood events (news-sourced locations, data/real_bengaluru_oct2024_incidents.json; capture computed live at 100 mm/hr / 60 min peak-rate assumption)"
+  }
+}

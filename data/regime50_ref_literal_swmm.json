@@ -1,0 +1,22 @@
+{
+ "hsr": {
+  "nodes": 1380,
+  "flooded_gt30cm": 105
+ },
+ "bellandur": {
+  "nodes": 1508,
+  "flooded_gt30cm": 244
+ },
+ "whitefield": {
+  "nodes": 1798,
+  "flooded_gt30cm": 240
+ },
+ "ecity": {
+  "nodes": 3338,
+  "flooded_gt30cm": 540
+ },
+ "koramangala": {
+  "nodes": 4417,
+  "flooded_gt30cm": 638
+ }
+}

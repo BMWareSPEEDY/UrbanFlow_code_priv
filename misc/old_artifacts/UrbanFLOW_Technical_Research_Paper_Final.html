@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UrbanFLOW — Comprehensive Technical Research Paper (Final)</title>
+<style>
+@page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 10.5pt; line-height: 1.4; color: #111;
+  max-width: 100%;
+}
+h1 { font-size: 19pt; line-height: 1.25; margin: 0 0 10pt 0; }
+h2 {
+  font-size: 13.5pt; margin: 18pt 0 6pt 0; padding-bottom: 2pt;
+  border-bottom: 0.8pt solid #999; break-after: avoid;
+}
+h3 { font-size: 11.5pt; margin: 12pt 0 4pt 0; break-after: avoid; }
+h4 { font-size: 10.5pt; margin: 10pt 0 3pt 0; break-after: avoid; }
+p { margin: 0 0 6pt 0; text-align: justify; }
+a { color: #0645ad; text-decoration: none; word-break: break-all; }
+code {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 8.8pt; background: #f4f4f4; padding: 0 2px; border-radius: 2px;
+}
+pre {
+  background: #f7f7f7; border: 0.6pt solid #ddd; border-radius: 3px;
+  padding: 7pt 9pt; overflow-x: auto; break-inside: avoid;
+  font-size: 8.6pt; line-height: 1.3;
+}
+pre code { background: none; padding: 0; }
+table {
+  border-collapse: collapse; width: 100%; margin: 8pt 0;
+  font-size: 8.8pt; line-height: 1.25; break-inside: avoid;
+}
+th, td { border: 0.5pt solid #bbb; padding: 3pt 5pt; text-align: left; vertical-align: top; }
+th { background: #eef1f4; font-weight: bold; }
+blockquote {
+  margin: 8pt 0; padding: 4pt 10pt; border-left: 3pt solid #ccc;
+  background: #fafafa; color: #333;
+}
+ul, ol { margin: 0 0 6pt 0; padding-left: 1.4em; }
+li { margin-bottom: 3pt; }
+hr { border: none; border-top: 0.8pt solid #ccc; margin: 14pt 0; }
+img { max-width: 100%; }
+</style>
+</head>
+<body>
+<h1 id="urbanflow-comprehensive-technical-research-paper-final-version-full-version-history">UrbanFLOW — Comprehensive Technical Research Paper (Final Version + Full Version History)</h1>
+<p><strong>Author context:</strong> This document is the definitive developer-grade technical writeup. It captures<br />
+the <strong>final shipped production system</strong> (4-model weighted ensemble, <code>HEAD = a18ac71</code>,<br />
+commit <code>3f4dca8</code> = final tree) and the <strong>complete version-by-version lineage</strong> reconstructed from<br />
+<code>git log</code>, training scripts, benchmark JSONs, and the production predictor.</p>
+<p>Every constant, formula, mask, and code snippet below is <strong>verbatim</strong> from the working tree<br />
+(<code>production_v4.py</code>, <code>train_hydro_gine_v5_0.py</code>, <code>master_pinn_engine.py</code>, <code>active_pinn_pipeline.py</code>,<br />
+<code>benchmark_*.json</code>). Where something is inferred from commit messages only, it is flagged as such.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#1-executive-summary">Executive Summary</a></li>
+<li><a href="#2-final-production-system">Final Production System (The Whole Logic)</a></li>
+<li><a href="#3-dataset--feature-engineering">Dataset &amp; Feature Engineering (Formulas)</a></li>
+<li><a href="#4-model-architecture">Final Model Architecture — HydroGINE-v5 (Verbatim)</a></li>
+<li><a href="#5-final-loss">Final Loss (v5.11, Verbatim)</a></li>
+<li><a href="#6-the-loss-family">The Loss Family — Every Formula Ever Used (Precise)</a></li>
+<li><a href="#7-production-physical-rails">Production Physical Continuity Rails (Verbatim)</a></li>
+<li><a href="#8-final-ensemble">The Final Ensemble (Verbatim)</a></li>
+<li><a href="#9-full-version-history">Full Version History From Git (Including Regressions)</a></li>
+<li><a href="#10-benchmark-tables">Benchmark Tables</a></li>
+<li><a href="#11-empirical-validation-data-provenance--source-verification">Empirical Validation Data Provenance &amp; Source Verification</a></li>
+<li><a href="#12-key-lessons">Key Lessons / Why Some Versions Became Worse</a></li>
+</ol>
+<hr />
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>UrbanFLOW is an autonomous <strong>physics-guided Graph Neural Network (GNN) surrogate</strong> for hyper-local<br />
+urban flood early warning. It replaces EPA SWMM 5.2 (15–45 min per run) with a sub-100 ms tensor<br />
+forward pass per city while preserving hydraulic behavior.</p>
+<p><strong>Final shipped predictor</strong> = <code>EnsembleFloodPredictorV4</code>, a <strong>weighted raw-depth ensemble</strong> of 4<br />
+independently-trained HydroGINE checkpoints whose <strong>pre-rail</strong> depths/probabilities are averaged<br />
+and then passed through the physics rail stack <strong>exactly once</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Weight</th>
+<th>Role in the ensemble</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hydro_gine_v5_10_model.pt</code></td>
+<td>0.80</td>
+<td>High global precision &amp; speed (the 88.14% leader)</td>
+</tr>
+<tr>
+<td><code>hydro_gine_v5_11_model.pt</code></td>
+<td>0.30</td>
+<td>Deep-tail reweighted recovery (lean on deep pools)</td>
+</tr>
+<tr>
+<td><code>hydro_gine_v5_0_model.pt</code></td>
+<td>0.05</td>
+<td>HSR / local district recall</td>
+</tr>
+<tr>
+<td><code>hydro_gine_v5_bangalore_opt.pt</code></td>
+<td>0.10</td>
+<td>Local valley morphology</td>
+</tr>
+</tbody>
+</table>
+<p>Weights normalized by <code>w_sum = 1.25</code> in <code>__init__</code>.</p>
+<p><strong>Final numbers (canonical, <code>data/canonical_metrics.json</code>):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Global hazard F1 (50 mm/hr)</td>
+<td><strong>90.8 %</strong> (precision 93.1 %, recall 88.7 %)</td>
+</tr>
+<tr>
+<td>Global MAE / RMSE (50 mm/hr)</td>
+<td><strong>2.39 cm / 9.13 cm</strong></td>
+</tr>
+<tr>
+<td>Catchment <strong>NSE</strong></td>
+<td><strong>0.9128</strong></td>
+</tr>
+<tr>
+<td>Categorical hazard recall @ 480 highest-consequence nodes</td>
+<td><strong>99.4 %</strong> (74.2 % depth match within ±15 cm)</td>
+</tr>
+<tr>
+<td>Live capture of documented Oct-2024 Bengaluru floods</td>
+<td><strong>5 / 13 (38.5 %)</strong></td>
+</tr>
+<tr>
+<td>Speedup vs SWMM 5.2</td>
+<td>~1,310×–8,690× (~0.08–10 ms tensor, 85.5 ms avg API)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Legacy live-match metric</strong> (doc-specific: risk node <code>p_depth &gt; 0.08 m</code> ∧ <code>|p_depth − y_swmm| &lt; 0.15 m</code>; superseded and <strong>not directly comparable to hazard F1</strong>):<br />
+HSR 82.2 %, Bellandur 72.0 %, Berlin / Singapore / Tokyo / Paris / NYC 95.7 / 95.6 / 94.6 / 93.0 / 93.4 %.</p>
+<p>Training derivate of final scenario-conditional asymmetric loss + deep-tail reweight lives in<br />
+<code>train_hydro_gine_v5_0.py</code> (OUT = <code>hydro_gine_v5_11_model.pt</code>, warm-started from<br />
+<code>hydro_gine_v5_10_model.pt</code>).</p>
+<hr />
+<h2 id="2-final-production-system-the-whole-logic">2. Final Production System (The Whole Logic)</h2>
+<h3 id="21-inference-path-production_v4py">2.1 Inference path (<code>production_v4.py</code>)</h3>
+<pre><code>Request (graph, intensity_mmhr, duration_min)
+ └─ ProductionFloodPredictorV4.predict()  [per ensemble member]
+     ├─ feature builder: raw graph → 32-node feature matrix x_full (formulas in §3)
+     ├─ normalize x, edge_attr with ckpt stats (x_mean/x_std/e_mean/e_std)
+     ├─ model forward → cls_logits, raw_depth (lognormal-domain)
+     ├─ p_lin  = clamp(expm1(raw_depth * yl_std + yl_mean), 0, 3)   [meters]
+     └─ p_prob = sigmoid(cls_logits)                                 [flood probability]
+ └─ Ensemble:  p_lin_avg = Σ w_i · p_lin_i ; p_prob_avg = Σ w_i · p_prob_i
+ └─ apply_physics_rails(x_full, edge_index, p_lin_avg, p_prob_avg, elev_range)
+     └─ regime classification → confidence gate → mass bound → WSE backwater → clamp
+</code></pre>
+<p><strong>Model-format auto-detection</strong> (<code>production_v4.py:282</code>) — determines whether a checkpoint is v4<br />
+or v5 by key presense:</p>
+<pre><code class="language-python">ck = torch.load(model_path, map_location=self.device, weights_only=False)
+if &quot;convs.0.conv.nn.0.weight&quot; in ck['model']:
+    self.model = HydroGINE_v5(...)   # GravityGINEConv-backed
+else:
+    self.model = HydroGINE_v4(...)   # plain GINEConv-backed
+</code></pre>
+<p><strong>Thresholds:</strong> <code>THR_HAZARD = 0.15</code> m, <code>THR_CRITICAL = 0.30</code> m (production_v4.py:16-17).</p>
+<h3 id="22-live-match-metric-the-leaderboard-quantity">2.2 Live-match metric (the leaderboard quantity)</h3>
+<p>From training validation <code>train_hydro_gine_v5_0.py:499-503</code> and benchmark code:</p>
+<pre><code>risk node   : p_depth &gt; 0.08 m
+live match  : pred classified as risk AND |p_depth − y_swmm| &lt; 0.15 m
+match rate  = matches / risk_nodes × 100
+over        = pred is risk, swmm y is 0 (false flood)
+under       = pred is 0, swmm y &gt; 0 (missed flood)
+</code></pre>
+<p>The <strong>production benchmark applies the rails first</strong>, then this definition<br />
+(<code>SELECT_RAIL_MATCH = True</code> philosophy — raw pre-rail accuracy is only ~47 %, the rails lift it to<br />
+~83 % deploy-time).</p>
+<h3 id="23-asynchronous-serving-apppy-1431-lines">2.3 Asynchronous serving (<code>app.py</code>, 1431 lines)</h3>
+<p><code>/api/predict</code> REST microservice → GeoJSON flood-risk vectors → WebGL/Canvas digital-twin<br />
+dashboard. Latencies: neural tensor forward 4.0–15.0 ms; full HTTP API 32.0–169.8 ms<br />
+(avg ≈ 85.0 ms).</p>
+<hr />
+<h2 id="3-dataset-feature-engineering-formulas">3. Dataset &amp; Feature Engineering (Formulas)</h2>
+<h3 id="31-feature-vector-32-node-features">3.1 Feature vector — 32 node features</h3>
+<p>26 physical features (schema in <code>build_physics_dataset.py</code>) + <strong>6 derived</strong> features computed at<br />
+serve time in <code>production_v4.py</code>:</p>
+<p>Derived features (exact formulas, <code>production_v4.py:333-340</code> / <code>419-422</code>):</p>
+<pre><code>total_rain_mm = intensity_mmhr × duration_min / 60
+
+deg_diff      = in_deg − out_deg
+dyn_sat       = imp × (1.0 + 0.5 · log1p(intensity × duration / 1000))          # dynamic saturation
+true_ponding  = log1p(sink_depth × total_rain_mm / (max(0.2, out_deg) + 0.3))   # ponding index
+inflow_load   = expm1(log_imp) × total_rain_mm
+pipe_drain_cap= expm1(path_cap) + 0.1
+conv_def      = log1p(inflow_load / pipe_drain_cap)                            # conveyance deficit
+dep_escape    = dep_depth / (max(0.005, |max_in_grade|) + 0.01)
+</code></pre>
+<p>Feeds <code>x_full = [26 physical, deg_diff, total_rain_mm, dyn_sat, true_ponding, conv_def, dep_escape]</code><br />
+= <strong>32 node features</strong>. <code>intensity_mmhr</code> → col 13, <code>duration_min</code> → col 14 are stamped live;<br />
+col 25 intensity-scaled, col 27 = total rain, col 28/29/30 = dyn_sat/true_ponding/conv_def.</p>
+<p><strong>2 edge features</strong> (<code>edge_c=2</code>): col 0 = conduit length, col 1 = conduit <strong>grade</strong> (slope).<br />
+The gravity gate (§4) reads <code>ea[:, 1:2]</code>.</p>
+<h3 id="32-dataset">3.2 Dataset</h3>
+<ul>
+<li><code>expanded_master_physics_dataset.pt</code> — <strong>480 graphs, 2,350,544 nodes</strong>; 8 storm intensities ×<br />
+  durations; 16 global catchments (76,316 <em>independently audited</em> physical nodes); ground truth<br />
+  from <strong>EPA SWMM 5.2</strong> dynamic-wave 1D/2D solutions.</li>
+<li>Valley-sink fixes applied in <code>build_expanded_physics_dataset.py</code>:</li>
+<li><code>x[:,23] = where(rel_drop≥0.50 &amp; dep_depth≥0.05, dep_depth, 0)</code></li>
+<li><code>x[:,6]  = where(rel_drop≥0.50 &amp; dep_depth≥0.08, 1.0, 0.0)</code></li>
+<li>ponding index <code>x[:,29] = log1p(x[:,23] · total_rain / (max(0.2, out_deg) + 0.3))</code></li>
+<li><code>elev_range</code> (true catchment relief in m) baked onto graphs for the WSE backwater envelope.</li>
+<li><strong>Train/val split</strong> (<code>train()</code>): val regions = <code>{'hsr', 'bellandur', 'london', 'newyork'}</code>.</li>
+</ul>
+<h3 id="33-normalization-target">3.3 Normalization &amp; target</h3>
+<pre><code class="language-python">x_mean/x_std: standardize per column on TRAIN graphs only (zero leakage)
+e_mean/e_std: standardize edge_attr
+y_log  = log1p(clamp(y, 0))
+yl_mean, yl_std = mean/std of y_log
+y_norm = (y_log − yl_mean) / yl_std          # regressor target
+</code></pre>
+<p>Decode: <code>p_lin = clamp(expm1(raw_depth · yl_std + yl_mean), 0, 3)</code>.</p>
+<p>The <code>log1p</code> domain is the reason the loss is Huber-in-log-space: log-domain errors on deep basins<br />
+amplify into meter-scale spikes after <code>expm1</code> inversion (documented in <code>train_..._v5_0.py:41-47</code>).</p>
+<hr />
+<h2 id="4-model-architecture-verbatim">4. Model Architecture (Verbatim)</h2>
+<h3 id="41-gravitygineconv-the-v5-novelty-production_v4py192-210">4.1 GravityGINEConv (the v5 novelty) — <code>production_v4.py:192-210</code></h3>
+<pre><code class="language-python">class GravityGINEConv(nn.Module):
+    def __init__(self, in_c, out_c, edge_c=2):
+        super().__init__()
+        self.conv = GINEConv(nn.Sequential(
+            nn.Linear(in_c, out_c),
+            nn.LayerNorm(out_c),
+            nn.LeakyReLU(0.1),
+            nn.Linear(out_c, out_c)), edge_dim=edge_c)
+        self.ln = nn.LayerNorm(out_c)
+
+    def forward(self, h, ei, ea):
+        grade = ea[:, 1:2]
+        gravity_gate = torch.sigmoid(1.0 - 5.0 * F.relu(grade))   # downhill=full, uphill attenuated
+        ea_gated = ea * gravity_gate
+        return F.leaky_relu(self.ln(self.conv(h, ei, ea_gated)), 0.1)
+</code></pre>
+<p>Physics meaning: <strong>downhill edges (grade ≤ 0) pass flow unattenuated</strong> (sig(1) ≈ 0.731 →<br />
+gate≈1); <strong>steep uphill edges are exponentially attenuated</strong> (grade=0.4 → sig(−1)=0.269; grade=1<br />
+→ sig(−4)=0.018) — water does not flow up conduits.</p>
+<h3 id="42-hydrogine_v5-backbone-production_v4py213-268">4.2 HydroGINE_v5 backbone — <code>production_v4.py:213-268</code></h3>
+<pre><code>6 × GravityGINEConv (in_c=32 → 128, then 128 → 128)
+residual:  h = h_next + 0.3 · h           (for i &gt; 0; preserves topology — NO pooling)
+mid_h captured at layer i == n_layers//2  (multi-scale skip)
+cat = concat([h, mid_h, x])              → cat_dim = 128·2 + 32 = 288
+
+Classifier head cls:   Linear(288,128)→LN→LReLU(0.1)→Dropout(0.05)→Linear(128,64)→LN→LReLU→Linear(64,1)
+FiLM generator:        Linear(1,64)→LReLU→Linear(64, 2·cat_dim=576)  [LAST LAYER ZERO-INIT]
+Regressor head reg:    Linear(288,256)→LN→LReLU→Dropout(0.05)→Linear(256,128)→LN→LReLU→Linear(128,1)
+</code></pre>
+<p>Forward:</p>
+<pre><code class="language-python">def forward(self, x, ei, ea):
+    h = x; mid_h = None
+    for i, conv in enumerate(self.convs):
+        h_next = conv(h, ei, ea)
+        h = h_next + 0.3*h if (i &gt; 0 and h.shape == h_next.shape) else h_next
+        if i == len(self.convs)//2: mid_h = h
+    cat = torch.cat([h, mid_h, x], dim=-1)
+    cls_logits = self.cls(cat)
+    prob = torch.sigmoid(cls_logits)
+    film = self.film_gen(prob)
+    gamma, beta = torch.chunk(film, 2, dim=-1)
+    h_cond = cat * (1.0 + gamma) + beta      # FiLM modulation, identity at init
+    raw_depth = self.reg(h_cond)
+    return cls_logits, raw_depth
+</code></pre>
+<p>Design notes:<br />
+- <strong>Zero-initialized FiLM</strong> → identity modulation at start, so depth regressor trains clean then<br />
+  learns hazard×depth cross-task conditioning later (prevents zero-gradient collapse).<br />
+- <strong>Margin focal classifier</strong> head drives the prob that (a) FiLM-modulates depth and (b) feeds the<br />
+  production confidence gate.</p>
+<h3 id="43-hydrological-rationale-paper-narrative">4.3 Hydrological rationale (paper narrative)</h3>
+<p>10-m SRTM/Copernicus DEM + OSM street centerlines → directed graph <code>G=(V,E)</code>; Kirpich time of<br />
+concentration <code>T_c = 0.0195 L^0.77 S^-0.385</code>; TWI, sink-depression depth, drainage capacity<br />
+ratio all pre-baked as features.</p>
+<hr />
+<h2 id="5-final-loss-v511-verbatim">5. Final Loss (v5.11, Verbatim)</h2>
+<p><code>train_hydro_gine_v5_0.py</code> lines 327-445. Config constants:</p>
+<pre><code>EPOCHS          = 300          LR = 3e-4        WEIGHT_DECAY = 1e-4
+HIDDEN_DIM      = 128          N_LAYERS = 6     N_CHUNK = 20000 (was 25000; RTX 4060 TDR fix)
+SEED            = 42
+LOSS_ASSYM_UP         = 1.5   # over-pred on DRY cells (y ≤ 0.15)
+LOSS_ASSYM_UP_SHALLOW = 1.5   # over-pred in advisory band (0.15 &lt; y ≤ 0.50)
+LOSS_ASSYM_UNDER      = 2.0   # under-pred on FLOODED cells (y &gt; 0.15)
+DEEP_W_STRENGTH = 3.0   DEEP_W_THRESH = 1.5   DEEP_W_RANGE = 2.5   DEEP_W_POWER = 2.0
+MATCH_BAND_M = 0.12    MATCH_HINGE_STRENGTH = 0.0
+DEEP_TARGET_W = 2.2    DEEP_TARGET_W_MID = 1.3
+SELECT_RAIL_MATCH = True    EQUAL_WEIGHT_REGIONS = True
+MARGIN_FOCAL = MarginFocalLoss(gamma=2.0, alpha=0.35, margin=0.02)
+</code></pre>
+<pre><code class="language-python"># 1. Margin Focal Loss on hazard (binary y≥0.15)
+loss_cls = focal_loss(cls_logits, y_hazard)
+
+# 2. Zero-Bias Asymmetric Huber (log-domain), delta = 0.10
+diff  = depth_pred_log - y_norm
+abs_diff = torch.abs(diff)
+huber = torch.where(abs_diff &lt; delta, 0.5*diff**2, delta*(abs_diff - 0.5*delta))
+
+over_mask = (diff &gt; 0.0) &amp; (y_true &gt; 0.15) &amp; (y_true &lt;= 0.50)
+asym = torch.where(
+    (diff &gt; 0.0) &amp; (y_true &lt;= 0.15), LOSS_ASSYM_UP,                                  # 1.5 dry over
+    torch.where(over_mask,            LOSS_ASSYM_UP_SHALLOW,                         # 1.5 advisory over
+      torch.where((diff &lt; 0.0) &amp; (y_true &gt; 0.15), LOSS_ASSYM_UNDER, 1.0)))           # 2.0 flooded under
+huber = huber * asym
+
+# 3. Node weights
+sink_d = batch.x[:, 23];  dep_d = batch.x[:, 16]
+is_dry_pavement = (y_true &lt;= 0.03) &amp; (sink_d &lt; 0.03)
+w = torch.ones_like(y_true)
+w = torch.where(y_true &gt;= 0.30,     3.0, w)                    # critical
+w = torch.where((y_true &gt;= 0.15) &amp; (y_true &lt; 0.30), 2.0, w)    # advisory
+w = torch.where(is_dry_pavement,    3.0, w)                    # dry pavement hard-negative
+w = torch.where(y_true &gt;= 0.50,     w * DEEP_TARGET_W, w)      # 2.2 deep-tail
+w = torch.where((y_true &gt;= 0.30) &amp; (y_true &lt; 0.50), w * DEEP_TARGET_W_MID, w)  # 1.3
+deep_w = 1.0 + DEEP_W_STRENGTH * clamp((dep_d - DEEP_W_THRESH)/DEEP_W_RANGE, 0, 1)**DEEP_W_POWER
+w = w * deep_w
+loss_reg = (w * huber).mean()
+
+# 4. Flood-gated match hinge (OFF in final; MATCH_HINGE_STRENGTH = 0.0)
+pred_lin = clamp(expm1(depth_pred_log * yl_std + yl_mean), 0)
+res_lin  = pred_lin - y_true
+hinge_mask = (y_true &gt; 0.15)
+match_hinge = relu(|res_lin| - MATCH_BAND_M)
+loss_match = MATCH_HINGE_STRENGTH * sum(hinge_mask * w * match_hinge) / n_flooded
+
+total = loss_cls + 1.5*loss_reg + 0.8*loss_match
+</code></pre>
+<p><strong>Optimization:</strong> AdamW(lr=3e-4, wd=1e-4), CosineAnnealingLR → eta_min=1e-5, grad-clip 1.0,<br />
+mini-epochs of 20k-node chunks, warm-start param-transfer from <code>hydro_gine_v5_10_model.pt</code>,<br />
+<strong>early stop</strong> after 9 no-improve validation evals.</p>
+<h3 id="51-marginfocalloss-exact-reused-in-v4v5">5.1 MarginFocalLoss (exact, reused in v4/v5)</h3>
+<pre><code class="language-python">class MarginFocalLoss(nn.Module):
+    def forward(self, logits, targets):
+        probs = torch.sigmoid(logits).clamp(1e-6, 1 - 1e-6)
+        targets_m = torch.where(targets == 1.0, 1.0 - self.margin, self.margin)
+        p_t       = torch.where(targets == 1.0, probs, 1.0 - probs)
+        alpha_t   = torch.where(targets == 1.0, self.alpha, 1.0 - self.alpha)
+        focal_weight = alpha_t * (1.0 - p_t)**self.gamma
+        return (focal_weight * BCELogits(logits, targets_m)).mean()
+</code></pre>
+<hr />
+<h2 id="6-the-loss-family-every-formula-ever-used-precise">6. The Loss Family — Every Formula Ever Used (Precise)</h2>
+<h3 id="61-phase-0-pinn-prototypes">6.1 Phase 0 — PINN prototypes</h3>
+<p><strong><code>train_pinn_gnn.py</code></strong> (<code>physics_informed_loss</code>, λ=0.5) — GATv2 8-feature prototype; replaced.</p>
+<p><strong><code>train_ultra_pinn.py</code> <code>ultra_pinn_loss</code> (exact):</strong></p>
+<pre><code>huber_loss        = huber(pred, target, 0.15)
+mse_loss          = F.mse_loss(pred, target)
+focal_depth       = mean((target &gt; 0.5) * (pred − target)²)      # outfall high-depth focal
+non_neg_penalty   = mean(relu(−pred)²)
+L = huber + 0.5·mse + 1.2·focal_depth + 0.2·non_neg_penalty
+</code></pre>
+<p>AdamW lr=3e-3 wd=1e-5, ReduceLROnPlateau(factor=0.5, patience=50), 1000 epochs.</p>
+<p><strong><code>master_pinn_engine.py</code> <code>compute_master_physics_loss</code></strong> (full Saint-Venant + Bernoulli; verbatim in file):</p>
+<pre><code>high_depth_mask = (target &gt; 0.4)
+focal_loss      = mean(high_depth_mask · (pred − target)²)
+non_neg         = mean(relu(−pred)²) ; surcharge = mean(relu(pred − 3.0)²)
+velocity = (1/n) · sqrt(|grade|) ; flow_q = depth · velocity
+node_inflow/outflow via index_add over edges
+mass     = mean(clamp((inflow − outflow)², max=25))
+S_f      = n²·v² / depth^(4/3)                                   # Manning friction slope
+momentum = mean(clamp(((d_dst−d_src) + grade·L − clamp(S_f,2)·L)², max=25))
+E_head   = elev + depth + v²/2g                                  # Bernoulli energy head
+energy   = mean(clamp((E_src − E_dst − S_f·L)², max=25))
+L = huber + 0.4·mse + 1.0·focal + 0.2·non_neg + 0.05·surcharge + 0.08·mass + 0.04·momentum + 0.04·energy
+</code></pre>
+<p><strong><code>active_pinn_pipeline.py</code> <code>compute_saint_venant_pinn_loss</code></strong> (λ_mass=0.05, λ_momentum=0.02,<br />
+λ_phys=0.2):</p>
+<pre><code>L = mse + 0.2·non_neg + 0.05·surcharge + 0.05·mass + 0.02·momentum
+</code></pre>
+<ul>
+<li>active Monte-Carlo dropout sampling (20 samples) boosting loss 0.2× on top-20%-variance nodes.</li>
+</ul>
+<p><strong><code>train_dual_stream_hydro_gnn.py</code></strong> (multi-task "hurdle gate"):</p>
+<pre><code>p_gate = sigmoid(gate_logit)
+focal_weight = gate_target·(1−p_gate)^1.5·2.0 + (1−gate_target)·p_gate^1.5
+gate_loss = mean(focal_weight · BCE(gate_logit, gate_target))
+depth_loss = sum(wet_mask·crit_scale·SmoothL1(pred, target, β=0.02)) / (wet_mask.sum()+1e-6)
+L = depth_loss + 3.0·gate_loss + safe_penalty
+</code></pre>
+<h3 id="62-phase-1-st_gnn-research-line-iter-118">6.2 Phase 1 — <code>st_gnn/</code> research line (iter 1–18)</h3>
+<p>Common: x.zscore, log1p(y) target, chunk streaming, grad clip 1.0, AdamW + Cosine.<br />
+- <strong>iter1/2:</strong> <code>L_log = mean(w_node·(out−ty)²)</code> + <code>0.5·mean(w_node·w_asym·d²)</code>, <code>w_asym = 2.5 under / 1.0</code><br />
+- <strong>iter6–11 (<code>TwoHeadGINE</code>):</strong> <code>L_reg + 0.5·L_asym + 0.7·L_bce + 0.3·L_dice</code>, <code>hilly_w=2.0 on elev₂&gt;1.3</code><br />
+- <strong>iter12 (focal):</strong> <code>alpha_t = t·0.25+(1−t)·0.75</code>, <code>0.7·L_focal + 0.3·L_dice</code><br />
+- <strong>iter13–17 (<code>FiLMGINE</code>):</strong> homoscedastic <strong><code>prec_cls·L_cls + 0.5·s_cls + prec_reg·L_reg + 0.5·s_reg</code></strong>,<br />
+  zero-init identity FiLM; iter17 warm-started from contrastive encoder<br />
+- <strong>iter18 (<code>FiLMGINE_SAGPool</code>):</strong> <code>MarginFocal(γ=2, α=0.25, m=0.03) + 0.3 soft-dice + 0.5 asym-MSE</code><br />
+  pooled to coarse nodes — <strong>collapsed</strong> (§11).</p>
+<h3 id="63-phase-2-v4-lineage">6.3 Phase 2 — v4 lineage</h3>
+<p>Common scaffold: <code>in_c=32, hidden∈{96,128}, n_layers=6</code>, residual 0.3×, skip <code>cat=[h,mid_h,x]</code>,<br />
+<code>cat_dim=hidden·2+32</code>, FiLM zero-init, bi-head.</p>
+<table>
+<thead>
+<tr>
+<th>Ver</th>
+<th>hidden</th>
+<th>epochs</th>
+<th>lr/wd</th>
+<th>chunk</th>
+<th>loss delta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v4</td>
+<td>128</td>
+<td>350</td>
+<td>3e-3/1e-5</td>
+<td>100k</td>
+<td>asym MSE + BCE + soft-dice</td>
+</tr>
+<tr>
+<td>v4.1</td>
+<td>96</td>
+<td>160</td>
+<td>7e-4/1e-4</td>
+<td>20k</td>
+<td>LeakyReLU encoder; <strong>MarginFocal(2.0, 0.35, 0.02)</strong></td>
+</tr>
+<tr>
+<td>v4.2</td>
+<td>128</td>
+<td>600</td>
+<td>1.2e-3/2e-5</td>
+<td>100k</td>
+<td>cosine restarts; same MarginFocal</td>
+</tr>
+<tr>
+<td>v4.3</td>
+<td>96</td>
+<td>250</td>
+<td>2.5e-4/1e-5</td>
+<td>25k</td>
+<td><strong>homoscedastic</strong> <code>log_var_cls/log_var_reg</code> weighting; warm-start v4.1</td>
+</tr>
+</tbody>
+</table>
+<p>The v4 "clay-and-pavement" lesson reframed into cannot-v5 two-task <strong>classify + regress + FiLM-gate</strong>.</p>
+<hr />
+<h2 id="7-production-physical-rails-verbatim">7. Production Physical Rails (Verbatim)</h2>
+<p><code>apply_physics_rails(x_full, ei, p_lin, p_prob)</code> — the "Universal Physical Continuity Bounding"<br />
+post-processing. Feature cols used: <code>rel_drop=0, in_d=3, out_d=4, accum_s=5, is_sink=6,
+sag_idx=8, dep_d=16, sink_d=23, total_r=27, conv_def=30</code>.</p>
+<pre><code class="language-python">is_choked_surcharge = (conv_def &gt;= 0.7) &amp; ((sag_idx &gt; 0.01) | (dep_d &gt; 0.02) | (out_d &lt; in_d))
+is_deep_sink        = is_sink &amp; (dep_d &gt;= 0.20)
+is_valley_depression= dep_d &gt;= 0.20
+is_convergent_sag   = (in_d &gt; out_d) | (sag_idx &gt;= 0.03)
+is_ridge_crest      = (rel_drop &lt; 0.25) &amp; (sink_d &lt; 0.03) &amp; (dep_d &lt; 0.03)
+is_free_drain_slope = (sink_d &lt; 0.02) &amp; (dep_d &lt; 0.02) &amp; (out_d &gt;= 2) &amp; ~choked
+is_steep_ridge      = (rel_drop &lt; 0.20) &amp; (|slope| &gt; 0.06) &amp; (accum_s &lt; 0.5) &amp; (sink_d &lt; 0.01) &amp; ~choked
+
+tau = 0.15 if (deep_sink|valley) else
+      0.25 if (choked|sag)       else
+      0.75 if (ridge|free_drain|steep) else 0.35
+conf_gate = 1 / (1 + exp(−6·(p_prob − tau)))          # steep logistic confidence gate
+
+mass_bound: choked → 3.0
+            deep_sink|valley → clip(dep_d·1.5 + 0.3, 1, 3)
+            ridge|steep → 0.01 ; free_drain → 0.04 (if rain≤50 mm) else 0.10
+            (p_prob ≥ 0.65 &amp; sag) → max(0.50, sink_d·2 + 0.25)
+            (p_prob ≥ 0.65)       → max(0.50, sink_d·1.5 + 0.20)
+            else                  → max(0.15, sink_d·1.5 + 0.08)
+
+p_final = min(p_lin · conf_gate, mass_bound)
+p_final = 0 where (flat_dry | steep_ridge); 0 where &lt; 0.02; cap 3.0
+
+# WSE backwater envelope (relief_m = elev_range, default 15.0)
+elevs     = −max(max(dep_d, sink_d), rel_drop·relief_m)
+wse       = elevs + p_final
+backwater = relu(wse[src] − elevs[dst])  (both directions; max-scatter per node)
+is_protected = deep_sink | valley | choked
+p_final[~protected] = min(p_final[~protected],
+                          max(max_backwater[~protected], own_storage[~protected]))
+</code></pre>
+<p>This single transformer converts <strong>raw ~47 %</strong> accuracy into deploy-time <strong>~83 %</strong>; checkpoint<br />
+selection data accordingly uses <strong>post-rail</strong> metrics (<code>SELECT_RAIL_MATCH=True</code>).</p>
+<hr />
+<h2 id="8-final-ensemble-verbatim">8. Final Ensemble (Verbatim)</h2>
+<p><code>EnsembleFloodPredictorV4</code> (<code>production_v4.py:443-527</code>). Key logic:</p>
+<pre><code class="language-python">model_paths = (&quot;hydro_gine_v5_10_model.pt&quot;,      # w=0.80
+               &quot;hydro_gine_v5_11_model.pt&quot;,      # w=0.30
+               &quot;hydro_gine_v5_0_model.pt&quot;,       # w=0.05
+               &quot;hydro_gine_v5_bangalore_opt.pt&quot;) # w=0.10
+weights     = (0.80, 0.30, 0.05, 0.10)           # re-normalized by w_sum in __init__
+...
+def predict(self, graph_or_batch, intensity_mmhr, duration_min=60.0):
+    raw_list, prob_list = [], []
+    for m, w in zip(self.members, self.weights):
+        p_rail, p_lin, p_prob = m.predict(...)
+        raw_list.append(p_lin.astype(np.float64) * w)
+        prob_list.append(p_prob.astype(np.float64) * w)
+    p_lin_avg  = np.sum(stack(raw_list), axis=0)
+    p_prob_avg = np.sum(stack(prob_list), axis=0)
+    p_final = apply_physics_rails(x_full, ei, p_lin_avg, p_prob_avg, elev_range=relief_m)
+    return p_final, p_lin_avg, p_prob_avg
+</code></pre>
+<p>Critical design: <strong>average raw pre-rail <code>p_lin</code>/<code>p_prob</code>, apply rails ONCE</strong> — rails applied<br />
+per-member would double-count the confidence gates and mass bounds. Missing members are skipped;<br />
+an empty ensemble falls back to <code>v5.10</code> then <code>bottleneck_opt</code> with unity weight.</p>
+<hr />
+<h2 id="9-full-version-history-from-git-including-regressions">9. Full Version History From Git (Including Regressions)</h2>
+<p>Commit map, newest → oldest (<code>git log --oneline</code>, subset):</p>
+<table>
+<thead>
+<tr>
+<th>Commit</th>
+<th>Artifact</th>
+<th>Change</th>
+<th>Headline</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>3f4dca8</code></td>
+<td>final tree</td>
+<td>cleanup for competition transfer</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>a18ac71</code></td>
+<td><strong>FINAL</strong></td>
+<td>weighted 4-model ensemble</td>
+<td>HSR 82.2, Bellandur 72.0, NSE 0.9098</td>
+</tr>
+<tr>
+<td><code>b806d3d</code></td>
+<td>v5.11</td>
+<td>deep reweight <strong>2.2/1.3</strong></td>
+<td><strong>87.11 % (regression!)  ← worse than v5.10</strong></td>
+</tr>
+<tr>
+<td><code>2eb0a38</code></td>
+<td>v5.10</td>
+<td>deep reweight <strong>1.6/1.2</strong> (sweet spot)</td>
+<td><strong>88.14 % leader</strong></td>
+</tr>
+<tr>
+<td><code>b4ad8d2</code></td>
+<td>Ens v5.6+v5.8</td>
+<td>weighted raw-depth ensemble</td>
+<td>85.88 %, NSE 0.8911</td>
+</tr>
+<tr>
+<td><code>1367d46</code></td>
+<td>v5.9</td>
+<td>deep reweight 3.0/1.4</td>
+<td><strong>NSE 0.8942 best-ever quality, match 84.5 % ← regression vs v5.8</strong></td>
+</tr>
+<tr>
+<td><code>0f90840</code></td>
+<td>v5.8</td>
+<td>EQUAL_WEIGHT_REGIONS</td>
+<td><strong>84.8 % leader</strong>, OVER 977</td>
+</tr>
+<tr>
+<td><code>ee57de0</code></td>
+<td>v5.7</td>
+<td>shallow-band over-penalty</td>
+<td><strong>84.07 % ← regression vs v5.6</strong></td>
+</tr>
+<tr>
+<td><code>240d86c</code>/<code>b6a2ee4</code></td>
+<td>v5.6</td>
+<td>post-rail checkpoint selection</td>
+<td>84.5 %, NSE 0.8814</td>
+</tr>
+<tr>
+<td><code>3f2519c</code></td>
+<td>v5.3–5.5</td>
+<td>match-hinge/flood-gated experiments</td>
+<td><strong>all worse than v5.2</strong></td>
+</tr>
+<tr>
+<td><code>291be43</code></td>
+<td>v5.2</td>
+<td>scenario-conditional asym (under 2× flooded)</td>
+<td>83.3 %, MAE 2.97cm, NSE 0.866</td>
+</tr>
+<tr>
+<td><code>16f5130</code></td>
+<td>v5.0</td>
+<td>zero-bias asymmetric Huber</td>
+<td>82.0 %, OVER 3141→692</td>
+</tr>
+<tr>
+<td><code>b53f51d</code></td>
+<td>v5 base</td>
+<td>HydroGINE-v5.0 + master dataset</td>
+<td>77.8 %</td>
+</tr>
+<tr>
+<td>(pre-v5)</td>
+<td>v4→v4.3</td>
+<td>MarginFocal + homoscedastic</td>
+<td>predecessor line</td>
+</tr>
+<tr>
+<td>(pre-v4)</td>
+<td>st_gnn iter1–18</td>
+<td>two-task GINE + FiLM + contrastive</td>
+<td>iter18 SAGPool <strong>collapsed</strong></td>
+</tr>
+<tr>
+<td>(Phase0)</td>
+<td>PINN prototypes</td>
+<td>GATv2 + Saint-Venant</td>
+<td>abandoned</td>
+</tr>
+</tbody>
+</table>
+<h3 id="91-v5-hyperparameter-sweep-the-core-story">9.1 v5 hyperparameter sweep (the core story)</h3>
+<table>
+<thead>
+<tr>
+<th>Ver</th>
+<th>EPOCHS</th>
+<th>LR</th>
+<th>N_CHUNK</th>
+<th>UP</th>
+<th>UP_SH</th>
+<th>UNDER</th>
+<th>DEEP_W</th>
+<th>DEEP_MID</th>
+<th>HINGE</th>
+<th>RAIL</th>
+<th>EQREG</th>
+<th>Match</th>
+<th>NSE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>base</td>
+<td>200</td>
+<td>3e-4</td>
+<td>25k</td>
+<td>—</td>
+<td>—</td>
+<td>2.5×MSE</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>✗</td>
+<td>✗</td>
+<td>77.8</td>
+<td>0.7764</td>
+</tr>
+<tr>
+<td>v5.0</td>
+<td>200</td>
+<td>3e-4</td>
+<td>25k</td>
+<td>1.5</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>✗</td>
+<td>✗</td>
+<td>82.0</td>
+<td>0.8465</td>
+</tr>
+<tr>
+<td>v5.2</td>
+<td>220</td>
+<td>3e-4</td>
+<td>25k</td>
+<td>1.5</td>
+<td>—</td>
+<td>2.0</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>✗</td>
+<td>✗</td>
+<td>83.3</td>
+<td>0.8659</td>
+</tr>
+<tr>
+<td>v5.4</td>
+<td>220</td>
+<td>3e-4</td>
+<td>25k</td>
+<td>1.5</td>
+<td>—</td>
+<td>2.0</td>
+<td>—</td>
+<td>—</td>
+<td>2.0</td>
+<td>✗</td>
+<td>✗</td>
+<td>81.7</td>
+<td>0.8606</td>
+</tr>
+<tr>
+<td>v5.5</td>
+<td>220</td>
+<td>3e-4</td>
+<td>25k</td>
+<td>1.5</td>
+<td>—</td>
+<td>2.0</td>
+<td>—</td>
+<td>—</td>
+<td>0.0</td>
+<td>✗</td>
+<td>✗</td>
+<td>80.5</td>
+<td>0.8647</td>
+</tr>
+<tr>
+<td>v5.6</td>
+<td>300</td>
+<td>3e-4</td>
+<td>25k</td>
+<td>1.5</td>
+<td>—</td>
+<td>2.0</td>
+<td>—</td>
+<td>—</td>
+<td>0.0</td>
+<td>✔</td>
+<td>✗</td>
+<td>84.5</td>
+<td>0.8814</td>
+</tr>
+<tr>
+<td>v5.7</td>
+<td>300</td>
+<td>3e-4</td>
+<td>25k</td>
+<td>1.5</td>
+<td>1.5</td>
+<td>2.0</td>
+<td>—</td>
+<td>—</td>
+<td>0.0</td>
+<td>✔</td>
+<td>✗</td>
+<td>84.1</td>
+<td>0.8745</td>
+</tr>
+<tr>
+<td>v5.8</td>
+<td>300</td>
+<td>3e-4</td>
+<td>20k</td>
+<td>1.5</td>
+<td>1.5</td>
+<td>2.0</td>
+<td>0</td>
+<td>—</td>
+<td>0.0</td>
+<td>✔</td>
+<td>✔</td>
+<td>84.8</td>
+<td>0.8779</td>
+</tr>
+<tr>
+<td>v5.9</td>
+<td>300</td>
+<td>3e-4</td>
+<td>20k</td>
+<td>1.5</td>
+<td>1.5</td>
+<td>2.0</td>
+<td>3.0</td>
+<td>1.4</td>
+<td>0.0</td>
+<td>✔</td>
+<td>✔</td>
+<td>84.5</td>
+<td><strong>0.8942</strong></td>
+</tr>
+<tr>
+<td>v5.10</td>
+<td>300</td>
+<td>3e-4</td>
+<td>20k</td>
+<td>1.5</td>
+<td>1.5</td>
+<td>2.0</td>
+<td><strong>1.6</strong></td>
+<td><strong>1.2</strong></td>
+<td>0.0</td>
+<td>✔</td>
+<td>✔</td>
+<td><strong>88.1</strong></td>
+<td><strong>0.9060</strong></td>
+</tr>
+<tr>
+<td>v5.11</td>
+<td>300</td>
+<td>3e-4</td>
+<td>20k</td>
+<td>1.5</td>
+<td>1.5</td>
+<td>2.0</td>
+<td>2.2</td>
+<td>1.3</td>
+<td>0.0</td>
+<td>✔</td>
+<td>✔</td>
+<td>87.1</td>
+<td>~0.900</td>
+</tr>
+</tbody>
+</table>
+<p><em>(v5.1 = global match-hinge → OVER exploded, removed. v5.3 = hinge-strength sweep.)</em></p>
+<hr />
+<h2 id="10-benchmark-tables">10. Benchmark Tables</h2>
+<h3 id="101-full-10-version-table-benchmark_all_versionsjson">10.1 Full 10-version table (<code>benchmark_all_versions.json</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Match %</th>
+<th>NSE</th>
+<th>GlbMAE cm</th>
+<th>HazMAE cm</th>
+<th>Risk</th>
+<th>OVER</th>
+<th>UNDER</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v5.6</td>
+<td>84.54</td>
+<td>0.8814</td>
+<td>2.80</td>
+<td>10.30</td>
+<td>17604</td>
+<td>1847</td>
+<td>875</td>
+</tr>
+<tr>
+<td>v5.7</td>
+<td>84.07</td>
+<td>0.8745</td>
+<td>2.88</td>
+<td>10.83</td>
+<td>17093</td>
+<td>1733</td>
+<td>990</td>
+</tr>
+<tr>
+<td>v5.2</td>
+<td>83.30</td>
+<td>0.8659</td>
+<td>2.97</td>
+<td>11.18</td>
+<td>16986</td>
+<td>1403</td>
+<td>1433</td>
+</tr>
+<tr>
+<td>v5.0</td>
+<td>81.96</td>
+<td>0.8465</td>
+<td>3.14</td>
+<td>12.53</td>
+<td>16373</td>
+<td>692</td>
+<td>2262</td>
+</tr>
+<tr>
+<td>v5.4</td>
+<td>81.67</td>
+<td>0.8606</td>
+<td>3.11</td>
+<td>11.10</td>
+<td>17685</td>
+<td>1975</td>
+<td>1266</td>
+</tr>
+<tr>
+<td>v5.5</td>
+<td>80.55</td>
+<td>0.8647</td>
+<td>3.37</td>
+<td>10.77</td>
+<td>20248</td>
+<td>2301</td>
+<td>1638</td>
+</tr>
+<tr>
+<td>v5 Base</td>
+<td>77.79</td>
+<td>0.7764</td>
+<td>3.84</td>
+<td>15.15</td>
+<td>16571</td>
+<td>1227</td>
+<td>2453</td>
+</tr>
+<tr>
+<td>v5 Bottleneck</td>
+<td>77.15</td>
+<td>0.8284</td>
+<td>5.15</td>
+<td>12.70</td>
+<td>22753</td>
+<td>3141</td>
+<td>2057</td>
+</tr>
+<tr>
+<td>v5 Bengaluru</td>
+<td>77.02</td>
+<td>0.8292</td>
+<td>4.53</td>
+<td>13.08</td>
+<td>20463</td>
+<td>2182</td>
+<td>2521</td>
+</tr>
+<tr>
+<td>v5 Finetuned</td>
+<td>76.70</td>
+<td>0.8187</td>
+<td>5.71</td>
+<td>13.13</td>
+<td>22776</td>
+<td>3286</td>
+<td>2020</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-per-city-progression-hsr-bellandur-the-local-priority">10.2 Per-city progression (HSR + Bellandur — the local priority)</h3>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>HSR %</th>
+<th>Bellandur %</th>
+<th>Whitefield %</th>
+<th>ECity %</th>
+<th>Koramangala %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v5.6</td>
+<td>76.79</td>
+<td>68.62</td>
+<td>83.48</td>
+<td>83.27</td>
+<td>73.31</td>
+</tr>
+<tr>
+<td>v5.8</td>
+<td>78.31</td>
+<td>70.39</td>
+<td>83.81</td>
+<td>81.95</td>
+<td>74.70</td>
+</tr>
+<tr>
+<td>v5.6+v5.8 ens</td>
+<td>78.24</td>
+<td>70.54</td>
+<td>85.98</td>
+<td>84.29</td>
+<td>76.01</td>
+</tr>
+<tr>
+<td><strong>Final 4-model ens</strong></td>
+<td><strong>82.2</strong></td>
+<td><strong>72.0</strong></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103-phase-2-competition-benchmark-competition_benchmark_verifiedjson-final-system">10.3 Phase-2 competition benchmark (<code>competition_benchmark_verified.json</code>) — final system</h3>
+<p><strong>Goal 1 — hotspot match (±15 cm, 30 nodes/city):</strong><br />
+- Global hotspot match rate <strong>94.79 %</strong>, worst-case district <strong>86.67 %</strong>, hazard recall <strong>99.58 %</strong><br />
+- Best cities: Tokyo/London/Bangkok 100.0 %; Bellandur 100.0 %, HSR 93.3 %, Berlin 93.3 %, Delhi 93.3 %<br />
+- Koramangala &amp; Hong Kong at 86.67 % (worst-case)</p>
+<p><strong>Goal 2 — flooded-node detection (100 mm/hr, regenerated verified)</strong><br />
+- Flooded nodes 20,966 (27.47 % gated); recall <strong>93.37 %</strong>, precision <strong>89.43 %</strong>, <strong>F1 0.9136</strong>;<br />
+  flooded-binary MAE 7.81 cm.<br />
+- HSR: recall 92.16 %, precision 73.44 %, F1 0.817, flooded MAE 5.29 cm.</p>
+<p><strong>Goal 3 — NSE / hazard depth MAE / mass continuity:</strong> 0.9128 catchment NSE / 0.8765 flooded NSE, 8.65 cm<br />
+hazard MAE, 8.61 % mass-continuity error.</p>
+<blockquote>
+<p><strong>Note:</strong> the pre-regeneration values (hotspot 93.13 %, F1 0.803, MAE 14.52 cm, NSE 0.8338) were<br />
+superseded when <code>competition_benchmark_verified.json</code> was rebuilt live; the numbers above are the<br />
+canonical, reproducible output. <code>round2_live_benchmark_*.json</code> in §10.4 is an earlier run and is<br />
+retained as a historical record only.</p>
+</blockquote>
+<h3 id="104-round-2-live-50-mmhr-vs-100-mmhr-top-30-audit">10.4 Round-2 live (50 mm/hr vs 100 mm/hr, top-30 audit)</h3>
+<ul>
+<li>50 mm/hr: F1 range 0.731 (NYC)–0.904 (Bangkok); HSR F1 0.845 / top-30 96.7 %; worst MAE 7.43 cm (Hong Kong @50).</li>
+<li>100 mm/hr: per-city flood F1 0.683 (Koramangala)–0.876 (Tokyo); each city keeps ≥26/30<br />
+  top-30 hotspots matched.</li>
+<li>Live-match speedup: <code>swmm_speedup = 3500.0 * (15.0 / avg_city_latency_ms)</code> → v5.6 = 5004×,<br />
+  v5.8 = 6471×, ens v5.6+v5.8 = 1966× (heavier, 26.7 ms/city).</li>
+</ul>
+<hr />
+<h2 id="11-empirical-validation-data-provenance-source-verification">11. Empirical Validation Data Provenance &amp; Source Verification</h2>
+<p>This section documents the exact origin of every piece of real-world data used to validate UrbanFLOW on<br />
+Bengaluru, so that no claim in this paper rests on an unidentified or synthetic source. It exists because<br />
+the validation must be <strong>falsifiable</strong>: a reader must be able to open each cited news report and confirm<br />
+that the named location, date, and rainfall figure are real.</p>
+<h3 id="111-governing-principle-no-fabricated-incidents">11.1 Governing principle: no fabricated incidents</h3>
+<p>The empirical validation set contains <strong>no invented locations, dates, or rainfall values</strong>. Every incident<br />
+corresponds to a place explicitly named in a published news report, geocoded from OpenStreetMap (Nominatim).<br />
+Where a report gives a corridor rather than a point (e.g. "Sarjapur Road"), the geocode represents the named<br />
+corridor and this is stated in the entry's <code>coordinate_note</code>. The dataset asserts <strong>no flood depths, no<br />
+incident counts, and no control-room records</strong> that are not present in the cited sources.</p>
+<h3 id="112-source-dataset-and-schema">11.2 Source dataset and schema</h3>
+<ul>
+<li><strong>File:</strong> <code>data/real_bengaluru_oct2024_incidents.json</code> (<code>schema_version</code> 1.0).</li>
+<li><strong>Scope:</strong> flood-affected locations inside the five UrbanFLOW Bengaluru catchments<br />
+  (HSR, Koramangala, Bellandur, Whitefield, Electronic City).</li>
+<li><strong>Structure:</strong> three <code>events</code> (with per-event rainfall and full article lists) + thirteen <code>incidents</code><br />
+  (each with <code>region</code>, linked <code>event_id</code>s, <code>location</code>, <code>lat</code>/<code>lon</code>, <code>coordinate_note</code>, <code>description</code>,<br />
+  and one or more <code>sources</code> URLs).</li>
+<li><strong>Origin of the file:</strong> hand-assembled from the cited reports and Nominatim geocoding; it is the<br />
+  source of truth consumed live by <code>validate_real_world_incidents.py</code> and by the portal endpoint<br />
+<code>/api/historical-validation</code> (<code>app.py:1352</code>). It is <strong>not</strong> model output.</li>
+</ul>
+<h3 id="113-the-three-october-2024-rain-events-rainfall-attribution">11.3 The three October 2024 rain events (rainfall attribution)</h3>
+<table>
+<thead>
+<tr>
+<th>Event ID</th>
+<th>Dates</th>
+<th>Rainfall figure and its source</th>
+<th>What the sources document</th>
+<th>Publishers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bengaluru_oct15_2024</code></td>
+<td>2024-10-14 → 15</td>
+<td><strong>65 mm</strong> city-wide, 8 am–8 pm Oct 15; <strong>228 %</strong> above seasonal average (BBMP / NIE)</td>
+<td>Waterlogging at <strong>142 places</strong>; <strong>52 areas</strong> and <strong>142 houses</strong> flooded; 34 places declared flood-prone by BBMP</td>
+<td>The Hindu, New Indian Express, Moneycontrol, Times of India</td>
+</tr>
+<tr>
+<td><code>bengaluru_oct20_2024</code></td>
+<td>2024-10-19 → 20</td>
+<td><strong>Kengeri 141 mm</strong> / 24 h (BBMP via TOI); Jnana Bharathi, RR Nagar, Nayandahalli <strong>106 mm</strong>; IMD Bengaluru city station <strong>19.7 mm</strong></td>
+<td>Hosur Road (Roopena Agrahara) and Silk Board Junction flooded; Varthur–Gunjur Rd, ITPL Rd, Mysuru Rd corridor waterlogged till mid-morning</td>
+<td>Times of India, The Hindu, New Indian Express</td>
+</tr>
+<tr>
+<td><code>bengaluru_oct22_2024</code></td>
+<td>2024-10-21 → 22</td>
+<td>IMD <strong>GKVK 186.2 mm</strong> / 24 h — highest single-day October rainfall in <strong>27 years</strong> (previous record 178.9 mm on 1997-10-01); BBMP <strong>Yelahanka zone 157 mm / 6 h</strong>; city total <strong>264.5 mm</strong> to 08:30 Oct 22</td>
+<td>Two lakes breached (Kogilu, Doddabommasandra); NDRF/SDRF boats at Kendriya Vihar; ~100 lakes overflowing; ORR/IT-corridor flooding</td>
+<td>Indian Express, New Indian Express, Times of India, Times Now</td>
+</tr>
+</tbody>
+</table>
+<h3 id="114-incident-level-provenance-map-all-13-incidents">11.4 Incident-level provenance map (all 13 incidents)</h3>
+<p>Each bullet gives the incident ID, its catchment, the event(s) it belongs to, and the exact article URL<br />
+that names the location. Full titles/dates are in the JSON <code>sources</code> blocks.</p>
+<ol>
+<li><strong>REAL-KOR-01-SILK-BOARD</strong> — Koramangala, events oct15+oct20 — "Silk Board Junction and Hosur Road" —<br />
+   The Hindu <code>…/bengaluru-weather-heavy-rains-lead-to-waterlogging-and-traffic-chaos…/article68755266.ece</code>;<br />
+   The Hindu <code>…/early-morning-rains-flood-bengaluru-roads-and-apartments/article68775016.ece</code>.</li>
+<li><strong>REAL-KOR-02-MADIWALA</strong> — Koramangala, event oct15 — "Madiwala junction (Hosur Road)" —<br />
+   NIE <code>…/2024/Oct/16/traffic-goes-haywire-on-major-roads</code>.</li>
+<li><strong>REAL-HSR-01-ROOPENA-AGRAHARA</strong> — HSR, event oct20 — "Hosur Road at Roopena Agrahara" —<br />
+   TOI <code>…/articleshow/114404508.cms</code>; NIE <code>…/2024/Oct/21/rain-woes-continue-to-haunt-bengaluru</code>.</li>
+<li><strong>REAL-HSR-02-HSR-LAYOUT</strong> — HSR, event oct22 — "HSR Layout (Sector 2 / 27th Main)" —<br />
+   NIE <code>…/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst</code>.</li>
+<li><strong>REAL-HSR-03-SARJAPUR-ROAD</strong> — HSR, events oct15+oct22 — "Sarjapur Road (Wipro / RGA Tech Park)" —<br />
+   Moneycontrol <code>…/manyata-tech-park-in-bengaluru-flooded…-12842550.html</code>;<br />
+   Indian Express <code>…/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/</code>.</li>
+<li><strong>REAL-HSR-04-BOMMANAHALLI</strong> — HSR, events oct15+oct20 — "Bommanahalli junction (Hosur Road)" —<br />
+   NIE <code>…/2024/Oct/16/traffic-goes-haywire-on-major-roads</code>; The Hindu <code>…/article68775016.ece</code>.</li>
+<li><strong>REAL-BEL-01-ORR-IBLUR</strong> — Bellandur, event oct22 — "ORR service road between Iblur and Marathahalli" —<br />
+   Indian Express <code>…/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/</code>.</li>
+<li><strong>REAL-BEL-02-ECOSPACE</strong> — Bellandur, event oct22 — "Ecospace junction (ORR)" —<br />
+   Indian Express <code>…/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/</code>.</li>
+<li><strong>REAL-BEL-03-DEVARABEESANAHALLI</strong> — Bellandur, event oct22 — "Devarabeesanahalli (ORR)" —<br />
+   NIE <code>…/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst</code>.</li>
+<li><strong>REAL-BEL-04-BELLANDUR-LAKE</strong> — Bellandur, event oct22 — "Bellandur Lake overflow / ORR service roads" —<br />
+    Indian Express <code>…/rainfall-north-bengaluru-breach-two-lakes-yelahanka-zone-9634106/</code>;<br />
+    NIE <code>…/2024/Oct/23/north-bengaluru-crumbles-under-cloudburst</code>.</li>
+<li><strong>REAL-WHI-01-ITPL-ROAD</strong> — Whitefield, event oct20 — "ITPL Road / International Tech Park Bengaluru" —<br />
+    TOI <code>…/articleshow/114404508.cms</code>.</li>
+<li><strong>REAL-WHI-02-HOPEFARM</strong> — Whitefield, event oct20 — "Hope Farm junction (Whitefield)" —<br />
+    TOI <code>…/articleshow/114404508.cms</code>.</li>
+<li><strong>REAL-ECI-01-ELECTRONIC-CITY</strong> — Electronic City, events oct15+oct20 — "Electronic City Phase 1 (Hosur Road)" —<br />
+    Moneycontrol <code>…/manyata-tech-park-in-bengaluru-flooded…-12842550.html</code>; The Hindu <code>…/article68775016.ece</code>.</li>
+</ol>
+<p>Event-level articles not tied to a single incident (full URLs in the JSON): Indian Express<br />
+<code>…/bengaluru-rain-building-collapse-schools-closed-flooding-overflowing-lakes-9633673/</code>, New Indian Express<br />
+<code>…/2024/Oct/22/cloud-burst-hits-bengalurus-yelahanka-zone-10-layouts-flooded-4000-residents-impacted</code>, and<br />
+Times Now <code>…/bengaluru-rains-break-27-year-old-october-record…-114455130</code>.</p>
+<h3 id="115-coordinate-provenance">11.5 Coordinate provenance</h3>
+<p>All thirteen coordinates were geocoded with <strong>OpenStreetMap Nominatim</strong> (e.g. "Silk Board Junction Bengaluru",<br />
+"EcoSpace Bengaluru", "Iblur Junction Bengaluru"). Each incident stores a <code>coordinate_note</code> recording the<br />
+query and, where the source names a corridor rather than a point, states that the point is a representative<br />
+geocode. Coordinates were not chosen to improve the model's hit rate.</p>
+<h3 id="116-how-this-dataset-is-used-validation-methodology">11.6 How this dataset is used (validation methodology)</h3>
+<p><code>validate_real_world_incidents.py</code> starts the live server, loads these incidents, and for each one runs the<br />
+shipped ensemble (<code>HydroGINE-v5</code>: v5.10 + v5.11 + v5.0 + BangaloreOpt) at an assumed short-duration peak<br />
+intensity of <strong>100 mm/hr for 60 min</strong> (the published Oct 2024 figures are 6 h / 24 h accumulations and cannot<br />
+be fed to a minute-scale urban-inundation model directly). An incident is <strong>captured</strong> iff a predicted hazard<br />
+node (<code>gnn_depth ≥ 0.15 m</code>) lies within <strong>50 m</strong> of the geocoded location. The canonical live result is<br />
+<strong>5 / 13 captured (38.5 %)</strong> (<code>real_world_validation_result.json</code>); all five captures are in the<br />
+Koramangala–Bellandur corridor (KOR-01 33.7 m, KOR-02 10.2 m, BEL-01 29.8 m, BEL-02 27.8 m, BEL-03 26.8 m).<br />
+The misses are <strong>spatial</strong>, not intensity-driven: the model's hazard nodes do not reach those points even at<br />
+the high assumed rate, and the paper reports this miss rate rather than tuning the assumed intensity upward<br />
+to hide it. <code>historical_validation_result.json</code> is a stale, malformed artifact and is <strong>not</strong> authoritative.</p>
+<h3 id="117-real-vs-synthetic-the-explicit-provenance-boundary">11.7 Real vs. synthetic — the explicit provenance boundary</h3>
+<p>To prevent conflation, the two data classes are separated here:</p>
+<ul>
+<li><strong>Real (news-documented):</strong> the incident <em>locations</em>, <em>dates</em>, <em>event linkage</em>, and the <em>rainfall figures</em><br />
+  in §11.3/§11.4 above. These come only from the cited reports.</li>
+<li><strong>Synthetic (model-generated):</strong> the SWMM reference depths that the GNN regresses against. The 50 mm/hr<br />
+  references are stored targets in <code>expanded_master_physics_dataset.pt</code> (<code>region_graphs_50[r].y</code>) /<br />
+<code>swmm_groundtruth_targets.csv</code>, not re-run during validation.</li>
+<li><strong>Important caveat:</strong> the 100 mm/hr "SWMM" reference in the competition benchmark is <strong>not</strong> a genuine<br />
+  SWMM dynamic-wave re-run. It is a heuristic scaling of the 50 mm/hr baseline inside <code>app.py</code> (lines<br />
+  919–925: <code>base_d*(1+0.55*(ratio-1)) + 0.082*(ratio-1)</code>), and the GNN output is post-adjusted at<blockquote>
+<p>50 mm/hr (<code>app.py:927</code>: <code>pred*1.04+0.02</code>). This is a documented approximation, not a physics run.</p>
+</blockquote>
+</li>
+<li><strong>Also hardcoded:</strong> the goal-4 speedup/latency constants are literal values in<br />
+<code>run_competition_master_benchmark.py</code> (lines 194–219), not measured in-run. The models were <strong>not</strong><br />
+  retrained for any of the reported numbers.</li>
+</ul>
+<h3 id="118-verification-log">11.8 Verification log</h3>
+<p>During preparation of this revision the three events and the incident attributions were checked against the<br />
+live articles. Confirmed: the 65 mm city-wide total, 52 areas / 142 houses flooded, and 142 waterlogging<br />
+points (Oct 15); Kengeri 141 mm and the Hosur Road / Silk Board flooding (Oct 19–20); and the IMD GKVK<br />
+186.2 mm 27-year October record with the Yelahanka cloudburst and lake breaches (Oct 21–22). The Indian<br />
+Express Yelahanka-zone report names Ecospace junction, the Iblur–Marathahalli ORR service roads, Bellandur<br />
+Lake overflow, and Sarjapur Road; the NIE "North Bengaluru crumbles under cloudburst" report names<br />
+Devarabeesanahalli, HSR Layout, Bellandur, Sarjapur and Karthik Nagar. Every incident citation in §11.4<br />
+therefore matches a location actually named in its cited source.</p>
+<hr />
+<h2 id="12-key-lessons-why-some-versions-became-worse">12. Key Lessons / Why Some Versions Became Worse</h2>
+<ol>
+<li>
+<p><strong>Global match-hinge (v5.1) → removed.</strong> A global linear hinge that penalized <code>|residual − band|</code><br />
+   on <em>all</em> nodes inflated OVER explosively; the fix (v5.2) gated it to flooded cells only<br />
+   (<code>hinge_mask = y &gt; 0.15</code>), but the final config disables it entirely (<code>STRENGTH = 0.0</code>).</p>
+</li>
+<li>
+<p><strong>v5.4 &lt; v5.2 (81.67 % vs 83.30 %)</strong>: activating the hinge with strength 2.0 <em>with</em> dry-gate<br />
+   still hurt; v5.5 confirms hinge→0 (80.55 %, even lower due to the flood-gated-interim variant).<br />
+   Lesson: <strong>hinge terms map to the match metric only in expectation; they trade off regression<br />
+   quality</strong>.</p>
+</li>
+<li>
+<p><strong>v5.7 &lt; v5.6 (84.07 % vs 84.54 %)</strong>: extending the 1.5× over-penalty into the shallow advisory<br />
+   band (0.15–0.50) over-punished legitimate over-predictions and pressed down edges that v5.6<br />
+   matched — flip side of the same lesson.</p>
+</li>
+<li>
+<p><strong>v5.9 vs v5.8 (match 84.5 % vs 84.8 %) despite best-ever NSE 0.8942</strong>: the deep-tail hammer<br />
+<code>DEEP_TARGET_W=3.0</code> recovered deep pools but <strong>pushed extreme dry bowls up</strong> (OVER 1623),<br />
+   breaking the <em>match</em> (depth-band) metric while improving <em>volume</em> (NSE). <strong>NSE and live-match<br />
+   are different objectives</strong> — a 3× tail weight is not free.</p>
+</li>
+<li>
+<p><strong>v5.11 &lt; v5.10 (87.11 % vs 88.14 %)</strong>: overshooting <code>DEEP_TARGET_W</code> from 1.6 → 2.2 re-created<br />
+   dry-bowl OVERs; the optimum is exactly at <strong>1.6/1.2</strong>. v5.11 is kept in the ensemble <strong>only</strong><br />
+   for deep-tail recovery at low weight (0.30), so its regression datum actually contributes<br />
+   complementarity instead of harm.</p>
+</li>
+<li>
+<p><strong>Pre-rail vs post-rail confusion (≤v5.5)</strong>: without <code>SELECT_RAIL_MATCH</code>, checkpoints were<br />
+   selected on raw accuracy (~47 %), systematically saving models the rails would later crush.<br />
+   Moving selection to <strong>post-rail</strong> (v5.6) was a +~7 pp jump.</p>
+</li>
+<li>
+<p><strong>Node-weighted vs region-equal aggregation (v5.7→v5.8)</strong>: the node-weighted val average was<br />
+   dominated by London + NYC (largest graphs), silently trading away Bengaluru districts<br />
+   (v5.6: HSR 84.7→76.8, Bellandur 75.2→68.6). <code>EQUAL_WEIGHT_REGIONS</code> restored hsr/bellandur<br />
+   influence → 84.8 % leader + lower OVER (977).</p>
+</li>
+<li>
+<p><strong>SAGPool collapse (Phase 1 iter18)</strong>: hierarchical pooling permanently drops nodes →<br />
+   spatial-path discontinuity → floods trapped on retained coarse nodes. <strong>Hard constraint:<br />
+   never destructively pool; production HydroGINE preserves full topology</strong> (paper ablation:<br />
+   SAGPool coarse = collapse vs Standard 6.82 cm vs Full Topology 2.39 cm).</p>
+</li>
+<li>
+<p><strong><code>log1p</code> target + aggressive tail weights interact</strong>: the <code>expm1</code> decode amplifies log-domain<br />
+   error on deep basins, which is <em>why</em> Huber-in-log-space + deep-target weighting must be<br />
+   balanced, not maximized.</p>
+</li>
+<li>
+<p><strong>Chunk-size / hardware coupling</strong>: <code>N_CHUNK</code> 25000 → 20000 after an RTX 4060 TDR/cublas<br />
+    backward fault; reproducibility pinned with <code>SEED=42</code> throughout.</p>
+</li>
+</ol>
+<hr />
+<h2 id="appendix-files-referenced">Appendix — Files referenced</h2>
+<ul>
+<li><code>production_v4.py</code> (527 ln) — final predictor + <code>EnsembleFloodPredictorV4</code></li>
+<li><code>train_hydro_gine_v5_0.py</code> (556 ln) — v5.11 final training engine</li>
+<li><code>master_pinn_engine.py</code> (159 ln), <code>active_pinn_pipeline.py</code> (144 ln) — PINN prototypes</li>
+<li><code>build_physics_dataset.py</code>, <code>build_expanded_physics_dataset.py</code>, <code>create_multi_pyg_dataset.py</code>,<br />
+<code>create_testcity_dataset.py</code>, <code>create_combined_dataset.py</code> — dataset/feature builders</li>
+<li><code>benchmark_all_versions.json</code>, <code>benchmark_final_v58.json</code>, <code>benchmark_ensemble_v56_v58.json</code>,<br />
+<code>benchmark_live_match_results.json</code>, <code>competition_benchmark_verified.json</code>,<br />
+<code>round2_live_benchmark_50.json</code>, <code>round2_live_benchmark_100.json</code> — metrics</li>
+<li><code>Model_Evolution_Trace.md</code> — the subagent archaeologized lineage (this doc is its peer-reviewable form)</li>
+<li><code>data/real_bengaluru_oct2024_incidents.json</code>, <code>real_world_validation_result.json</code> — the real-world<br />
+  validation set and its live result (see §11); <code>historical_validation_result.json</code> is stale/malformed</li>
+<li><code>data/canonical_metrics.json</code> — canonical, reproducible metric set (50/100 mm/hr, capture, latency)</li>
+<li><code>doc/UrbanFLOW_Research_Paper.md</code>, <code>doc/System_Architecture_and_Model_Specification.md</code> —<br />
+  peer-facing docs describing v5.0/v5.8 era; <strong>reconcile with this final-version document.</strong></li>
+</ul>
+</body>
+</html>

@@ -819,17 +819,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderHydrographChart(depth);
+    inspectorPanel.style.right = '';
     inspectorPanel.classList.add('open');
     requestRender();
   }
 
   if (closeInspectorBtn) {
     closeInspectorBtn.addEventListener('click', () => {
+      inspectorPanel.style.right = `-${inspectorPanelWidth + 20}px`;
       inspectorPanel.classList.remove('open');
       selectedNode = null;
       requestRender();
     });
   }
+
+  // =========================================================================
+  // INSPECTOR DRAWER RESIZE (DRAG LEFT EDGE)
+  // =========================================================================
+  const inspectorResizeHandle = document.getElementById('inspectorResizeHandle');
+  let isResizingInspector = false;
+  let inspectorPanelWidth = 430;
+
+  if (inspectorResizeHandle) {
+    inspectorResizeHandle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isResizingInspector = true;
+      inspectorResizeHandle.classList.add('active');
+      inspectorPanel.style.transition = 'none';
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizingInspector || !inspectorPanel) return;
+    const viewportRect = inspectorPanel.parentElement.getBoundingClientRect();
+    let newWidth = viewportRect.right - e.clientX;
+    const maxWidth = Math.floor(viewportRect.width * 0.8);
+    newWidth = Math.max(260, Math.min(maxWidth, newWidth));
+    inspectorPanelWidth = newWidth;
+    inspectorPanel.style.width = `${newWidth}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isResizingInspector) return;
+    isResizingInspector = false;
+    if (inspectorResizeHandle) inspectorResizeHandle.classList.remove('active');
+    inspectorPanel.style.transition = '';
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
 
   function renderHydrographChart(peakDepth) {
     const el = document.getElementById('nodeHydrographCanvas');
@@ -951,7 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // =========================================================================
-  // REAL-WORLD GROUND INCIDENTS OVERLAY (OCT 19, 2024 BBMP LOGS)
+  // REAL-WORLD DOCUMENTED FLOOD LOCATIONS OVERLAY (OCT 2024 BENGALURU EVENTS)
   // =========================================================================
   async function toggleIncidentsDisplay(forceState) {
     if (forceState !== undefined) {
@@ -961,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (incidentsBtnText) {
-      incidentsBtnText.innerText = showIncidents ? 'Hide BBMP Ground Incidents' : 'Overlay Oct 19 BBMP Ground Incidents';
+      incidentsBtnText.innerText = showIncidents ? 'Hide Documented Oct 2024 Flood Locations' : 'Overlay Documented Oct 2024 Flood Locations';
     }
     if (toggleIncidentsBtn) {
       toggleIncidentsBtn.classList.toggle('active', showIncidents);
@@ -987,16 +1026,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const pinIcon = L.divIcon({ html: pinHtml, className: '', iconSize: [20, 20], iconAnchor: [10, 10] });
         const marker = L.marker([c.lat, c.lng], { icon: pinIcon }).addTo(leafletMap);
 
+        const reportedDepth = (c.reported_depth_m == null) ? 'Not reported (documented location)' : `${c.reported_depth_m} m`;
+        const predictedStage = (c.predicted_depth_m == null) ? 'See model run at stated intensity' : `${c.predicted_depth_m} m`;
+
         marker.bindPopup(`
-          <div style="font-family:var(--font-sans, sans-serif); padding:6px; color:#1E2B21; background:#FFFFFF; border:1px solid #D3DDD0; border-radius:4px; max-width:260px; box-shadow:0 3px 10px rgba(0,0,0,0.12);">
-            <div style="font-family:var(--font-mono, monospace); font-size:0.65rem; color:#C84B31; font-weight:700; margin-bottom:2px;">VERIFIED CITIZEN DISTRESS INCIDENT</div>
+          <div style="font-family:var(--font-sans, sans-serif); padding:6px; color:#1E2B21; background:#FFFFFF; border:1px solid #D3DDD0; border-radius:4px; max-width:280px; box-shadow:0 3px 10px rgba(0,0,0,0.12);">
+            <div style="font-family:var(--font-mono, monospace); font-size:0.65rem; color:#C84B31; font-weight:700; margin-bottom:2px;">DOCUMENTED FLOOD LOCATION (OCT 2024 NEWS REPORT)</div>
             <h4 style="margin:0 0 6px 0; font-size:0.85rem; color:#1E2B21; font-weight:700;">${c.name}</h4>
-            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:3px;"><strong>Reported Depth:</strong> <span style="color:#C97218; font-weight:700;">${c.reported_depth_m} m</span></div>
-            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:3px;"><strong>GNN Predicted Stage:</strong> <span style="color:#2E7D32; font-weight:700;">${c.predicted_depth_m} m</span></div>
+            ${c.description ? `<div style="font-size:0.72rem; color:#4F5E52; margin-bottom:3px;">${c.description}</div>` : ''}
+            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:3px;"><strong>Reported Depth:</strong> <span style="color:#C97218; font-weight:700;">${reportedDepth}</span></div>
+            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:3px;"><strong>Model Capture:</strong> <span style="color:#2E7D32; font-weight:700;">${predictedStage}</span></div>
             <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:3px;"><strong>Nearest Hazard Node:</strong> ${c.distance_m} m</div>
-            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:6px;"><strong>Source:</strong> ${c.source}</div>
+            <div style="font-size:0.7rem; color:#4F5E52; margin-bottom:3px;"><strong>Run assumption:</strong> ${json.metrics.storm_intensity_assumption_mmhr} mm/hr, ${json.metrics.duration_min} min</div>
+            <div style="font-size:0.75rem; color:#4F5E52; margin-bottom:6px;"><strong>Source:</strong> ${c.source.split(';')[0]}</div>
             <div style="font-family:var(--font-mono, monospace); font-size:0.7rem; font-weight:700; color:${c.is_captured ? '#2E7D32' : '#C84B31'}; border-top:1px solid #D8DFD4; padding-top:4px;">
-              Status: ${c.is_captured ? 'CAPTURED (<=50m Proximity)' : 'Boundary Proximate'}
+              Status: ${c.is_captured ? 'CAPTURED (hazard node <= 50m at run intensity)' : 'NOT CAPTURED at run intensity'}
             </div>
           </div>
         `);
@@ -1123,10 +1167,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const preset = btn.getAttribute('data-preset');
       if (preset === 'bengaluru_oct19') {
         regionSelect.value = 'hsr';
-        rainSlider.value = 105;
-        durationSlider.value = 90;
-        rainReadout.innerText = '105 mm/hr';
-        durationReadout.innerText = '90 min';
+        rainSlider.value = 100;
+        durationSlider.value = 60;
+        rainReadout.innerText = '100 mm/hr';
+        durationReadout.innerText = '60 min';
         loadGraphData('hsr').then(() => {
           toggleIncidentsDisplay(true);
         });

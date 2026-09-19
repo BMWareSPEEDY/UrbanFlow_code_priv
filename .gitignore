@@ -24,6 +24,12 @@ Thumbs.db
 expanded_master_physics_dataset.pt
 multi_scenario_physics_pyg_dataset.pt
 
+# Regenerable multi-hundred-MB .pt dataset caches (excluded from VCS)
+multi_scenario_full31_pyg_dataset.pt
+multi_scenario_full22_pyg_dataset.pt
+multi_scenario_pyg_dataset.pt
+multi_scenario_pyg_dataset_v2.pt
+
 # Regenerable experiment artifacts (deleted in cleanup; keep out of fresh clones)
 swmm_temporal/
 st_gnn/

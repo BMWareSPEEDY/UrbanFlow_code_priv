@@ -1,0 +1,3162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document id="root_doc">
+    <Schema id="BLR_Telemetric_rain_guages.schema">
+      <SimpleField name="OBJECTID" type="float"/>
+      <SimpleField name="KGISCode" type="string"/>
+      <SimpleField name="KGISTM_RainGauge_LocationID" type="float"/>
+      <SimpleField name="DepartmentCode" type="string"/>
+      <SimpleField name="TM_RainGauge_LocationName" type="string"/>
+      <SimpleField name="KGISVillageID" type="float"/>
+      <SimpleField name="KGISWardID" type="float"/>
+    </Schema>
+    <Document id="BLR_Telemetric_rain_guages">
+      <name>BLR_Telemetric_rain_guages</name>
+      <Placemark id="BLR_Telemetric_rain_guages.1">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3973</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1017</SimpleData>
+            <SimpleData name="DepartmentCode">1017</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Uttarahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19415</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5433080000918,12.9031650002363,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.2">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5333</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0002</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1018</SimpleData>
+            <SimpleData name="DepartmentCode">1018</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bangalore South (Begur)</SimpleData>
+            <SimpleData name="KGISVillageID">29125</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6266020001905,12.8741160004398,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.3">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3954</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0003</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1019</SimpleData>
+            <SimpleData name="DepartmentCode">1019</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kengeri</SimpleData>
+            <SimpleData name="KGISVillageID">19302</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4854399997688,12.9205980000563,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.4">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3894</SimpleData>
+            <SimpleData name="KGISCode">29572055426129050000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1432</SimpleData>
+            <SimpleData name="DepartmentCode">1432</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Jala (ITC)</SimpleData>
+            <SimpleData name="KGISVillageID">19066</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6785106223146,13.1687900075682,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.5">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3958</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0005</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1504</SimpleData>
+            <SimpleData name="DepartmentCode">1504</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Yelankha (Ksndmc)</SimpleData>
+            <SimpleData name="KGISVillageID">19336</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5623877893437,13.0955455834315,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.6">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3931</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0006</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1505</SimpleData>
+            <SimpleData name="DepartmentCode">1505</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Nagapura</SimpleData>
+            <SimpleData name="KGISVillageID">19210</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5522077031981,13.0095399599625,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.7">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5330</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0007</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1506</SimpleData>
+            <SimpleData name="DepartmentCode">1506</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Nandini Layout</SimpleData>
+            <SimpleData name="KGISVillageID">29090</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5345261122802,13.0140734902721,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.8">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3961</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0004</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1507</SimpleData>
+            <SimpleData name="DepartmentCode">1507</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bommanahalli Konanakunte</SimpleData>
+            <SimpleData name="KGISVillageID">19372</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5631644794373,12.8827606541144,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.9">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4008</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0003</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1508</SimpleData>
+            <SimpleData name="DepartmentCode">1508</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">East Banaswadi</SimpleData>
+            <SimpleData name="KGISVillageID">19633</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.658357195711,13.0117750290143,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.10">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3901</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0008</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1509</SimpleData>
+            <SimpleData name="DepartmentCode">1509</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">East Dommalur</SimpleData>
+            <SimpleData name="KGISVillageID">19100</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6383221352758,12.9625201866739,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.11">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5328</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0009</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1510</SimpleData>
+            <SimpleData name="DepartmentCode">1510</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">East Manorayanapalya</SimpleData>
+            <SimpleData name="KGISVillageID">29074</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5957245543749,13.0252859123202,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.12">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3934</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0010</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1511</SimpleData>
+            <SimpleData name="DepartmentCode">1511</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Rrnagara_Gnanabharathi</SimpleData>
+            <SimpleData name="KGISVillageID">19215</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5009859086738,12.9619851223955,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.13">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3949</SimpleData>
+            <SimpleData name="KGISCode">29572055436130190000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1512</SimpleData>
+            <SimpleData name="DepartmentCode">1512</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Rrnagara Kengeri</SimpleData>
+            <SimpleData name="KGISVillageID">19281</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4706784906622,12.9073350689896,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.14">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3947</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0005</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1513</SimpleData>
+            <SimpleData name="DepartmentCode">1513</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Rajarajeshwarinagar</SimpleData>
+            <SimpleData name="KGISVillageID">19271</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5171580941915,12.9222949415262,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.15">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3946</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0006</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1514</SimpleData>
+            <SimpleData name="DepartmentCode">1514</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">B.T.M.Layout</SimpleData>
+            <SimpleData name="KGISVillageID">19255</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6112372906701,12.9154949992181,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.16">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3909</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0011</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1515</SimpleData>
+            <SimpleData name="DepartmentCode">1515</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Vishweshwarapuram</SimpleData>
+            <SimpleData name="KGISVillageID">19125</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5826775341375,12.953494674643,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.17">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5327</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0012</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1516</SimpleData>
+            <SimpleData name="DepartmentCode">1516</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Cottonpete</SimpleData>
+            <SimpleData name="KGISVillageID">29065</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5645061067296,12.9727261730599,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.18">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3908</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0013</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1517</SimpleData>
+            <SimpleData name="DepartmentCode">1517</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Rajamahal Guttahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19117</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5770833483535,13.001114174476,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.19">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3936</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0014</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1518</SimpleData>
+            <SimpleData name="DepartmentCode">1518</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Rajajinagar</SimpleData>
+            <SimpleData name="KGISVillageID">19221</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5499127436897,12.9939340101322,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.20">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3913</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0015</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1519</SimpleData>
+            <SimpleData name="DepartmentCode">1519</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Byatarayanapura</SimpleData>
+            <SimpleData name="KGISVillageID">19149</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6048560068773,13.0638551995491,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.21">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3918</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0016</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1520</SimpleData>
+            <SimpleData name="DepartmentCode">1520</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Jakkuru</SimpleData>
+            <SimpleData name="KGISVillageID">19175</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6298541000313,13.0879300977303,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.22">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3915</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0017</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1521</SimpleData>
+            <SimpleData name="DepartmentCode">1521</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kodigehalli</SimpleData>
+            <SimpleData name="KGISVillageID">19165</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5771860205718,13.0540689301599,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.23">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3921</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0018</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1522</SimpleData>
+            <SimpleData name="DepartmentCode">1522</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bagalkunte</SimpleData>
+            <SimpleData name="KGISVillageID">19184</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5067080003052,13.0550969999334,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.24">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3924</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0019</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1523</SimpleData>
+            <SimpleData name="DepartmentCode">1523</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Shettihalli</SimpleData>
+            <SimpleData name="KGISVillageID">19194</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5279239159983,13.0690632241,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.25">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5922</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0020</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1524</SimpleData>
+            <SimpleData name="DepartmentCode">1524</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sampangiramanagar</SimpleData>
+            <SimpleData name="KGISVillageID">32610</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6067738419309,12.9832313397371,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.26">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5923</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0021</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1525</SimpleData>
+            <SimpleData name="DepartmentCode">1525</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sampangiramanagar-2</SimpleData>
+            <SimpleData name="KGISVillageID">32610</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5826333927433,12.9732107757719,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.27">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3910</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0022</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1526</SimpleData>
+            <SimpleData name="DepartmentCode">1526</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Vannarpet</SimpleData>
+            <SimpleData name="KGISVillageID">19131</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6223389999651,12.9512219997518,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.28">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3927</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0023</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1527</SimpleData>
+            <SimpleData name="DepartmentCode">1527</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Doddabidirekallu</SimpleData>
+            <SimpleData name="KGISVillageID">19200</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4844156647987,13.0075255293831,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.29">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5920</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0024</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1528</SimpleData>
+            <SimpleData name="DepartmentCode">1528</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Pulakeshinagar</SimpleData>
+            <SimpleData name="KGISVillageID">32578</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6150622575021,12.9997467966663,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.30">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4007</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0004</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1529</SimpleData>
+            <SimpleData name="DepartmentCode">1529</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Horamavu</SimpleData>
+            <SimpleData name="KGISVillageID">19628</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6567638259365,13.0367468618585,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.31">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4025</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0005</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1530</SimpleData>
+            <SimpleData name="DepartmentCode">1530</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bellandur</SimpleData>
+            <SimpleData name="KGISVillageID">19729</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6719677134512,12.9281607697548,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.32">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3974</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0007</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1531</SimpleData>
+            <SimpleData name="DepartmentCode">1531</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Pattabhiramanagar</SimpleData>
+            <SimpleData name="KGISVillageID">19418</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5817187986704,12.9314327156052,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.33">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3929</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0025</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1532</SimpleData>
+            <SimpleData name="DepartmentCode">1532</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Peenya Indl.Area</SimpleData>
+            <SimpleData name="KGISVillageID">19204</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5061440001894,13.0170059996099,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.34">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5331</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0026</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1533</SimpleData>
+            <SimpleData name="DepartmentCode">1533</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Herohalli</SimpleData>
+            <SimpleData name="KGISVillageID">29118</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4898783273404,12.9811744387243,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.35">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5329</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0027</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1534</SimpleData>
+            <SimpleData name="DepartmentCode">1534</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Attur</SimpleData>
+            <SimpleData name="KGISVillageID">29089</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5665330007241,13.102750000158,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.36">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4013</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0006</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1535</SimpleData>
+            <SimpleData name="DepartmentCode">1535</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hal Airport</SimpleData>
+            <SimpleData name="KGISVillageID">19657</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6651133046322,12.9622942206843,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.37">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3920</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0028</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1536</SimpleData>
+            <SimpleData name="DepartmentCode">1536</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Vidyaranyapura</SimpleData>
+            <SimpleData name="KGISVillageID">19179</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5610639994045,13.083435999821,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.38">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3898</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0029</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1537</SimpleData>
+            <SimpleData name="DepartmentCode">1537</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Gali Anjaneya Temple</SimpleData>
+            <SimpleData name="KGISVillageID">19095</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5450213558132,12.9501486177351,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.39">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3967</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0008</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1538</SimpleData>
+            <SimpleData name="DepartmentCode">1538</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Vidyapeeta</SimpleData>
+            <SimpleData name="KGISVillageID">19390</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.555401959859,12.9288628980291,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.40">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3917</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0030</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1539</SimpleData>
+            <SimpleData name="DepartmentCode">1539</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Chowdeshwari</SimpleData>
+            <SimpleData name="KGISVillageID">19170</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5829561177728,13.1143180885942,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.41">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5336</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0009</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1540</SimpleData>
+            <SimpleData name="DepartmentCode">1540</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Nayandahalli</SimpleData>
+            <SimpleData name="KGISVillageID">29144</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5206359998694,12.9359279994316,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.42">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5859</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0010</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1541</SimpleData>
+            <SimpleData name="DepartmentCode">1541</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Arakere</SimpleData>
+            <SimpleData name="KGISVillageID">32368</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6027362204904,12.8859340116662,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.43">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3941</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0011</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1542</SimpleData>
+            <SimpleData name="DepartmentCode">1542</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bilekahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19231</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6049643391441,12.8966074135759,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.44">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3923</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0031</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1543</SimpleData>
+            <SimpleData name="DepartmentCode">1543</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Chokkasandra</SimpleData>
+            <SimpleData name="KGISVillageID">19187</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.506605135065,13.0387026159984,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.45">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3928</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0032</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1544</SimpleData>
+            <SimpleData name="DepartmentCode">1544</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Heggenahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19201</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5029412623722,12.999119450566,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.46">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4004</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0007</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1545</SimpleData>
+            <SimpleData name="DepartmentCode">1545</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Benniganahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19618</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6520786437576,12.9983040691213,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.47">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3902</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0033</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1546</SimpleData>
+            <SimpleData name="DepartmentCode">1546</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hbr Layout</SimpleData>
+            <SimpleData name="KGISVillageID">19108</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6345330005168,13.0347329995249,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.48">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3905</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0034</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1547</SimpleData>
+            <SimpleData name="DepartmentCode">1547</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hoysala Nagar</SimpleData>
+            <SimpleData name="KGISVillageID">19111</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6374588499033,12.9822853396642,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.49">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3907</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0035</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1548</SimpleData>
+            <SimpleData name="DepartmentCode">1548</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kushalnagar</SimpleData>
+            <SimpleData name="KGISVillageID">19114</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6180316917809,13.0201862363711,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.50">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3900</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0036</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1549</SimpleData>
+            <SimpleData name="DepartmentCode">1549</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">V.Nagenahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19097</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5989890000901,13.035681000658,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.51">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3987</SimpleData>
+            <SimpleData name="KGISCode">29572055446130820000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1550</SimpleData>
+            <SimpleData name="DepartmentCode">1550</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Basavanapura</SimpleData>
+            <SimpleData name="KGISVillageID">19505</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7196918835612,13.0253515329471,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.52">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4006</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0008</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1551</SimpleData>
+            <SimpleData name="DepartmentCode">1551</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hoodi</SimpleData>
+            <SimpleData name="KGISVillageID">19626</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7190429330446,12.9979777405045,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.53">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4011</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0009</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1552</SimpleData>
+            <SimpleData name="DepartmentCode">1552</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Horamavu-2</SimpleData>
+            <SimpleData name="KGISVillageID">19645</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6436057438131,13.0628280587148,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.54">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4012</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0010</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1553</SimpleData>
+            <SimpleData name="DepartmentCode">1553</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">K.R.Puram</SimpleData>
+            <SimpleData name="KGISVillageID">19647</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6930029752716,13.0109094824365,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.55">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3985</SimpleData>
+            <SimpleData name="KGISCode">29572055446130790000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1554</SimpleData>
+            <SimpleData name="DepartmentCode">1554</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Ramamurthy Nagar</SimpleData>
+            <SimpleData name="KGISVillageID">19492</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6860707900724,13.0275467245141,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.56">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3950</SimpleData>
+            <SimpleData name="KGISCode">29572055436130190000RDDMCPUSCRTRS0002</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1555</SimpleData>
+            <SimpleData name="DepartmentCode">1555</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hemmigepura</SimpleData>
+            <SimpleData name="KGISVillageID">19281</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4884223935947,12.9012750253432,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.57">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5335</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0012</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1556</SimpleData>
+            <SimpleData name="DepartmentCode">1556</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Koramangala</SimpleData>
+            <SimpleData name="KGISVillageID">29132</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6242462364904,12.9308961483281,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.58">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3903</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0037</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1557</SimpleData>
+            <SimpleData name="DepartmentCode">1557</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Maruthi Mandira</SimpleData>
+            <SimpleData name="KGISVillageID">19110</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5310920003151,12.9672060000403,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.59">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3932</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0038</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1558</SimpleData>
+            <SimpleData name="DepartmentCode">1558</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Dayanandanagar</SimpleData>
+            <SimpleData name="KGISVillageID">19210</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5647286854828,12.9899685106061,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.60">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3911</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0039</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1559</SimpleData>
+            <SimpleData name="DepartmentCode">1559</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Doddabommasandra</SimpleData>
+            <SimpleData name="KGISVillageID">19142</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5517408780868,13.055049009298,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.61">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4005</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0011</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1595</SimpleData>
+            <SimpleData name="DepartmentCode">1595</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hagaduru</SimpleData>
+            <SimpleData name="KGISVillageID">19625</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7544785011322,12.9695855131738,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.62">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5337</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0012</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1596</SimpleData>
+            <SimpleData name="DepartmentCode">1596</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kadugodi</SimpleData>
+            <SimpleData name="KGISVillageID">29164</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7636867055025,12.9967427078704,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.63">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3972</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0013</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1597</SimpleData>
+            <SimpleData name="DepartmentCode">1597</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hemmigepura-2</SimpleData>
+            <SimpleData name="KGISVillageID">19411</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5318698067646,12.8643407791733,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.64">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3944</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0014</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1598</SimpleData>
+            <SimpleData name="DepartmentCode">1598</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Lakkasandra</SimpleData>
+            <SimpleData name="KGISVillageID">19246</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5977990478986,12.9419091706215,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.65">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3904</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0040</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1599</SimpleData>
+            <SimpleData name="DepartmentCode">1599</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hampi Nagar</SimpleData>
+            <SimpleData name="KGISVillageID">19110</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5382389994069,12.9644609999701,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.66">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4023</SimpleData>
+            <SimpleData name="KGISCode">29572055456133580000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">164</SimpleData>
+            <SimpleData name="DepartmentCode">164</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sarjapur</SimpleData>
+            <SimpleData name="KGISVillageID">19719</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7881039996381,12.8599349998701,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.67">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3962</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0015</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1674</SimpleData>
+            <SimpleData name="DepartmentCode">1674</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Anjanapura</SimpleData>
+            <SimpleData name="KGISVillageID">19373</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5611061907052,12.8571238800482,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.68">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3940</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0016</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1675</SimpleData>
+            <SimpleData name="DepartmentCode">1675</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Begur</SimpleData>
+            <SimpleData name="KGISVillageID">19228</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5944800918393,12.8491309708366,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.69">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3964</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0017</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1676</SimpleData>
+            <SimpleData name="DepartmentCode">1676</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Gottigere</SimpleData>
+            <SimpleData name="KGISVillageID">19374</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5856925652803,12.8524964055474,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.70">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4019</SimpleData>
+            <SimpleData name="KGISCode">29572055456131840000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1677</SimpleData>
+            <SimpleData name="DepartmentCode">1677</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Singasandra</SimpleData>
+            <SimpleData name="KGISVillageID">19702</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6496825816223,12.8885813524583,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.71">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5865</SimpleData>
+            <SimpleData name="KGISCode">29572055446131190000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1678</SimpleData>
+            <SimpleData name="DepartmentCode">1678</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bellandur-2</SimpleData>
+            <SimpleData name="KGISVillageID">32385</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7021271358369,12.9056262665529,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.72">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4009</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0013</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1679</SimpleData>
+            <SimpleData name="DepartmentCode">1679</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Garudacharpalya</SimpleData>
+            <SimpleData name="KGISVillageID">19639</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.69922926931,12.993283787896,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.73">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5860</SimpleData>
+            <SimpleData name="KGISCode">29572055436129880000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1695</SimpleData>
+            <SimpleData name="DepartmentCode">1695</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Chikkanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">32371</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.3553053578056,12.88114217007,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.74">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3951</SimpleData>
+            <SimpleData name="KGISCode">29572055436130270000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1696</SimpleData>
+            <SimpleData name="DepartmentCode">1696</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kg Halli (Gonipura)</SimpleData>
+            <SimpleData name="KGISVillageID">19286</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4532530005039,12.8423319996144,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.75">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3957</SimpleData>
+            <SimpleData name="KGISCode">29572055436129720000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1698</SimpleData>
+            <SimpleData name="DepartmentCode">1698</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Tavarekere</SimpleData>
+            <SimpleData name="KGISVillageID">19322</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.3463926724836,12.9571311886277,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.76">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3959</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0041</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">1778</SimpleData>
+            <SimpleData name="DepartmentCode">1778</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Ksndmc-Geoedge</SimpleData>
+            <SimpleData name="KGISVillageID">19336</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5628089669616,13.0927350504503,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.77">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3975</SimpleData>
+            <SimpleData name="KGISCode">29572055456133590000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">212</SimpleData>
+            <SimpleData name="DepartmentCode">212</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Attibele</SimpleData>
+            <SimpleData name="KGISVillageID">19423</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7735200003178,12.7754019999377,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.78">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4003</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">213</SimpleData>
+            <SimpleData name="DepartmentCode">213</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bangalore East (Krishnarajapur)</SimpleData>
+            <SimpleData name="KGISVillageID">19616</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6810680754497,13.0012706769738,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.79">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3875</SimpleData>
+            <SimpleData name="KGISCode">29572055426127800000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">233</SimpleData>
+            <SimpleData name="DepartmentCode">233</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Dasanapura</SimpleData>
+            <SimpleData name="KGISVillageID">18929</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4370860002205,13.0743389995468,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.80">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3942</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0018</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2411</SimpleData>
+            <SimpleData name="DepartmentCode">2411</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bommanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19232</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6296450004273,12.9061560001695,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.81">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3969</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0019</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2412</SimpleData>
+            <SimpleData name="DepartmentCode">2412</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Konanakunte-2</SimpleData>
+            <SimpleData name="KGISVillageID">19396</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5693241957053,12.8858578402807,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.82">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3935</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0042</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2413</SimpleData>
+            <SimpleData name="DepartmentCode">2413</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Nagarabhavi</SimpleData>
+            <SimpleData name="KGISVillageID">19216</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5185601659483,12.9570049894307,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.83">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3948</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0020</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2414</SimpleData>
+            <SimpleData name="DepartmentCode">2414</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Rajarajeshwarinagar-2</SimpleData>
+            <SimpleData name="KGISVillageID">19271</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5207245018987,12.90870113671,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.84">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4035</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0021</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2415</SimpleData>
+            <SimpleData name="DepartmentCode">2415</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Basavanagudi</SimpleData>
+            <SimpleData name="KGISVillageID">19831</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5687617943755,12.9374268763479,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.85">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3965</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0022</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2416</SimpleData>
+            <SimpleData name="DepartmentCode">2416</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kumaraswamy Layout</SimpleData>
+            <SimpleData name="KGISVillageID">19386</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5627668644953,12.9076445065685,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.86">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5924</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0043</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2417</SimpleData>
+            <SimpleData name="DepartmentCode">2417</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Chamarajpete</SimpleData>
+            <SimpleData name="KGISVillageID">32610</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5638056706741,12.9588842052704,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.87">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3926</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0044</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2846</SimpleData>
+            <SimpleData name="DepartmentCode">2846</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Agrahara Dasarahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19199</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.540327172995,12.9825610336197,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.88">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3916</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0045</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2874</SimpleData>
+            <SimpleData name="DepartmentCode">2874</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Yelahanka</SimpleData>
+            <SimpleData name="KGISVillageID">19166</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6294055490683,13.1007131194284,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.89">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3899</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0046</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2875</SimpleData>
+            <SimpleData name="DepartmentCode">2875</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Radhakrishna Temple Ward</SimpleData>
+            <SimpleData name="KGISVillageID">19096</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5672796568569,13.0421219339299,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.90">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5332</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0047</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2876</SimpleData>
+            <SimpleData name="DepartmentCode">2876</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Rrnagara_Hmt Ward</SimpleData>
+            <SimpleData name="KGISVillageID">29122</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5313301036813,13.0356787589804,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.91">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3970</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0023</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2878</SimpleData>
+            <SimpleData name="DepartmentCode">2878</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sarakki</SimpleData>
+            <SimpleData name="KGISVillageID">19399</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5878885357673,12.909440855112,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.92">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4010</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0014</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2879</SimpleData>
+            <SimpleData name="DepartmentCode">2879</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Vijnana Nagara</SimpleData>
+            <SimpleData name="KGISVillageID">19644</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.680600384806,12.9836540750622,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.93">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3906</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0048</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2880</SimpleData>
+            <SimpleData name="DepartmentCode">2880</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kammanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19112</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6364249911801,13.0108948235428,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.94">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5864</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0015</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2881</SimpleData>
+            <SimpleData name="DepartmentCode">2881</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Marathahalli</SimpleData>
+            <SimpleData name="KGISVillageID">32384</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6838476167263,12.9429310598708,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.95">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5341</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0016</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2882</SimpleData>
+            <SimpleData name="DepartmentCode">2882</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Doddanekkundi</SimpleData>
+            <SimpleData name="KGISVillageID">29192</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6973629551871,12.970770753929,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.96">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4014</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0017</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2883</SimpleData>
+            <SimpleData name="DepartmentCode">2883</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hal Airport-2</SimpleData>
+            <SimpleData name="KGISVillageID">19657</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6847672495577,12.9551940412177,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.97">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3939</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0024</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2884</SimpleData>
+            <SimpleData name="DepartmentCode">2884</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hsr Layout</SimpleData>
+            <SimpleData name="KGISVillageID">19226</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6476032092017,12.9234239671607,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.98">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3930</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0049</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2885</SimpleData>
+            <SimpleData name="DepartmentCode">2885</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Marappanapalya</SimpleData>
+            <SimpleData name="KGISVillageID">19209</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5495503798766,13.0187297093425,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.99">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5338</SimpleData>
+            <SimpleData name="KGISCode">29572055446131140000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">2891</SimpleData>
+            <SimpleData name="DepartmentCode">2891</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Konena Agrahara</SimpleData>
+            <SimpleData name="KGISVillageID">29170</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7485379997522,13.0010579999771,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.100">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3925</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">320</SimpleData>
+            <SimpleData name="DepartmentCode">320</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Yashavanthapur</SimpleData>
+            <SimpleData name="KGISVillageID">19198</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5514404065734,13.0395286023513,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.101">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3992</SimpleData>
+            <SimpleData name="KGISCode">29572055456133600000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">321</SimpleData>
+            <SimpleData name="DepartmentCode">321</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Jigani</SimpleData>
+            <SimpleData name="KGISVillageID">19531</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6375049996864,12.7852650003132,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.102">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3891</SimpleData>
+            <SimpleData name="KGISCode">29572055426128970000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">322</SimpleData>
+            <SimpleData name="DepartmentCode">322</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Jala</SimpleData>
+            <SimpleData name="KGISVillageID">19045</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.634801000251,13.1689800000543,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.103">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3989</SimpleData>
+            <SimpleData name="KGISCode">29572055456131680000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3360</SimpleData>
+            <SimpleData name="DepartmentCode">3360</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Haragadde</SimpleData>
+            <SimpleData name="KGISVillageID">19521</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6561750002158,12.7620490004351,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.104">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3991</SimpleData>
+            <SimpleData name="KGISCode">29572055456131610000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3361</SimpleData>
+            <SimpleData name="DepartmentCode">3361</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hulimangala</SimpleData>
+            <SimpleData name="KGISVillageID">19526</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.639592,12.8179470004157,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.105">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3995</SimpleData>
+            <SimpleData name="KGISCode">29572055456131520000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3362</SimpleData>
+            <SimpleData name="DepartmentCode">3362</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Ragihalli</SimpleData>
+            <SimpleData name="KGISVillageID">19549</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5755160001381,12.7380830000325,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.106">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4000</SimpleData>
+            <SimpleData name="KGISCode">29572055456133530000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3363</SimpleData>
+            <SimpleData name="DepartmentCode">3363</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Samanduru</SimpleData>
+            <SimpleData name="KGISVillageID">19604</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7540179996916,12.7129820001031,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.107">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4015</SimpleData>
+            <SimpleData name="KGISCode">29572055456133540000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3364</SimpleData>
+            <SimpleData name="DepartmentCode">3364</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Dommasandra</SimpleData>
+            <SimpleData name="KGISVillageID">19680</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7549089997895,12.8763179999671,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.108">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5342</SimpleData>
+            <SimpleData name="KGISCode">29572055446131150000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3365</SimpleData>
+            <SimpleData name="DepartmentCode">3365</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Halanayakanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">29204</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6894950000588,12.8984370000461,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.109">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3912</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0050</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3366</SimpleData>
+            <SimpleData name="DepartmentCode">3366</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Gantiganahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19143</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5883125511175,13.1424803452677,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.110">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3876</SimpleData>
+            <SimpleData name="KGISCode">29572055426127490000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3367</SimpleData>
+            <SimpleData name="DepartmentCode">3367</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Gopalapura</SimpleData>
+            <SimpleData name="KGISVillageID">18932</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4285620003129,13.1394989997059,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.111">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3893</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0051</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3368</SimpleData>
+            <SimpleData name="DepartmentCode">3368</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hunasemaranahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19060</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6198340004112,13.1408060001769,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.112">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3937</SimpleData>
+            <SimpleData name="KGISCode">29572055426128190000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3369</SimpleData>
+            <SimpleData name="DepartmentCode">3369</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Somashettihalli</SimpleData>
+            <SimpleData name="KGISVillageID">19222</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5220700001027,13.0861359996624,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.113">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3914</SimpleData>
+            <SimpleData name="KGISCode">29572055426129450000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3370</SimpleData>
+            <SimpleData name="DepartmentCode">3370</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Vaderahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19162</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5393880000249,13.0944459999402,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.114">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3963</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0025</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3371</SimpleData>
+            <SimpleData name="DepartmentCode">3371</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">H.Gollahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19373</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5658800000256,12.8607020004301,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.115">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4018</SimpleData>
+            <SimpleData name="KGISCode">29572055456131860000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3454</SimpleData>
+            <SimpleData name="DepartmentCode">3454</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Shanthipura</SimpleData>
+            <SimpleData name="KGISVillageID">19697</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6868321822944,12.8738152612817,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.116">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3976</SimpleData>
+            <SimpleData name="KGISCode">29572055456132920000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3632</SimpleData>
+            <SimpleData name="DepartmentCode">3632</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Balluru</SimpleData>
+            <SimpleData name="KGISVillageID">19425</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7883909996948,12.7524689999942,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.117">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3956</SimpleData>
+            <SimpleData name="KGISCode">29572055436129930000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3633</SimpleData>
+            <SimpleData name="DepartmentCode">3633</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Chunchanakuppe</SimpleData>
+            <SimpleData name="KGISVillageID">19310</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.3876929995658,12.9080280001382,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.118">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3943</SimpleData>
+            <SimpleData name="KGISCode">29572055436130630000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">3634</SimpleData>
+            <SimpleData name="DepartmentCode">3634</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Konappanaagrahara</SimpleData>
+            <SimpleData name="KGISVillageID">19245</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6658910001155,12.8539339997549,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.119">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3889</SimpleData>
+            <SimpleData name="KGISCode">29572055426129170000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4070</SimpleData>
+            <SimpleData name="DepartmentCode">4070</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bandikodagehalli</SimpleData>
+            <SimpleData name="KGISVillageID">19041</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6909859997454,13.1699310003503,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.120">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3890</SimpleData>
+            <SimpleData name="KGISCode">29572055426128950000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4071</SimpleData>
+            <SimpleData name="DepartmentCode">4071</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bettahalasooru</SimpleData>
+            <SimpleData name="KGISVillageID">19044</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.610957999761,13.1598980003999,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.121">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3892</SimpleData>
+            <SimpleData name="KGISCode">29572055426128990000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4072</SimpleData>
+            <SimpleData name="DepartmentCode">4072</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Doddajala</SimpleData>
+            <SimpleData name="KGISVillageID">19046</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6543110001383,13.1754039996472,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.122">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3895</SimpleData>
+            <SimpleData name="KGISCode">29572055426129290000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4073</SimpleData>
+            <SimpleData name="DepartmentCode">4073</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Marenahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19076</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6800760004416,13.1188659996636,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.123">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3896</SimpleData>
+            <SimpleData name="KGISCode">29572055426129110000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4074</SimpleData>
+            <SimpleData name="DepartmentCode">4074</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sonnappanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19084</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6179950003844,13.1548449998525,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.124">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3919</SimpleData>
+            <SimpleData name="KGISCode">29572055426129370000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4075</SimpleData>
+            <SimpleData name="DepartmentCode">4075</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Singanayakanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19177</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5684979997709,13.1456119999896,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.125">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3922</SimpleData>
+            <SimpleData name="KGISCode">29572055426129500000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4076</SimpleData>
+            <SimpleData name="DepartmentCode">4076</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Chikkabanavara</SimpleData>
+            <SimpleData name="KGISVillageID">19185</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.502393000163,13.0810450000308,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.126">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3933</SimpleData>
+            <SimpleData name="KGISCode">29572055426128220000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4077</SimpleData>
+            <SimpleData name="DepartmentCode">4077</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kodigehalli</SimpleData>
+            <SimpleData name="KGISVillageID">19211</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4649590003649,12.9755399997796,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.127">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3955</SimpleData>
+            <SimpleData name="KGISCode">29572055436129760000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4078</SimpleData>
+            <SimpleData name="DepartmentCode">4078</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Cholanayakanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19309</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.3621070003641,12.959368000046,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.128">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3952</SimpleData>
+            <SimpleData name="KGISCode">29572055436130160000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4079</SimpleData>
+            <SimpleData name="DepartmentCode">4079</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Ramohalli</SimpleData>
+            <SimpleData name="KGISVillageID">19296</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4193880000365,12.9048929996536,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.129">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3953</SimpleData>
+            <SimpleData name="KGISCode">29572055436130120000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4080</SimpleData>
+            <SimpleData name="DepartmentCode">4080</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sulikere</SimpleData>
+            <SimpleData name="KGISVillageID">19299</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4490389996692,12.9379190002336,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.130">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3966</SimpleData>
+            <SimpleData name="KGISCode">29572055436130420000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4081</SimpleData>
+            <SimpleData name="DepartmentCode">4081</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kaggalipura</SimpleData>
+            <SimpleData name="KGISVillageID">19389</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5089740003656,12.7995609997234,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.131">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3971</SimpleData>
+            <SimpleData name="KGISCode">29572055436130500000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4082</SimpleData>
+            <SimpleData name="DepartmentCode">4082</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Somanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19409</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5058340002348,12.7722900001447,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.132">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3968</SimpleData>
+            <SimpleData name="KGISCode">29572055436130470000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4083</SimpleData>
+            <SimpleData name="DepartmentCode">4083</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Tharalu</SimpleData>
+            <SimpleData name="KGISVillageID">19392</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5223539999326,12.7883310000954,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.133">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4016</SimpleData>
+            <SimpleData name="KGISCode">29572055456132240000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4661</SimpleData>
+            <SimpleData name="DepartmentCode">4661</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Handenahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19688</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7671540001252,12.8246249996504,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.134">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4017</SimpleData>
+            <SimpleData name="KGISCode">29572055456131920000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4662</SimpleData>
+            <SimpleData name="DepartmentCode">4662</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Huskuru</SimpleData>
+            <SimpleData name="KGISVillageID">19692</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7080149998073,12.8599600002055,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.135">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4020</SimpleData>
+            <SimpleData name="KGISCode">29572055456132440000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4663</SimpleData>
+            <SimpleData name="DepartmentCode">4663</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Mugaluru</SimpleData>
+            <SimpleData name="KGISVillageID">19707</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.8225729997174,12.8924460002794,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.136">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4022</SimpleData>
+            <SimpleData name="KGISCode">29572055456132370000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4664</SimpleData>
+            <SimpleData name="DepartmentCode">4664</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Neriga</SimpleData>
+            <SimpleData name="KGISVillageID">19713</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.778747371962,12.9116596078799,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.137">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4021</SimpleData>
+            <SimpleData name="KGISCode">29572055456132010000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4665</SimpleData>
+            <SimpleData name="DepartmentCode">4665</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Mutthanalluru</SimpleData>
+            <SimpleData name="KGISVillageID">19708</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7362259996581,12.831696999871,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.138">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4024</SimpleData>
+            <SimpleData name="KGISCode">29572055456132170000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4666</SimpleData>
+            <SimpleData name="DepartmentCode">4666</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Yamare</SimpleData>
+            <SimpleData name="KGISVillageID">19727</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7669710000552,12.8715060002723,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.139">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3977</SimpleData>
+            <SimpleData name="KGISCode">29572055456132890000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4667</SimpleData>
+            <SimpleData name="DepartmentCode">4667</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bidaraguppe</SimpleData>
+            <SimpleData name="KGISVillageID">19429</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7874519998032,12.8045340004066,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.140">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3978</SimpleData>
+            <SimpleData name="KGISCode">29572055456133570000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4668</SimpleData>
+            <SimpleData name="DepartmentCode">4668</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bommasandra</SimpleData>
+            <SimpleData name="KGISVillageID">19430</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6992000001184,12.8143710003705,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.141">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3979</SimpleData>
+            <SimpleData name="KGISCode">29572055456132620000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4669</SimpleData>
+            <SimpleData name="DepartmentCode">4669</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Chandapura</SimpleData>
+            <SimpleData name="KGISVillageID">19431</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7137649996495,12.8017709998975,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.142">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3980</SimpleData>
+            <SimpleData name="KGISCode">29572055456133550000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4670</SimpleData>
+            <SimpleData name="DepartmentCode">4670</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hebbagodi</SimpleData>
+            <SimpleData name="KGISVillageID">19439</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6760380000158,12.8260919996523,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.143">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3981</SimpleData>
+            <SimpleData name="KGISCode">29572055456132780000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4671</SimpleData>
+            <SimpleData name="DepartmentCode">4671</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Mayasandra</SimpleData>
+            <SimpleData name="KGISVillageID">19451</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.74807000027,12.7522400004025,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.144">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3982</SimpleData>
+            <SimpleData name="KGISCode">29572055456132680000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4672</SimpleData>
+            <SimpleData name="DepartmentCode">4672</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Neraluru</SimpleData>
+            <SimpleData name="KGISVillageID">19453</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.729428999793,12.7947829996802,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.145">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3988</SimpleData>
+            <SimpleData name="KGISCode">29572055456131320000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4673</SimpleData>
+            <SimpleData name="DepartmentCode">4673</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bannerughatta</SimpleData>
+            <SimpleData name="KGISVillageID">19512</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5789579997214,12.8126090002878,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.146">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3990</SimpleData>
+            <SimpleData name="KGISCode">29572055456131800000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4674</SimpleData>
+            <SimpleData name="DepartmentCode">4674</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hennagara</SimpleData>
+            <SimpleData name="KGISVillageID">19523</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6734519997006,12.7868650001342,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.147">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3993</SimpleData>
+            <SimpleData name="KGISCode">29572055456131500000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4675</SimpleData>
+            <SimpleData name="DepartmentCode">4675</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kallubalu</SimpleData>
+            <SimpleData name="KGISVillageID">19537</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6226929995729,12.7682029999964,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.148">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3994</SimpleData>
+            <SimpleData name="KGISCode">29572055456131380000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4676</SimpleData>
+            <SimpleData name="DepartmentCode">4676</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Mantapa</SimpleData>
+            <SimpleData name="KGISVillageID">19543</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.597874000319,12.8067600002846,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.149">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3996</SimpleData>
+            <SimpleData name="KGISCode">29572055456133150000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4677</SimpleData>
+            <SimpleData name="DepartmentCode">4677</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Byagadadenahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19567</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7031919996786,12.7512950001266,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.150">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3997</SimpleData>
+            <SimpleData name="KGISCode">29572055456133020000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4678</SimpleData>
+            <SimpleData name="DepartmentCode">4678</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Indlawadi</SimpleData>
+            <SimpleData name="KGISVillageID">19582</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6386950001726,12.7274430001975,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.151">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3998</SimpleData>
+            <SimpleData name="KGISCode">29572055456133490000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4679</SimpleData>
+            <SimpleData name="DepartmentCode">4679</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Karpur</SimpleData>
+            <SimpleData name="KGISVillageID">19589</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7207730000645,12.7248870004119,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.152">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3999</SimpleData>
+            <SimpleData name="KGISCode">29572055456133160000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4680</SimpleData>
+            <SimpleData name="DepartmentCode">4680</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Marasuru</SimpleData>
+            <SimpleData name="KGISVillageID">19597</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7138569996338,12.7599110003414,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.153">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3945</SimpleData>
+            <SimpleData name="KGISCode">29572055438031620000RDDMCPUSCRTRS0026</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4759</SimpleData>
+            <SimpleData name="DepartmentCode">4759</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Singasandra-2</SimpleData>
+            <SimpleData name="KGISVillageID">19254</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6495359998952,12.8763649998023,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.154">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4001</SimpleData>
+            <SimpleData name="KGISCode">29572055456132970000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4769</SimpleData>
+            <SimpleData name="DepartmentCode">4769</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Suragajakkanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19610</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.66758899974,12.7386139995691,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.155">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4002</SimpleData>
+            <SimpleData name="KGISCode">29572055456133340000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4770</SimpleData>
+            <SimpleData name="DepartmentCode">4770</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Vanakanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19615</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6944154496603,12.6707067858319,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.156">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5863</SimpleData>
+            <SimpleData name="KGISCode">29572055446131140000RDDMCPUSCRTRS0002</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4771</SimpleData>
+            <SimpleData name="DepartmentCode">4771</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sheegehalli</SimpleData>
+            <SimpleData name="KGISVillageID">32381</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7654300001317,13.0085869999411,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.157">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3883</SimpleData>
+            <SimpleData name="KGISCode">29572055426128350000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4772</SimpleData>
+            <SimpleData name="DepartmentCode">4772</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Arakere</SimpleData>
+            <SimpleData name="KGISVillageID">18989</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5393480003248,13.1991360001073,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.158">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3888</SimpleData>
+            <SimpleData name="KGISCode">29572055426128260000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4773</SimpleData>
+            <SimpleData name="DepartmentCode">4773</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sonnenahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19037</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5021570003549,13.1956949999073,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.159">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3874</SimpleData>
+            <SimpleData name="KGISCode">29572055426127730000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4774</SimpleData>
+            <SimpleData name="DepartmentCode">4774</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Aluru</SimpleData>
+            <SimpleData name="KGISVillageID">18923</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4658939999254,13.084336000084,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.160">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3881</SimpleData>
+            <SimpleData name="KGISCode">29572055426127910000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">4775</SimpleData>
+            <SimpleData name="DepartmentCode">4775</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Madavara</SimpleData>
+            <SimpleData name="KGISVillageID">18973</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.473717000082,13.0518749997026,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.161">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3983</SimpleData>
+            <SimpleData name="KGISCode">29572055446131010000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5811</SimpleData>
+            <SimpleData name="DepartmentCode">5811</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Avalahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19460</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7380220001062,13.0341590004098,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.162">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5862</SimpleData>
+            <SimpleData name="KGISCode">29572055446131050000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5812</SimpleData>
+            <SimpleData name="DepartmentCode">5812</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Doddabanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">32379</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7482980001684,13.0228180000396,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.163">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3984</SimpleData>
+            <SimpleData name="KGISCode">29572055446131260000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5813</SimpleData>
+            <SimpleData name="DepartmentCode">5813</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Doddagubbi</SimpleData>
+            <SimpleData name="KGISVillageID">19466</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6735469996628,13.0697730002169,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.164">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3986</SimpleData>
+            <SimpleData name="KGISCode">29572055446131240000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5814</SimpleData>
+            <SimpleData name="DepartmentCode">5814</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kannuru</SimpleData>
+            <SimpleData name="KGISVillageID">19500</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6546229996238,13.0908979996056,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.165">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5339</SimpleData>
+            <SimpleData name="KGISCode">29572055446130940000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5815</SimpleData>
+            <SimpleData name="DepartmentCode">5815</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Manduru</SimpleData>
+            <SimpleData name="KGISVillageID">29176</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7387199998551,13.0812969999128,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.166">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5866</SimpleData>
+            <SimpleData name="KGISCode">29572055446131220000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5816</SimpleData>
+            <SimpleData name="DepartmentCode">5816</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kodathi</SimpleData>
+            <SimpleData name="KGISVillageID">32386</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7172400001128,12.8860839998796,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.167">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3877</SimpleData>
+            <SimpleData name="KGISCode">29572055426127570000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5817</SimpleData>
+            <SimpleData name="DepartmentCode">5817</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Huskuru</SimpleData>
+            <SimpleData name="KGISVillageID">18936</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4311839997566,13.1216570002732,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.168">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3878</SimpleData>
+            <SimpleData name="KGISCode">29572055426128100000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5818</SimpleData>
+            <SimpleData name="DepartmentCode">5818</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kithanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">18946</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4196210001355,13.0075880000945,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.169">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3879</SimpleData>
+            <SimpleData name="KGISCode">29572055426128170000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5819</SimpleData>
+            <SimpleData name="DepartmentCode">5819</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Machohalli</SimpleData>
+            <SimpleData name="KGISVillageID">18962</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4725429997689,12.9994839998389,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.170">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3882</SimpleData>
+            <SimpleData name="KGISCode">29572055426127910000RDDMCPUSCRTRS0002</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5820</SimpleData>
+            <SimpleData name="DepartmentCode">5820</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Madanayakanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">18973</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4673859999901,13.0568439998651,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.171">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3880</SimpleData>
+            <SimpleData name="KGISCode">29572055426127980000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5821</SimpleData>
+            <SimpleData name="DepartmentCode">5821</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Sondekoppa</SimpleData>
+            <SimpleData name="KGISVillageID">18966</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.3839140002637,13.0187710001182,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.172">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3885</SimpleData>
+            <SimpleData name="KGISCode">29572055426128480000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5822</SimpleData>
+            <SimpleData name="DepartmentCode">5822</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Rajanukunte</SimpleData>
+            <SimpleData name="KGISVillageID">19010</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5645599997915,13.1716619996393,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.173">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3886</SimpleData>
+            <SimpleData name="KGISCode">29572055426128750000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5823</SimpleData>
+            <SimpleData name="DepartmentCode">5823</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Kasagattapura</SimpleData>
+            <SimpleData name="KGISVillageID">19018</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5055720003951,13.1094010003406,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.174">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3884</SimpleData>
+            <SimpleData name="KGISCode">29572055426128760000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5824</SimpleData>
+            <SimpleData name="DepartmentCode">5824</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hurulichikkanahalli</SimpleData>
+            <SimpleData name="KGISVillageID">19000</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4853519996167,13.1129879996152,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.175">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3887</SimpleData>
+            <SimpleData name="KGISCode">29572055426128630000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5825</SimpleData>
+            <SimpleData name="DepartmentCode">5825</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Shivakote</SimpleData>
+            <SimpleData name="KGISVillageID">19035</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5141040000691,13.1329400001677,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.176">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5326</SimpleData>
+            <SimpleData name="KGISCode">29572055426129150000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5826</SimpleData>
+            <SimpleData name="DepartmentCode">5826</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bagaluru</SimpleData>
+            <SimpleData name="KGISVillageID">29049</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6695140000766,13.1308930003871,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.177">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5334</SimpleData>
+            <SimpleData name="KGISCode">29572055436130580000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">5876</SimpleData>
+            <SimpleData name="DepartmentCode">5876</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Doddathoguru</SimpleData>
+            <SimpleData name="KGISVillageID">29127</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6572640000621,12.8524110001491,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.178">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5340</SimpleData>
+            <SimpleData name="KGISCode">29572055458031630000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">714</SimpleData>
+            <SimpleData name="DepartmentCode">714</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Anekal</SimpleData>
+            <SimpleData name="KGISVillageID">29188</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.6968669997971,12.7102039997771,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.179">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3960</SimpleData>
+            <SimpleData name="KGISCode">29572055436129790000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">768</SimpleData>
+            <SimpleData name="DepartmentCode">768</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Tavarekere (Tg Halli)</SimpleData>
+            <SimpleData name="KGISVillageID">19361</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4008279253493,12.9627485297371,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.180">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">4026</SimpleData>
+            <SimpleData name="KGISCode">29572055448031620000RDDMCPUSCRTRS0002</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">769</SimpleData>
+            <SimpleData name="DepartmentCode">769</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Varthuru</SimpleData>
+            <SimpleData name="KGISVillageID">19755</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7474660001303,12.9401440003104,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.181">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5858</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0002</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">770</SimpleData>
+            <SimpleData name="DepartmentCode">770</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Yelahanka</SimpleData>
+            <SimpleData name="KGISVillageID">32363</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5973210001529,13.101924,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.182">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5857</SimpleData>
+            <SimpleData name="KGISCode">29572055426128650000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">771</SimpleData>
+            <SimpleData name="DepartmentCode">771</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Hesaragatta</SimpleData>
+            <SimpleData name="KGISVillageID">32359</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.4794480003506,13.1392549996513,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.183">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">5861</SimpleData>
+            <SimpleData name="KGISCode">29572055446130830000RDDMCPUSCRTRS0001</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">772</SimpleData>
+            <SimpleData name="DepartmentCode">772</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bidarahalli</SimpleData>
+            <SimpleData name="KGISVillageID">32377</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.7165119998637,13.0582369999283,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.184">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3897</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0003</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">773</SimpleData>
+            <SimpleData name="DepartmentCode">773</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Bangalore North (Lalbag)</SimpleData>
+            <SimpleData name="KGISVillageID">19090</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5985629232895,12.9570989687375,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark id="BLR_Telemetric_rain_guages.185">
+        <ExtendedData>
+          <SchemaData schemaUrl="#BLR_Telemetric_rain_guages.schema">
+            <SimpleData name="OBJECTID">3938</SimpleData>
+            <SimpleData name="KGISCode">29572055428031620000RDDMCPUSCRTRS0004</SimpleData>
+            <SimpleData name="KGISTM_RainGauge_LocationID">942</SimpleData>
+            <SimpleData name="DepartmentCode">942</SimpleData>
+            <SimpleData name="TM_RainGauge_LocationName">Baseveswaranagar</SimpleData>
+            <SimpleData name="KGISVillageID">19223</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            77.5189379998224,12.9889419995662,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Document>
+  </Document>
+</kml>
